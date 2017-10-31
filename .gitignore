@@ -1,0 +1,24 @@
+# To cleanup all these files from your local repo run:
+# $ git clean -fdX
+
+# Files created by autogen.sh
+/Makefile.in
+/src/Makefile.in
+/aclocal.m4
+/autom4te.cache/
+/config.guess
+/config.sub
+/configure
+/depcomp
+/install-sh
+/missing
+
+# Files created by autogen.sh
+/Makefile
+/config.log
+/config.status
+/src/Makefile
+
+# Build objects and targets
+*.o
+/src/scamp2
