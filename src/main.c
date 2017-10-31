@@ -2,55 +2,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
+#include "logger.h"
 
 /*
  * This is where we store our command line arguments
  */
 struct global_args {
-    int dumpconfig;
-    int verbosity;
+    int loglevel;
     int numInputFiles;
     char **inputFiles;
-} GLOBAL_ARGS; 
-
-/*
- * print command line options
- */
-void
-print_opts() {
-    int i;
-    printf("Verbose option: %i\n",    GLOBAL_ARGS.verbosity);
-    printf("Dumpconfig option: %i\n", GLOBAL_ARGS.dumpconfig);
-
-    if (GLOBAL_ARGS.numInputFiles > 0) {
-        printf("Will handle files: ");
-        for (i = 0; i < GLOBAL_ARGS.numInputFiles; i++) {
-            printf("%s ", GLOBAL_ARGS.inputFiles[i]);
-        }
-        printf("\n");
-    }
-}
+} GLOB_ARGS; 
 
 /*
  * Our main function
  */
 int
 main(int argc, char** argv) {
-    int opt;
+    int opt, i;
 
-    GLOBAL_ARGS.dumpconfig = 0;
-    GLOBAL_ARGS.verbosity = 0;
-    GLOBAL_ARGS.inputFiles = NULL;
-    GLOBAL_ARGS.numInputFiles = 0;
+    GLOB_ARGS.loglevel = 1;
+    GLOB_ARGS.inputFiles = NULL;
+    GLOB_ARGS.numInputFiles = 0;
 
-    while ((opt = getopt(argc,argv, "vd")) != -1) {
+    while ((opt = getopt(argc,argv, "vq")) != -1) {
         switch (opt)
         {
             case 'v':
-                GLOBAL_ARGS.verbosity++;
+                GLOB_ARGS.loglevel += 1;
                 break;
-            case 'd':
-                GLOBAL_ARGS.dumpconfig++;
+            case 'q':
+                GLOB_ARGS.loglevel += 0;
                 break;
             default:
                 abort(); 
@@ -58,17 +40,12 @@ main(int argc, char** argv) {
         }
     }
 
-    GLOBAL_ARGS.inputFiles = argv + optind;
-    GLOBAL_ARGS.numInputFiles = argc - optind;
+    GLOB_ARGS.inputFiles = argv + optind;
+    GLOB_ARGS.numInputFiles = argc - optind;
 
-    print_opts();
+    logger_set_level(GLOB_ARGS.loglevel);
 
-    /*
-     * Handle arguments
-     */
-    if (GLOBAL_ARGS.dumpconfig > 0) {
-        exit(EXIT_SUCCESS);
-    }
+    catalog_read(GLOB_ARGS.inputFiles, GLOB_ARGS.numInputFiles);
 
     return EXIT_SUCCESS;
 }
