@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <stdio.h>
 #include "logger.h"
 
 LogLevel LOG_LEVEL = LOG_NORMAL;

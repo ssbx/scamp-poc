@@ -12,6 +12,7 @@
 /depcomp
 /install-sh
 /missing
+/compile
 
 # Files created by autogen.sh
 /Makefile

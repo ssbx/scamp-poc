@@ -1,9 +1,8 @@
-#include <omp.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <stdbool.h>
+
 #include "logger.h"
+#include "catalog.h"
 
 /*
  * This is where we store our command line arguments
@@ -12,14 +11,14 @@ struct global_args {
     int loglevel;
     int numInputFiles;
     char **inputFiles;
-} GLOB_ARGS; 
+} GLOB_ARGS;
 
 /*
  * Our main function
  */
 int
 main(int argc, char** argv) {
-    int opt, i;
+    int opt;
 
     GLOB_ARGS.loglevel = 1;
     GLOB_ARGS.inputFiles = NULL;
@@ -35,7 +34,7 @@ main(int argc, char** argv) {
                 GLOB_ARGS.loglevel += 0;
                 break;
             default:
-                abort(); 
+                abort();
 
         }
     }
