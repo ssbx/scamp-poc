@@ -14,7 +14,7 @@
 
 #include "fits/fitscat.h"
 
-void catalog_read_ascii(char **inputFiles, int numInputFiles);
+void catalog_read_asciicat(char **inputFiles, int numInputFiles);
 catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles);
 
 #endif // __CATALOG_H__

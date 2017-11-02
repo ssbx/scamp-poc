@@ -27,3 +27,4 @@
 /src/scamp2
 /src/.deps/
 /src/fits/.deps/
+/src/fits/libfits.a

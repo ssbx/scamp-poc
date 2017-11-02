@@ -76,7 +76,7 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
 /*
  * Read several catalogs (ASCII)
  */
-void catalog_read_ascii(char **inputFiles, int numInputFiles) {
+void catalog_read_asciicat(char **inputFiles, int numInputFiles) {
     int i;
 
 #pragma omp parallel for

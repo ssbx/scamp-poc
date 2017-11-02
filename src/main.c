@@ -13,15 +13,25 @@
 #include <unistd.h>
 #include "logger.h"
 #include "catalog.h"
+#include "test.h"
 
-/*
- * This is where we store our command line arguments
- */
-struct global_args {
+typedef enum {
+    RUN_TEST,
+    RUN_PROD
+} RunType;
+
+typedef enum {
+    FORMAT_ASCII,
+    FORMAT_FITS
+} FileFormat;
+
+typedef struct {
     int loglevel;
+    int runType;
     int numInputFiles;
+    int fileFormat;
     char **inputFiles;
-} GLOB_ARGS;
+} OptsInput;
 
 /*
  * Our main function
@@ -29,19 +39,27 @@ struct global_args {
 int
 main(int argc, char** argv) {
     int opt;
+    OptsInput opts_in;
 
-    GLOB_ARGS.loglevel = 1;
-    GLOB_ARGS.inputFiles = NULL;
-    GLOB_ARGS.numInputFiles = 0;
 
-    while ((opt = getopt(argc,argv, "vq")) != -1) {
+    /* Handle options BEGIN */
+    opts_in.loglevel = 1;
+    opts_in.runType = RUN_PROD;
+    opts_in.fileFormat = FORMAT_ASCII;
+    opts_in.inputFiles = NULL;
+    opts_in.numInputFiles = 0;
+
+    while ((opt = getopt(argc,argv, "vtf")) != -1) {
         switch (opt)
         {
             case 'v':
-                GLOB_ARGS.loglevel += 1;
+                opts_in.loglevel += 1;
                 break;
-            case 'q':
-                GLOB_ARGS.loglevel += 0;
+            case 't':
+                opts_in.runType = RUN_TEST;
+                break;
+            case 'f':
+                opts_in.fileFormat = FORMAT_FITS;
                 break;
             default:
                 abort();
@@ -49,13 +67,25 @@ main(int argc, char** argv) {
         }
     }
 
-    GLOB_ARGS.inputFiles = argv + optind;
-    GLOB_ARGS.numInputFiles = argc - optind;
+    opts_in.inputFiles = argv + optind;
+    opts_in.numInputFiles = argc - optind;
+    /* Handle options END */
 
-    logger_set_level(GLOB_ARGS.loglevel);
+    logger_set_level(opts_in.loglevel);
 
-    catalog_read_ascii(GLOB_ARGS.inputFiles, GLOB_ARGS.numInputFiles);
+    if (opts_in.runType ==  RUN_TEST) {
+        if (opts_in.fileFormat == FORMAT_ASCII) {
+            test_ascii_simple_cross(opts_in.inputFiles, opts_in.numInputFiles);
+        } else {
+            printf("Start fitscat test\n");
+            test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
+        }
+        return EXIT_SUCCESS;
+    }
+
+    catalog_read_fitscat(opts_in.inputFiles, opts_in.numInputFiles);
 
     return EXIT_SUCCESS;
+
 }
 
