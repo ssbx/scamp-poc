@@ -14,6 +14,7 @@
 #include <errno.h>
 #include <string.h>
 #include "datum.h"
+#include "datumlist.h"
 #include "logger.h"
 #include "fits/fitscat.h"
 
@@ -22,23 +23,23 @@
  * Read a catalog with a very simple ASCII format.
  * Mainly used for testing.
  */
-static void __read_ascii_file(char *fileName) {
+DatumList __read_ascii_file(char *fileName, int number) {
     FILE *file;
+    DatumList dlist;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
-    Datum d;
 
     if ((file = fopen(fileName, "r")) == NULL) {
         fprintf(stderr, "%s %s\n", fileName, strerror(errno));
         exit(EXIT_FAILURE);
     }
 
+    datumlist_init(&dlist);
     while (fscanf(file, "%llu %lf %lf %lf %lf\n",
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
-        d = datum_create(id, ra, orthoSD, dec, decSD);
-        logger_log(LOG_DEBUG, "%llu %lf %lf %lf %.10f <-\n",
-                d.id, d.ra, d.orthoSD, d.dec, d.decSD);
+        datumlist_add(&dlist, datum_create(id, ra, orthoSD, dec, decSD));
     }
+    return dlist;
 }
 
 /*
@@ -59,28 +60,30 @@ static catstruct* __read_fitscat_file(char *fileName) {
 /*
  * Read several catalogs (FITS LDAC)
  */
-catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
-    catstruct **catalogs;
+void catalog_read_fitscat(char **inputFiles, int numInputFiles) {
     int i;
-
-    catalogs = malloc(sizeof(catstruct*) * numInputFiles);
 
 #pragma omp parallel for
     for (i=0; i < numInputFiles; i++) {
-        catalogs[i] = __read_fitscat_file(inputFiles[i]);
+        __read_fitscat_file(inputFiles[i]);
     }
 
-    return catalogs;
 }
 
 /*
  * Read several catalogs (ASCII)
  */
 void catalog_read_asciicat(char **inputFiles, int numInputFiles) {
-    int i;
-
-#pragma omp parallel for
+    DatumList dlist;
+    Datum d;
+    int i, j;
+    
     for (i=0; i < numInputFiles; i++) {
-        __read_ascii_file(inputFiles[i]);
+        dlist = __read_ascii_file(inputFiles[i], numInputFiles);
+        for (j=0; j < dlist.size; j++) {
+            d = dlist.datums[j];
+
+            printf("id: %i %f %f %f %f\n", d.id, d.ra, d.dec, d.orthoSD, d.decSD);
+        }
     }
 }
