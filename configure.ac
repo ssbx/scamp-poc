@@ -9,7 +9,8 @@ AM_INIT_AUTOMAKE([subdir-objects])
 
 AC_PROG_CC
 AC_OPENMP
-AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
+AC_PROG_RANLIB
+AC_SUBST(AM_CFLAGS, "-Wall -Werror $OPENMP_CFLAGS")
 
-AC_CONFIG_FILES(Makefile src/Makefile)
+AC_CONFIG_FILES(Makefile src/Makefile src/fits/Makefile)
 AC_OUTPUT

@@ -12,6 +12,9 @@
 #ifndef __CATALOG_H__
 #define __CATALOG_H__
 
-void catalog_read(char **inputFiles, int numInputFiles);
+#include "fits/fitscat.h"
+
+void catalog_read_ascii(char **inputFiles, int numInputFiles);
+catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles);
 
 #endif // __CATALOG_H__

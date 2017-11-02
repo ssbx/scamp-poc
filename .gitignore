@@ -4,6 +4,7 @@
 # Files created by autogen.sh
 /Makefile.in
 /src/Makefile.in
+/src/fits/Makefile.in
 /aclocal.m4
 /autom4te.cache/
 /config.guess
@@ -14,13 +15,15 @@
 /missing
 /compile
 
-# Files created by autogen.sh
+# Files created by configure
 /Makefile
 /config.log
 /config.status
 /src/Makefile
+/src/fits/Makefile
 
 # Build objects and targets
 *.o
 /src/scamp2
 /src/.deps/
+/src/fits/.deps/

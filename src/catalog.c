@@ -15,8 +15,14 @@
 #include <string.h>
 #include "datum.h"
 #include "logger.h"
+#include "fits/fitscat.h"
 
-static void __read_file(char *fileName) {
+
+/*
+ * Read a catalog with a very simple ASCII format.
+ * Mainly used for testing.
+ */
+static void __read_ascii_file(char *fileName) {
     FILE *file;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
@@ -35,11 +41,46 @@ static void __read_file(char *fileName) {
     }
 }
 
-void catalog_read(char **inputFiles, int numInputFiles) {
+/*
+ * Read a catalog of FITS LDAC format.
+ */
+static catstruct* __read_fitscat_file(char *fileName) {
+    catstruct *catalog;
+
+    if ((catalog = read_cat(fileName)) == NULL) {
+        fprintf(stderr, "%s %s\n", fileName, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+
+    return catalog;
+}
+
+
+/*
+ * Read several catalogs (FITS LDAC)
+ */
+catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
+    catstruct **catalogs;
+    int i;
+
+    catalogs = malloc(sizeof(catstruct*) * numInputFiles);
+
+#pragma omp parallel for
+    for (i=0; i < numInputFiles; i++) {
+        catalogs[i] = __read_fitscat_file(inputFiles[i]);
+    }
+
+    return catalogs;
+}
+
+/*
+ * Read several catalogs (ASCII)
+ */
+void catalog_read_ascii(char **inputFiles, int numInputFiles) {
     int i;
 
 #pragma omp parallel for
     for (i=0; i < numInputFiles; i++) {
-        __read_file(inputFiles[i]);
+        __read_ascii_file(inputFiles[i]);
     }
 }

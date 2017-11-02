@@ -54,7 +54,7 @@ main(int argc, char** argv) {
 
     logger_set_level(GLOB_ARGS.loglevel);
 
-    catalog_read(GLOB_ARGS.inputFiles, GLOB_ARGS.numInputFiles);
+    catalog_read_ascii(GLOB_ARGS.inputFiles, GLOB_ARGS.numInputFiles);
 
     return EXIT_SUCCESS;
 }

@@ -1,3 +1,6 @@
-bin_PROGRAMS=scamp2
+SUBDIRS = fits
+
+bin_PROGRAMS = scamp2
 scamp2_SOURCES= main.c catalog.h catalog.c logger.h logger.c datum.c datum.h \
 		object.h object.c
+scamp2_LDADD = $(srcdir)/fits/libfits.a
