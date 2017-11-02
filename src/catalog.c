@@ -53,6 +53,7 @@ static catstruct* __read_fitscat_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
+    // TODO WARNING XXX free
     return catalog;
 }
 
@@ -60,14 +61,23 @@ static catstruct* __read_fitscat_file(char *fileName) {
 /*
  * Read several catalogs (FITS LDAC)
  */
-void catalog_read_fitscat(char **inputFiles, int numInputFiles) {
+catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
     int i;
+    catstruct **catalogs;
+    catalogs = malloc(sizeof(catstruct*) * numInputFiles);
 
 #pragma omp parallel for
     for (i=0; i < numInputFiles; i++) {
-        __read_fitscat_file(inputFiles[i]);
+        catalogs[i] = __read_fitscat_file(inputFiles[i]);
     }
 
+    // TODO WARNING XXX free
+    return catalogs;
+
+}
+
+void catalog_free(catstruct **catalogs, int number) {
+    free(catalogs);
 }
 
 /*
@@ -77,7 +87,7 @@ void catalog_read_asciicat(char **inputFiles, int numInputFiles) {
     DatumList dlist;
     Datum d;
     int i, j;
-    
+
     for (i=0; i < numInputFiles; i++) {
         dlist = __read_ascii_file(inputFiles[i], numInputFiles);
         for (j=0; j < dlist.size; j++) {

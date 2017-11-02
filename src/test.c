@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-#include "catalog.h"
 #include <stdio.h>
 #include <string.h>
+#include "catalog.h"
 
 void test_ascii_simple_cross(char **files, int numFiles) {
     catalog_read_asciicat(files, numFiles);
@@ -30,9 +30,10 @@ void test_fits_simple_print(char **files, int numFiles) {
 
     printf("will open %i files\n", numFiles);
     catalogs = catalog_read_fitscat(files, numFiles);
+
     for (i=0; i<numFiles; i++) {
         catalog = catalogs[i];
-        printf("iterate catalog %i\n", i);
+        printf("iterate catalog %i %i\n", i, catalog->ntab);
 
         j = 0;
         table = catalog->tab;
@@ -40,7 +41,7 @@ void test_fits_simple_print(char **files, int numFiles) {
         while (j < catalog->ntab) {
 
             if (!strcmp("LDAC_OBJECTS", table->extname) ||
-                !strcmp("OBJECTS", table->extname)) 
+                !strcmp("OBJECTS", table->extname))
             {
                 show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag, 0, SHOW_ASCII);
             }
