@@ -23,7 +23,7 @@
  * Read a catalog with a very simple ASCII format.
  * Mainly used for testing.
  */
-DatumList __read_ascii_file(char *fileName, int number) {
+DatumList catalog_read_ascii_file(char *fileName) {
     FILE *file;
     DatumList dlist;
     unsigned long long id;
@@ -42,6 +42,10 @@ DatumList __read_ascii_file(char *fileName, int number) {
     return dlist;
 }
 
+void catalog_free_datums(DatumList* d) {
+    datumlist_free(d);
+}
+
 /*
  * Read a catalog of FITS LDAC format.
  */
@@ -53,7 +57,6 @@ static catstruct* __read_fitscat_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
-    // TODO WARNING XXX free
     return catalog;
 }
 
@@ -71,29 +74,30 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
         catalogs[i] = __read_fitscat_file(inputFiles[i]);
     }
 
-    // TODO WARNING XXX free
     return catalogs;
 
 }
 
 void catalog_free(catstruct **catalogs, int number) {
+    free_cat(catalogs, number);
     free(catalogs);
 }
 
 /*
  * Read several catalogs (ASCII)
  */
-void catalog_read_asciicat(char **inputFiles, int numInputFiles) {
+void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
     DatumList dlist;
     Datum d;
     int i, j;
 
     for (i=0; i < numInputFiles; i++) {
-        dlist = __read_ascii_file(inputFiles[i], numInputFiles);
+        dlist = catalog_read_ascii_file(inputFiles[i]);
         for (j=0; j < dlist.size; j++) {
             d = dlist.datums[j];
 
-            printf("id: %i %f %f %f %f\n", d.id, d.ra, d.dec, d.orthoSD, d.decSD);
+            printf("id: %i %f %f %f %f\n", (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
         }
     }
+    datumlist_free(&dlist);
 }

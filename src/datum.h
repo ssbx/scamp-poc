@@ -14,8 +14,8 @@
 
 typedef struct {
     unsigned long long id;
-    double ra;
-    double dec;
+    double ra;      // right assention  (x)
+    double dec;     // declineson       (y)
     double orthoSD;
     double decSD;
     double sd;

@@ -12,9 +12,18 @@
 #include <stdio.h>
 #include <string.h>
 #include "catalog.h"
+#include "datumlist.h"
+#include "crossmatch.h"
 
 void test_ascii_simple_cross(char **files, int numFiles) {
-    catalog_read_asciicat(files, numFiles);
+    DatumList reference, samples;
+    reference = catalog_read_ascii_file(files[0]);
+    samples   = catalog_read_ascii_file(files[1]);
+
+    crossmatch_run(&reference, &samples);
+
+    datumlist_free(&reference);
+    datumlist_free(&samples);
 }
 
 #define MAX_OUTPUT 2
@@ -53,5 +62,6 @@ void test_fits_simple_print(char **files, int numFiles) {
         }
 
     }
+    catalog_free(catalogs, numFiles);
 
 }
