@@ -10,60 +10,76 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include "crossmatch.h"
 #include "datum.h"
 
-#define MATCH_DISTANCE_DEGREE 1.0f
-
+#define MATCH_DISTANCE_DEGREE 0.01f
+#define HEARTH_RADIUS_CONST 6000
 /*
  * This is incorrect, wee use pitagore on a sphere.
  * This is not optimized.
  */
-void crossmatch_run_naive1(DatumList *reference, DatumList *samples) {
+void crossmatch_bad(DatumList *reference, DatumList *samples) {
     Datum refDatum;
     Datum splDatum;
     double a, b, c; // pythagore
     int i, j;
 
+    int count = 0;
     printf("hello crossmatch\n");
     for (i=0; i<reference->size; i++) {
         refDatum = reference->datums[i];
         for (j=0; j<samples->size; j++) {
-            splDatum = samples->datums[i];
+            splDatum = samples->datums[j];
             a = pow(refDatum.ra - splDatum.ra, 2.0f);
             b = pow(refDatum.dec - splDatum.dec, 2.0f);
             c = sqrt(a + b);
             if (c < MATCH_DISTANCE_DEGREE)
-                printf("got a hit!\n");
+                count++;
             
         }
     }
+    printf("count is %i\n",count);
     return;
 }
 
 /*
- * This is correct, wee use pitagore on cartesian coordinates.
+ * It is correct. The distance is expressed in degree.
  * This is not optimized.
+ *
+ * See https://math.stackexchange.com/questions/833002/distance-between-two-points-in-spherical-coordinates
  */
-#define HEARTH_RADIUS_CONST 6000
-void crossmatch_run(DatumList *reference, DatumList *samples) {
+void crossmatch_all_spherical(DatumList *reference, DatumList *samples) {
     Datum refDatum;
     Datum splDatum;
-    double a, b, c; // pythagore
     int i, j;
+    double distance;
 
+    int count = 0;
+    printf("hello crossmatch\n");
     for (i=0; i<reference->size; i++) {
         refDatum = reference->datums[i];
         for (j=0; j<samples->size; j++) {
-            splDatum = samples->datums[i];
-            a = pow(HEARTH_RADIUS_CONST * cos(refDatum.ra - splDatum.ra), 2.0f);
-            b = pow(HEARTH_RADIUS_CONST * sin(refDatum.dec - splDatum.dec), 2.0f);
-            c = sqrt(a + b);
-            if (c < HEARTH_RADIUS_CONST * cos(MATCH_DISTANCE_DEGREE))
-                printf("got a hit!\n");
-
-    
+            splDatum = samples->datums[j];
+            distance = sqrt(
+                sin(refDatum.ra) * sin(splDatum.ra) *
+                cos(refDatum.dec - splDatum.dec) +
+                cos(refDatum.ra) * cos(splDatum.ra)
+           ); 
+            if (distance < MATCH_DISTANCE_DEGREE) {
+                count++;
+            }
+            
         }
     }
+    printf("count is %i\n",count);
+    return;
+}
+
+
+void crossmatch_run(DatumList *reference, DatumList *samples) {
+    crossmatch_bad(reference, samples);
+    crossmatch_all_spherical(reference, samples);
 }
