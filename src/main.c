@@ -30,6 +30,7 @@ typedef struct {
     int runType;
     int numInputFiles;
     int fileFormat;
+    double distance_max;
     char **inputFiles;
 } OptsInput;
 
@@ -49,7 +50,7 @@ main(int argc, char** argv) {
     opts_in.inputFiles = NULL;
     opts_in.numInputFiles = 0;
 
-    while ((opt = getopt(argc,argv, "vtf")) != -1) {
+    while ((opt = getopt(argc,argv, "vtfd:")) != -1) {
         switch (opt)
         {
             case 'v':
@@ -61,6 +62,10 @@ main(int argc, char** argv) {
             case 'f':
                 opts_in.fileFormat = FORMAT_FITS;
                 break;
+            case 'd':
+                opts_in.distance_max = atof(optarg);
+                break;
+
             default:
                 abort();
 
@@ -75,7 +80,7 @@ main(int argc, char** argv) {
 
     if (opts_in.runType ==  RUN_TEST) {
         if (opts_in.fileFormat == FORMAT_ASCII) {
-            test_ascii_simple_cross(opts_in.inputFiles, opts_in.numInputFiles);
+            test_ascii_simple_cross(opts_in.inputFiles, opts_in.numInputFiles, opts_in.distance_max);
         } else {
             printf("Start fitscat test\n");
             test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);

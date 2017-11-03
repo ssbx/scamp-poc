@@ -12,7 +12,7 @@
 #ifndef __TEST_H__
 #define __TEST_H__
 
-void test_ascii_simple_cross(char **files, int numFiles);
+void test_ascii_simple_cross(char **files, int numFiles, double distance_max);
 void test_fits_simple_print(char **files, int numFiles);
 
 #endif // __TEST_H__

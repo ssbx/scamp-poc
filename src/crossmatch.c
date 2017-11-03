@@ -51,7 +51,8 @@ void crossmatch_bad(DatumList *reference, DatumList *samples) {
  *
  * See https://math.stackexchange.com/questions/833002/distance-between-two-points-in-spherical-coordinates
  */
-void crossmatch_all_spherical(DatumList *reference, DatumList *samples) {
+void crossmatch_all_spherical(DatumList *reference, 
+                              DatumList *samples, double distance_max) {
     Datum refDatum;
     Datum splDatum;
     int i, j;
@@ -68,10 +69,9 @@ void crossmatch_all_spherical(DatumList *reference, DatumList *samples) {
                 cos(refDatum.dec - splDatum.dec) +
                 cos(refDatum.ra) * cos(splDatum.ra)
            ); 
-            if (distance < MATCH_DISTANCE_DEGREE) {
+            if (distance < distance_max) {
                 count++;
             }
-            
         }
     }
     printf("count is %i\n",count);
@@ -79,7 +79,8 @@ void crossmatch_all_spherical(DatumList *reference, DatumList *samples) {
 }
 
 
-void crossmatch_run(DatumList *reference, DatumList *samples) {
+void crossmatch_run(DatumList *reference, 
+                    DatumList *samples, double distance_max) {
     crossmatch_bad(reference, samples);
-    crossmatch_all_spherical(reference, samples);
+    crossmatch_all_spherical(reference, samples, distance_max);
 }

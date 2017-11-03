@@ -15,12 +15,13 @@
 #include "datumlist.h"
 #include "crossmatch.h"
 
-void test_ascii_simple_cross(char **files, int numFiles) {
+void test_ascii_simple_cross(
+        char **files, int numFiles, double distance_max) {
     DatumList reference, samples;
     reference = catalog_read_ascii_file(files[0]);
     samples   = catalog_read_ascii_file(files[1]);
 
-    crossmatch_run(&reference, &samples);
+    crossmatch_run(&reference, &samples, distance_max);
 
     datumlist_free(&reference);
     datumlist_free(&samples);

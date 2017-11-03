@@ -15,10 +15,10 @@
 typedef struct {
     unsigned long long id;
     double ra;      // right assention  (x)
-    double dec;     // declineson       (y)
-    double orthoSD;
-    double decSD;
-    double sd;
+    double dec;     // declinaison       (y)
+    double orthoSD; // ortho standard deviation
+    double decSD;   // declinaison standard deviation?
+    double sd;      // maximum standard deviation?
 } Datum;
 
 Datum datum_create(

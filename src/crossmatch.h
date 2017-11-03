@@ -12,6 +12,6 @@
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
 #include <datumlist.h>
-void crossmatch_run(DatumList *reference, DatumList *samples);
+void crossmatch_run(DatumList *reference, DatumList *samples, double distance_max);
 
 #endif // __CROSSMATCH_H__
