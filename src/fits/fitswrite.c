@@ -429,13 +429,12 @@ void	print_obj(FILE *stream, tabstruct *tab)
           if (i)
             putc(' ', stream);
           break;
-        case T_LONG:
-          fprintf(stream, *key->printf?key->printf:"%d", *(int *)ptr);
+        case T_LONG: fprintf(stream, *key->printf?key->printf:"%d", *(int *)ptr);
           if (i)
             putc(' ', stream);
           break;
         case T_LONGLONG:
-          fprintf(stream, *key->printf?key->printf:"%lld", *(SLONGLONG *)ptr);
+          fprintf(stream, *key->printf?key->printf:"%lld", *(long long int *)ptr);
           if (i)
             putc(' ', stream);
           break;
@@ -521,7 +520,7 @@ void	voprint_obj(FILE *stream, tabstruct *tab)
             putc(' ', stream);
           break;
         case T_LONGLONG:
-          fprintf(stream, *key->printf?key->printf:"%lld", *(SLONGLONG *)ptr);
+          fprintf(stream, *key->printf?key->printf:"%lld", *(long long int *)ptr);
           if (i)
             putc(' ', stream);
           break;

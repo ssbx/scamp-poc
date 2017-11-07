@@ -15,34 +15,26 @@
 #include "catalog.h"
 #include "crossmatch.h"
 
-typedef enum {
-    RUN_TEST,
-    RUN_PROD
-} RunType;
-
-typedef enum {
-    FORMAT_ASCII,
-    FORMAT_FITS
-} FileFormat;
-
+typedef enum {RUN_TEST, RUN_PROD}        RunType;
+typedef enum {FORMAT_ASCII, FORMAT_FITS} FileFormat;
 typedef struct {
-    int loglevel;
-    int runType;
-    int numInputFiles;
-    int fileFormat;
-    double distance_max;
-    char **inputFiles;
+    RunType     runType;
+    FileFormat  fileFormat;
+    int         loglevel;
+    int         numInputFiles;
+    double      matchFactor;
+    char        **inputFiles;
 } OptsInput;
 
 /*
  * Test ascii cross
  */
-void test_ascii_simple_cross(char **files, double distance_max) {
+void test_ascii_simple_cross(char **files, double matchFactor) {
     ObjectList reference, samples;
     reference = catalog_read_ascii_file(files[0]);
     samples   = catalog_read_ascii_file(files[1]);
 
-    crossmatch_run(&reference, &samples, distance_max);
+    crossmatch_run(&reference, &samples, matchFactor);
 
     objectlist_free(&reference);
     objectlist_free(&samples);
@@ -64,7 +56,7 @@ main(int argc, char** argv) {
     opts_in.inputFiles = NULL;
     opts_in.numInputFiles = 0;
 
-	while ((opt = getopt(argc, argv, "vtfd:")) != -1) {
+	while ((opt = getopt(argc, argv, "vtcf:")) != -1) {
 		switch (opt) {
 		case 'v':
 			opts_in.loglevel += 1;
@@ -72,13 +64,12 @@ main(int argc, char** argv) {
 		case 't':
 			opts_in.runType = RUN_TEST;
 			break;
-		case 'f':
+		case 'c':
 			opts_in.fileFormat = FORMAT_FITS;
 			break;
-		case 'd':
-			opts_in.distance_max = atof(optarg);
+		case 'f':
+			opts_in.matchFactor = atof(optarg);
 			break;
-
 		default:
 			abort();
 
@@ -93,15 +84,14 @@ main(int argc, char** argv) {
 
     if (opts_in.runType ==  RUN_TEST) {
         if (opts_in.fileFormat == FORMAT_ASCII) {
-            test_ascii_simple_cross(opts_in.inputFiles, opts_in.distance_max);
+            test_ascii_simple_cross(opts_in.inputFiles, opts_in.matchFactor);
         } else {
             printf("Start fitscat test\n");
             test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
         }
-		return (EXIT_SUCCESS);
     }
 
-	return (EXIT_SUCCESS);
+    return (EXIT_SUCCESS);
 
 }
 

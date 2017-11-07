@@ -15,7 +15,7 @@
 
 void crossmatch_run(
         ObjectList *reference,
-        ObjectList *samples, 
-        double      distance_max); /* in degree */
+        ObjectList *samples,
+        double      factor);
 
 #endif /* __CROSSMATCH_H__ */

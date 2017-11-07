@@ -25,7 +25,7 @@ Object object_create(
 
     Object object;
     object.id  = id;
-    object.ra  = ra  * M_PI/180;;
+    object.ra  = ra  * M_PI/180;
     object.dec = dec * M_PI/180;
     object.sd  = sd  * M_PI/180; /* What is SD? */
 
@@ -33,25 +33,21 @@ Object object_create(
 
 }
 
-/* 
- * Determine if the two objects position fit into the "limit"
- * distance.
+/*
+ * Determine if the two objects position fit into the "limit" distance.
+ * "factor" should be set to 1.0f by default. Increase and decrease
+ * it to influence the match.
  *
  */
-bool object_areClose(Object a, Object b, double limit) {
-    double distance;
+bool object_areClose(Object a, Object b, double factor) {
+    double distance, limit;
 
     /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
     distance = 2 * asin(sqrt(
-        pow(sin( (b.dec - a.dec) * 0.5) , 2) +
+        pow(sin( (b.dec - a.dec) / 2) , 2) +
         cos(a.dec) * cos(b.dec) *
-        pow(sin((b.ra - a.ra) * 0.5) , 2)
+        pow(sin((b.ra - a.ra) / 2) , 2)
     ));
-
-    if (distance < limit)
-        return true;
-    else
-        return false;
 
     /* Why??? from github.com/ssbx/crossmatch data/object.cpp
     double distance;
@@ -69,6 +65,15 @@ bool object_areClose(Object a, Object b, double limit) {
         distance = 2 * asin(term);
     return distance;
     */
+
+
+    /* TODO search the equiv in fits */
+    limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
+
+    if (distance < limit)
+        return true;
+    else
+        return false;
 
 }
 

@@ -31,8 +31,8 @@ Object object_create(
         double decSD);
 
 bool object_areClose(
-        Object a, 
-        Object b, 
-        double limit);
+        Object a,
+        Object b,
+        double factor);
 
 #endif /* __OBJECT_H__ */

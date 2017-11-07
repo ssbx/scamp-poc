@@ -19,12 +19,11 @@
  * Take two ObjectList and count the number of match
  * between them.
  */
-void crossmatch_run(ObjectList *reference, 
-                    ObjectList *samples, 
-                    double      distance_max) {
+void crossmatch_run(ObjectList *reference,
+                    ObjectList *samples,
+                    double      factor) {
     Object refObject;
     Object splObject;
-    distance_max = distance_max * M_PI/180;
     int i, j;
 
     int count = 0;
@@ -34,8 +33,8 @@ void crossmatch_run(ObjectList *reference,
 
         for (j=0; j<samples->size; j++) {
             splObject = samples->objects[j];
-            
-            if (object_areClose(refObject, splObject, distance_max))
+
+            if (object_areClose(refObject, splObject, factor))
                 count++;
 
         }
