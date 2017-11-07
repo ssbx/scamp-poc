@@ -15,24 +15,24 @@
 #include <stdbool.h>
 
 typedef struct {
-    unsigned long long id;
+    unsigned long long id; /* unique identifier */
     double ra;      /* right assention (rad) (x) */
     double dec;     /* declinaison     (rad) (y) */
     double orthoSD; /* ortho standard deviation */
     double decSD;   /* declinaison standard deviation? */
     double sd;      /* maximum standard deviation? */
-} Object;
+} Object_T;
 
-Object object_create(
+extern Object_T Object_new(
         unsigned long long id,
         double ra,
         double dec,
         double orthoSD,
         double decSD);
 
-bool object_areClose(
-        Object a,
-        Object b,
+extern bool Object_areClose(
+        Object_T a,
+        Object_T b,
         double factor);
 
 #endif /* __OBJECT_H__ */

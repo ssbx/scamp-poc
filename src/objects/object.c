@@ -19,20 +19,20 @@
  * Create and initialize an Object structure. Inputs are in degree,
  * and transformed in radians.
  */
-Object object_create(
+Object_T Object_new(
         unsigned long long id,
         double ra, double orthoSD,
         double dec, double decSD) {
 
     double sd = (orthoSD > decSD) ? orthoSD : decSD; /* What is this? */
 
-    Object object;
+    Object_T object;
     object.id  = id;
     object.ra  = ra  * M_PI/180;
     object.dec = dec * M_PI/180;
     object.sd  = sd  * M_PI/180; /* What is SD? */
 
-	return (object);
+    return (object);
 
 }
 
@@ -42,7 +42,7 @@ Object object_create(
  * it to influence the match.
  *
  */
-bool object_areClose(Object a, Object b, double factor) {
+bool Object_areClose(Object_T a, Object_T b, double factor) {
     double distance, limit;
 
     /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */

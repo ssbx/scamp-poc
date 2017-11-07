@@ -15,13 +15,13 @@
 #include "object.h"
 
 typedef struct {
-    Object *objects;
-    int    size;
-    int    max;
+    Object_T *objects;
+    int      size;
+    int      max;
 } ObjectList;
 
 void objectlist_init(ObjectList *l);
-void objectlist_add(ObjectList *l, Object d);
+void objectlist_add(ObjectList *l, Object_T d);
 void objectlist_rem(ObjectList *l, int i);
 void objectlist_free(ObjectList *l);
 void objectlist_merge(ObjectList *l, ObjectList *m);

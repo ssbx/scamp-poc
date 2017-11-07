@@ -39,7 +39,7 @@ ObjectList catalog_read_ascii_file(char *fileName) {
     objectlist_init(&dlist);
     while (fscanf(file, "%llu %lf %lf %lf %lf\n",
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
-        objectlist_add(&dlist, object_create(id, ra, orthoSD, dec, decSD));
+        objectlist_add(&dlist, Object_new(id, ra, orthoSD, dec, decSD));
     }
     return (dlist);
 }
@@ -93,7 +93,7 @@ void catalog_free(catstruct **catalogs, int number) {
  */
 void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
     ObjectList dlist;
-    Object d;
+    Object_T d;
     int i, j;
 
     for (i=0; i < numInputFiles; i++) {

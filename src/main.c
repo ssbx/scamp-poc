@@ -80,7 +80,7 @@ main(int argc, char** argv) {
     opts_in.numInputFiles = argc - optind;
     /* Handle options END */
 
-    logger_set_level(opts_in.loglevel);
+    Logger_setLevel(opts_in.loglevel);
 
     if (opts_in.runType ==  RUN_TEST) {
         if (opts_in.fileFormat == FORMAT_ASCII) {

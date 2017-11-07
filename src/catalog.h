@@ -14,7 +14,6 @@
 
 #include "fits/fitscat.h"
 #include "objects/objectlist.h"
-#include "objects/object.h"
 
 typedef struct {
     catstruct *catalog;
@@ -22,16 +21,16 @@ typedef struct {
 } Catalog;
 
 void        catalog_read_asciicat2(
-                char **inputFiles, 
+                char **inputFiles,
                 int    numInputFiles);
 catstruct** catalog_read_fitscat(
-                char **inputFiles, 
+                char **inputFiles,
                 int    numInputFiles);
-void        catalog_free(catstruct **cats, 
+void        catalog_free(catstruct **cats,
                          int   number);
 ObjectList  catalog_read_ascii_file(char *file);
 
 void        test_fits_simple_print(
-                char **inputFies, 
+                char **inputFies,
                 int numFiles);
 #endif /* __CATALOG_H__ */

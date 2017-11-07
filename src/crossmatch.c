@@ -23,8 +23,8 @@
 void crossmatch_run(ObjectList *reference,
                     ObjectList *samples,
                     double      factor) {
-    Object refObject;
-    Object splObject;
+    Object_T refObject;
+    Object_T splObject;
     int i, j;
 
     int count = 0;
@@ -35,7 +35,7 @@ void crossmatch_run(ObjectList *reference,
         for (j=0; j<samples->size; j++) {
             splObject = samples->objects[j];
 
-            if (object_areClose(refObject, splObject, factor))
+            if (Object_areClose(refObject, splObject, factor))
                 count++;
 
         }
