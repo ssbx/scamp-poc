@@ -48,7 +48,7 @@ void datumlist_add(DatumList *l, Datum d) {
  * Remove a Datum from DatumList, resize DatumList if appropriate
  */
 void datumlist_rem(DatumList *l, int i) {
-	Datum last = NULL;
+	Datum last;
 
     last = l->datums[l->size - 1];
     l->datums[i] = last;
