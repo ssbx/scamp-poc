@@ -2,7 +2,7 @@ t1: all
 	./src/scamp2 -vvtf ./tests/data/fitscat/*.cat
 
 t2: all
-	./src/scamp2 -vvt -d 150 ./tests/data/ascii/*.txt
+	./src/scamp2 -vvt -d 180 ./tests/data/ascii/*.txt
 
 test: t1 t2
 run: t2
