@@ -27,6 +27,7 @@ static inline double haversine(double  ra_A,
                                double  ra_B, 
                                double dec_B) {
 
+    /* Why???
     double distance;
     double term;
 
@@ -35,12 +36,19 @@ static inline double haversine(double  ra_A,
         cos(dec_A) * cos(dec_B) *
         pow(sin((ra_B - ra_A) * 0.5) , 2)
     );
+
     if (term >= 1.0f)
         distance = M_PI;
     else
         distance = 2 * asin(term);
-
     return distance;
+    */
+    return (2 * asin(sqrt(
+        pow(sin( (dec_B - dec_A) * 0.5) , 2) +
+        cos(dec_A) * cos(dec_B) *
+        pow(sin((ra_B - ra_A) * 0.5) , 2)
+    )));
+
 }
 
 /*
