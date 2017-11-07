@@ -11,6 +11,7 @@
 
 #include "datum.h"
 
+static const double PI = 3.14;
 Datum datum_create(
         unsigned long long id,
         double ra, double orthoSD,
@@ -18,9 +19,11 @@ Datum datum_create(
     Datum datum;
     datum.id = id;
     datum.ra = ra;
-    datum.orthoSD = orthoSD;
+    datum.raRad = ra * PI/180;;
     datum.dec = dec;
+    datum.decRad = dec * PI/180;
     datum.decSD = decSD;
+    datum.orthoSD = orthoSD;
     datum.sd = (orthoSD > decSD) ? orthoSD : decSD;
 
 	return (datum);

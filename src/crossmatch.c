@@ -15,8 +15,9 @@
 #include "crossmatch.h"
 #include "datum.h"
 
-static const double MATCH_DISTANCE_DEGREE = 0.01f;
-
+#define MATCH_DISTANCE_DEGREE 0.01f
+#define HEARTH_RADIUS_CONST 6000
+#define PI 3.14
 /*
  * This is incorrect, wee use pitagore on a sphere.
  * This is not optimized.
@@ -28,7 +29,7 @@ void crossmatch_bad(DatumList *reference, DatumList *samples) {
     int i, j;
 
     int count = 0;
-    printf("hello crossmatch\n");
+    printf("hello bad flat\n");
     for (i=0; i<reference->size; i++) {
         refDatum = reference->datums[i];
         for (j=0; j<samples->size; j++) {
@@ -46,7 +47,7 @@ void crossmatch_bad(DatumList *reference, DatumList *samples) {
 }
 
 /*
- * It is correct. The distance is expressed in degree.
+ * It is wrong, sin and coss take radians.
  * This is not optimized.
  *
  * See https://math.stackexchange.com/questions/833002/distance-between-two-points-in-spherical-coordinates
@@ -59,7 +60,7 @@ void crossmatch_all_spherical(DatumList *reference,
     double distance;
 
     int count = 0;
-    printf("hello crossmatch\n");
+    printf("hello bad sphere\n");
     for (i=0; i<reference->size; i++) {
         refDatum = reference->datums[i];
         for (j=0; j<samples->size; j++) {
@@ -79,8 +80,40 @@ void crossmatch_all_spherical(DatumList *reference,
 }
 
 
-void crossmatch_run(DatumList *reference,
-                    DatumList *samples, double distance_max) {
-    crossmatch_bad(reference, samples);
-    crossmatch_all_spherical(reference, samples, distance_max);
+static inline double haversine(double ra_A, double dec_A,
+                 double ra_B, double dec_B) {
+    /* see https://fr.wikipedia.org/wiki/Formule_de_haversine */
+    return (2 * (asin(pow(sin((dec_B - dec_A)/2),2) + cos(dec_A) * cos(dec_B) * pow(sin((ra_B - ra_A)/2), 2)  )));
 }
+
+void crossmatch_in_radian(DatumList *reference, DatumList *samples, double distance_max) {
+    Datum refDatum;
+    Datum splDatum;
+    const double RAD_DISTANCE = distance_max * (PI/180);
+    int i, j;
+    double c;
+
+    int count = 0;
+    printf("hello radian\n");
+    for (i=0; i<reference->size; i++) {
+        refDatum = reference->datums[i];
+        for (j=0; j<samples->size; j++) {
+
+            c = haversine(refDatum.raRad, refDatum.decRad,
+                          splDatum.raRad, splDatum.decRad);
+            
+            if (c < RAD_DISTANCE)
+                count++;
+        }
+    }
+    printf("count is %i\n",count);
+    return;
+}
+
+void crossmatch_run(DatumList *reference, 
+                    DatumList *samples, double distance_max) {
+    crossmatch_bad(reference, samples); /* wrong */
+    crossmatch_all_spherical(reference, samples, distance_max); /* wrong */
+    crossmatch_in_radian(reference, samples, distance_max); /* good */
+}
+

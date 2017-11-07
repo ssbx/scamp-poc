@@ -10,7 +10,6 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AC_PROG_CC
 AC_OPENMP
 AC_PROG_RANLIB
-AC_MATH
 AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
 
 AC_CONFIG_FILES(Makefile src/Makefile src/fits/Makefile)

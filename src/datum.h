@@ -14,11 +14,13 @@
 
 typedef struct {
     unsigned long long id;
-	double ra; /* right assention  (x) */
-	double dec; /* declinaison       (y) */
-	double orthoSD; /* ortho standard deviation */
-	double decSD; /* declinaison standard deviation? */
-	double sd; /* maximum standard deviation? */
+    double ra;      /* right assention degree (x) */
+    double raRad;   /* right assention rad (x) */
+    double dec;     /* declinaison deg   (y) */
+    double decRad;  /* declinaison rad   (y) */
+    double orthoSD; /* ortho standard deviation */
+    double decSD;   /* declinaison standard deviation? */
+    double sd;      /* maximum standard deviation? */
 } Datum;
 
 Datum datum_create(
