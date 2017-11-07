@@ -26,4 +26,4 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles);
 void catalog_free(catstruct **cats, int number);
 DatumList catalog_read_ascii_file(char *file);
 
-#endif // __CATALOG_H__
+#endif /* __CATALOG_H__ */

@@ -23,5 +23,5 @@ Datum datum_create(
     datum.decSD = decSD;
     datum.sd = (orthoSD > decSD) ? orthoSD : decSD;
 
-    return datum;
+	return (datum);
 }

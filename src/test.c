@@ -27,10 +27,10 @@ void test_ascii_simple_cross(
     datumlist_free(&samples);
 }
 
-#define MAX_OUTPUT 2
 /*
- * Fits table to ascii
+ * Fits table to ASCII
  */
+static const int MAX_OUTPUT = 2;
 void test_fits_simple_print(char **files, int numFiles) {
     catstruct **catalogs;
     catstruct *catalog;
@@ -58,7 +58,7 @@ void test_fits_simple_print(char **files, int numFiles) {
             table = table->nexttab;
             flag = 0;
             j++;
-            if (j > MAX_OUTPUT) // limit output to MAX_OUTPUT lines
+			if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
                 break;
         }
 

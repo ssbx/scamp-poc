@@ -50,27 +50,26 @@ main(int argc, char** argv) {
     opts_in.inputFiles = NULL;
     opts_in.numInputFiles = 0;
 
-    while ((opt = getopt(argc,argv, "vtfd:")) != -1) {
-        switch (opt)
-        {
-            case 'v':
-                opts_in.loglevel += 1;
-                break;
-            case 't':
-                opts_in.runType = RUN_TEST;
-                break;
-            case 'f':
-                opts_in.fileFormat = FORMAT_FITS;
-                break;
-            case 'd':
-                opts_in.distance_max = atof(optarg);
-                break;
+	while ((opt = getopt(argc, argv, "vtfd:")) != -1) {
+		switch (opt) {
+		case 'v':
+			opts_in.loglevel += 1;
+			break;
+		case 't':
+			opts_in.runType = RUN_TEST;
+			break;
+		case 'f':
+			opts_in.fileFormat = FORMAT_FITS;
+			break;
+		case 'd':
+			opts_in.distance_max = atof(optarg);
+			break;
 
-            default:
-                abort();
+		default:
+			abort();
 
-        }
-    }
+		}
+	}
 
     opts_in.inputFiles = argv + optind;
     opts_in.numInputFiles = argc - optind;
@@ -85,12 +84,12 @@ main(int argc, char** argv) {
             printf("Start fitscat test\n");
             test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
         }
-        return EXIT_SUCCESS;
+		return (EXIT_SUCCESS);
     }
 
     catalog_read_fitscat(opts_in.inputFiles, opts_in.numInputFiles);
 
-    return EXIT_SUCCESS;
+	return (EXIT_SUCCESS);
 
 }
 

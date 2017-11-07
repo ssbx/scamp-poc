@@ -10,4 +10,3 @@
  */
 
 #include "object.h"
-

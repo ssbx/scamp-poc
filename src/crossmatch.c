@@ -15,8 +15,8 @@
 #include "crossmatch.h"
 #include "datum.h"
 
-#define MATCH_DISTANCE_DEGREE 0.01f
-#define HEARTH_RADIUS_CONST 6000
+static const double MATCH_DISTANCE_DEGREE = 0.01f;
+
 /*
  * This is incorrect, wee use pitagore on a sphere.
  * This is not optimized.
@@ -24,7 +24,7 @@
 void crossmatch_bad(DatumList *reference, DatumList *samples) {
     Datum refDatum;
     Datum splDatum;
-    double a, b, c; // pythagore
+	double a, b, c;
     int i, j;
 
     int count = 0;
@@ -38,7 +38,7 @@ void crossmatch_bad(DatumList *reference, DatumList *samples) {
             c = sqrt(a + b);
             if (c < MATCH_DISTANCE_DEGREE)
                 count++;
-            
+
         }
     }
     printf("count is %i\n",count);
@@ -51,7 +51,7 @@ void crossmatch_bad(DatumList *reference, DatumList *samples) {
  *
  * See https://math.stackexchange.com/questions/833002/distance-between-two-points-in-spherical-coordinates
  */
-void crossmatch_all_spherical(DatumList *reference, 
+void crossmatch_all_spherical(DatumList *reference,
                               DatumList *samples, double distance_max) {
     Datum refDatum;
     Datum splDatum;
@@ -68,7 +68,7 @@ void crossmatch_all_spherical(DatumList *reference,
                 sin(refDatum.ra) * sin(splDatum.ra) *
                 cos(refDatum.dec - splDatum.dec) +
                 cos(refDatum.ra) * cos(splDatum.ra)
-           ); 
+           );
             if (distance < distance_max) {
                 count++;
             }
@@ -79,7 +79,7 @@ void crossmatch_all_spherical(DatumList *reference,
 }
 
 
-void crossmatch_run(DatumList *reference, 
+void crossmatch_run(DatumList *reference,
                     DatumList *samples, double distance_max) {
     crossmatch_bad(reference, samples);
     crossmatch_all_spherical(reference, samples, distance_max);

@@ -26,4 +26,4 @@ void datumlist_rem(DatumList *l, int i);
 void datumlist_free(DatumList *l);
 void datumlist_merge(DatumList *l, DatumList *m);
 
-#endif // __DATUMLIST_H__
+#endif /* __DATUMLIST_H__ */

@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define DATUMLIST_SIZE_INIT 200
+static const int DATUMLIST_SIZE_INIT = 200;
 
 /*
  * Initialize DatumList structure
@@ -48,13 +48,13 @@ void datumlist_add(DatumList *l, Datum d) {
  * Remove a Datum from DatumList, resize DatumList if appropriate
  */
 void datumlist_rem(DatumList *l, int i) {
-    Datum last;
+	Datum last = NULL;
 
     last = l->datums[l->size - 1];
     l->datums[i] = last;
     l->size--;
 
-    /* maybe realoc */
+	/* maybe realloc */
     if (l->size * 2 < l->max) {
         l->datums   = realloc(l->datums, sizeof(Datum) * l->size + DATUMLIST_SIZE_INIT);
         l->max      = l->size + DATUMLIST_SIZE_INIT;

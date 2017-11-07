@@ -24,7 +24,7 @@
  * Mainly used for testing.
  */
 DatumList catalog_read_ascii_file(char *fileName) {
-    FILE *file;
+	FILE *file;
     DatumList dlist;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
@@ -39,7 +39,7 @@ DatumList catalog_read_ascii_file(char *fileName) {
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
         datumlist_add(&dlist, datum_create(id, ra, orthoSD, dec, decSD));
     }
-    return dlist;
+	return (dlist);
 }
 
 void catalog_free_datums(DatumList* d) {
@@ -49,7 +49,7 @@ void catalog_free_datums(DatumList* d) {
 /*
  * Read a catalog of FITS LDAC format.
  */
-static catstruct* __read_fitscat_file(char *fileName) {
+static catstruct* read_fitscat_file(char *fileName) {
     catstruct *catalog;
 
     if ((catalog = read_cat(fileName)) == NULL) {
@@ -57,7 +57,7 @@ static catstruct* __read_fitscat_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
-    return catalog;
+	return (catalog);
 }
 
 
@@ -71,10 +71,10 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
 
 #pragma omp parallel for
     for (i=0; i < numInputFiles; i++) {
-        catalogs[i] = __read_fitscat_file(inputFiles[i]);
+		catalogs[i] = read_fitscat_file(inputFiles[i]);
     }
 
-    return catalogs;
+	return (catalogs);
 
 }
 

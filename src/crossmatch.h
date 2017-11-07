@@ -14,4 +14,4 @@
 #include <datumlist.h>
 void crossmatch_run(DatumList *reference, DatumList *samples, double distance_max);
 
-#endif // __CROSSMATCH_H__
+#endif /* __CROSSMATCH_H__ */

@@ -23,4 +23,4 @@ void logger_set_level(int level);
 
 void logger_log(LogLevel level, char *format, ...);
 
-#endif // __LOGGER_H__
+#endif /* __LOGGER_H__ */
