@@ -1,4 +1,6 @@
 /*
+ * Read and load data from files to object structures.
+ *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
  * Written by Sebastien Serre
@@ -20,12 +22,11 @@
 
 
 /*
- * Read a catalog with a very simple ASCII format.
- * Mainly used for testing.
+ * Read a catalog with a very simple ASCII format. Mainly used for testing.
  * ObjectList must be freed with catalog_free_objects/1
  */
 ObjectList catalog_read_ascii_file(char *fileName) {
-	FILE *file;
+    FILE *file;
     ObjectList dlist;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
@@ -40,7 +41,7 @@ ObjectList catalog_read_ascii_file(char *fileName) {
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
         objectlist_add(&dlist, object_create(id, ra, orthoSD, dec, decSD));
     }
-	return (dlist);
+    return (dlist);
 }
 
 void catalog_free_objects(ObjectList* d) {
@@ -48,8 +49,7 @@ void catalog_free_objects(ObjectList* d) {
 }
 
 /*
- * Read a catalog of FITS LDAC format.
- * Must be freed with catalog_free/2.
+ * Read a catalog of FITS LDAC format. Must be freed with catalog_free/2.
  */
 static catstruct* read_fitscat_file(char *fileName) {
     catstruct *catalog;
@@ -59,7 +59,7 @@ static catstruct* read_fitscat_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
-	return (catalog);
+    return (catalog);
 }
 
 /*
@@ -73,10 +73,10 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
 
 #pragma omp parallel for
     for (i=0; i < numInputFiles; i++) {
-		catalogs[i] = read_fitscat_file(inputFiles[i]);
+        catalogs[i] = read_fitscat_file(inputFiles[i]);
     }
 
-	return (catalogs);
+    return (catalogs);
 
 }
 
@@ -101,7 +101,8 @@ void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
         for (j=0; j < dlist.size; j++) {
             d = dlist.objects[j];
 
-            printf("id: %i %f %f %f %f\n", (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
+            printf("id: %i %f %f %f %f\n",
+                                (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
         }
     }
     objectlist_free(&dlist);
@@ -123,7 +124,7 @@ void test_fits_simple_print(char **files, int numFiles) {
 
     for (i=0; i<numFiles; i++) {
         catalog = catalogs[i];
-        printf("iterate catalog %i %i\n", i, catalog->ntab);
+        printf("Iterate catalog %i %i\n", i, catalog->ntab);
 
         j = 0;
         table = catalog->tab;
@@ -131,14 +132,15 @@ void test_fits_simple_print(char **files, int numFiles) {
         while (j < catalog->ntab) {
 
             if (!strcmp("LDAC_OBJECTS", table->extname) ||
-                !strcmp("OBJECTS", table->extname))
+                    !strcmp("OBJECTS", table->extname))
             {
-                show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag, 0, SHOW_ASCII);
+                show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag,
+                        0, SHOW_ASCII);
             }
             table = table->nexttab;
             flag = 0;
             j++;
-			if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
+            if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
                 break;
         }
 

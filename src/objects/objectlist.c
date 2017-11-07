@@ -1,4 +1,6 @@
 /*
+ * Eficient list of Object strutures.
+ *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
  * Written by Sebastien Serre

@@ -1,4 +1,7 @@
 /*
+ * An object represent a row in a catalog. Here are defined functions handling
+ * these.
+ *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
  * Written by Sebastien Serre
@@ -67,7 +70,7 @@ bool object_areClose(Object a, Object b, double factor) {
     */
 
 
-    /* TODO search the equiv in fits */
+    /* TODO search the equiv in fits LDAC */
     limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
 
     if (distance < limit)

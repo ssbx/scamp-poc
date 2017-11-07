@@ -1,4 +1,6 @@
 /*
+ * Efficient catalogs cross matching functions.
+ *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
  * Written by Sebastien Serre
@@ -16,8 +18,7 @@
 #include "objects/object.h"
 
 /*
- * Take two ObjectList and count the number of match
- * between them.
+ * Take two ObjectList and count the number of match between them.
  */
 void crossmatch_run(ObjectList *reference,
                     ObjectList *samples,
@@ -27,7 +28,7 @@ void crossmatch_run(ObjectList *reference,
     int i, j;
 
     int count = 0;
-    printf("hello radian\n");
+
     for (i=0; i<reference->size; i++) {
         refObject = reference->objects[i];
 
@@ -43,3 +44,4 @@ void crossmatch_run(ObjectList *reference,
     printf("count is %i\n",count);
     return;
 }
+

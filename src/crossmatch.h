@@ -11,7 +11,8 @@
 
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
-#include <objects/objectlist.h>
+
+#include "objects/objectlist.h"
 
 void crossmatch_run(
         ObjectList *reference,
@@ -19,3 +20,4 @@ void crossmatch_run(
         double      factor);
 
 #endif /* __CROSSMATCH_H__ */
+

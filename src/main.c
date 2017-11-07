@@ -18,12 +18,12 @@
 typedef enum {RUN_TEST, RUN_PROD}        RunType;
 typedef enum {FORMAT_ASCII, FORMAT_FITS} FileFormat;
 typedef struct {
-    RunType     runType;
-    FileFormat  fileFormat;
-    int         loglevel;
-    int         numInputFiles;
-    double      matchFactor;
-    char        **inputFiles;
+    RunType    runType;
+    FileFormat fileFormat;
+    int        loglevel;
+    int        numInputFiles;
+    double     matchFactor;
+    char     **inputFiles;
 } OptsInput;
 
 /*
