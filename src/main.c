@@ -11,7 +11,7 @@
 
 #include <stdlib.h>
 #include <unistd.h>
-#include "logger/logger.h"
+#include "logger.h"
 #include "catalog.h"
 #include "crossmatch.h"
 

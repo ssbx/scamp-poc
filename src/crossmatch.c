@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "crossmatch.h"
-#include "objects/object.h"
+#include "object.h"
 
 /*
  * Take two ObjectList and count the number of match between them.

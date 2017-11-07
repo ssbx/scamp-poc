@@ -13,7 +13,7 @@
 #define __CATALOG_H__
 
 #include "fits/fitscat.h"
-#include "objects/objectlist.h"
+#include "objectlist.h"
 
 typedef struct {
     catstruct *catalog;

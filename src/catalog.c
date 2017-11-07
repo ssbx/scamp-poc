@@ -15,9 +15,9 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include "objects/object.h"
-#include "objects/objectlist.h"
-#include "logger/logger.h"
+#include "object.h"
+#include "objectlist.h"
+#include "logger.h"
 #include "fits/fitscat.h"
 
 

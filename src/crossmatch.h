@@ -12,7 +12,7 @@
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
 
-#include "objects/objectlist.h"
+#include "objectlist.h"
 
 void crossmatch_run(
         ObjectList *reference,
