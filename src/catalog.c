@@ -13,8 +13,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include "datum.h"
-#include "datumlist.h"
+#include "object.h"
+#include "objectlist.h"
 #include "logger.h"
 #include "fits/fitscat.h"
 
@@ -23,9 +23,9 @@
  * Read a catalog with a very simple ASCII format.
  * Mainly used for testing.
  */
-DatumList catalog_read_ascii_file(char *fileName) {
+ObjectList catalog_read_ascii_file(char *fileName) {
 	FILE *file;
-    DatumList dlist;
+    ObjectList dlist;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
 
@@ -34,16 +34,16 @@ DatumList catalog_read_ascii_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
-    datumlist_init(&dlist);
+    objectlist_init(&dlist);
     while (fscanf(file, "%llu %lf %lf %lf %lf\n",
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
-        datumlist_add(&dlist, datum_create(id, ra, orthoSD, dec, decSD));
+        objectlist_add(&dlist, object_create(id, ra, orthoSD, dec, decSD));
     }
 	return (dlist);
 }
 
-void catalog_free_datums(DatumList* d) {
-    datumlist_free(d);
+void catalog_free_objects(ObjectList* d) {
+    objectlist_free(d);
 }
 
 /*
@@ -87,17 +87,57 @@ void catalog_free(catstruct **catalogs, int number) {
  * Read several catalogs (ASCII)
  */
 void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
-    DatumList dlist;
-    Datum d;
+    ObjectList dlist;
+    Object d;
     int i, j;
 
     for (i=0; i < numInputFiles; i++) {
         dlist = catalog_read_ascii_file(inputFiles[i]);
         for (j=0; j < dlist.size; j++) {
-            d = dlist.datums[j];
+            d = dlist.objects[j];
 
             printf("id: %i %f %f %f %f\n", (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
         }
     }
-    datumlist_free(&dlist);
+    objectlist_free(&dlist);
+}
+
+/*
+ * Fits table to ASCII
+ */
+static const int MAX_OUTPUT = 2;
+void test_fits_simple_print(char **files, int numFiles) {
+    catstruct **catalogs;
+    catstruct *catalog;
+    tabstruct *table;
+    int i, j;
+    int flag;
+
+    printf("will open %i files\n", numFiles);
+    catalogs = catalog_read_fitscat(files, numFiles);
+
+    for (i=0; i<numFiles; i++) {
+        catalog = catalogs[i];
+        printf("iterate catalog %i %i\n", i, catalog->ntab);
+
+        j = 0;
+        table = catalog->tab;
+        flag = 0;
+        while (j < catalog->ntab) {
+
+            if (!strcmp("LDAC_OBJECTS", table->extname) ||
+                !strcmp("OBJECTS", table->extname))
+            {
+                show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag, 0, SHOW_ASCII);
+            }
+            table = table->nexttab;
+            flag = 0;
+            j++;
+			if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
+                break;
+        }
+
+    }
+    catalog_free(catalogs, numFiles);
+
 }

@@ -12,4 +12,22 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
+typedef struct {
+    unsigned long long id;
+    double ra;      /* right assention degree (x) */
+    double raRad;   /* right assention rad (x) */
+    double dec;     /* declinaison deg   (y) */
+    double decRad;  /* declinaison rad   (y) */
+    double orthoSD; /* ortho standard deviation */
+    double decSD;   /* declinaison standard deviation? */
+    double sd;      /* maximum standard deviation? */
+} Object;
+
+Object object_create(
+        unsigned long long id,
+        double ra,
+        double dec,
+        double orthoSD,
+        double decSD);
+
 #endif /* __OBJECT_H__ */

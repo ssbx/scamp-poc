@@ -13,7 +13,7 @@
 #include <unistd.h>
 #include "logger.h"
 #include "catalog.h"
-#include "test.h"
+#include "crossmatch.h"
 
 typedef enum {
     RUN_TEST,
@@ -33,6 +33,20 @@ typedef struct {
     double distance_max;
     char **inputFiles;
 } OptsInput;
+
+/*
+ * Test ascii cross
+ */
+void test_ascii_simple_cross(char **files, double distance_max) {
+    ObjectList reference, samples;
+    reference = catalog_read_ascii_file(files[0]);
+    samples   = catalog_read_ascii_file(files[1]);
+
+    crossmatch_run(&reference, &samples, distance_max);
+
+    objectlist_free(&reference);
+    objectlist_free(&samples);
+}
 
 /*
  * Our main function
@@ -79,15 +93,13 @@ main(int argc, char** argv) {
 
     if (opts_in.runType ==  RUN_TEST) {
         if (opts_in.fileFormat == FORMAT_ASCII) {
-            test_ascii_simple_cross(opts_in.inputFiles, opts_in.numInputFiles, opts_in.distance_max);
+            test_ascii_simple_cross(opts_in.inputFiles, opts_in.distance_max);
         } else {
             printf("Start fitscat test\n");
             test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
         }
 		return (EXIT_SUCCESS);
     }
-
-    catalog_read_fitscat(opts_in.inputFiles, opts_in.numInputFiles);
 
 	return (EXIT_SUCCESS);
 

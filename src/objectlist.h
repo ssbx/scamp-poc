@@ -9,21 +9,21 @@
  * (at your option) any later version.
  */
 
-#ifndef __DATUMLIST_H__
-#define __DATUMLIST_H__
+#ifndef __OBJECTLIST_H__
+#define __OBJECTLIST_H__
 
-#include "datum.h"
+#include "object.h"
 
 typedef struct {
-    Datum *datums;
+    Object *objects;
     int    size;
     int    max;
-} DatumList;
+} ObjectList;
 
-void datumlist_init(DatumList *l);
-void datumlist_add(DatumList *l, Datum d);
-void datumlist_rem(DatumList *l, int i);
-void datumlist_free(DatumList *l);
-void datumlist_merge(DatumList *l, DatumList *m);
+void objectlist_init(ObjectList *l);
+void objectlist_add(ObjectList *l, Object d);
+void objectlist_rem(ObjectList *l, int i);
+void objectlist_free(ObjectList *l);
+void objectlist_merge(ObjectList *l, ObjectList *m);
 
-#endif /* __DATUMLIST_H__ */
+#endif /* __OBJECTLIST_H__ */

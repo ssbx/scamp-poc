@@ -13,17 +13,25 @@
 #define __CATALOG_H__
 
 #include "fits/fitscat.h"
-#include "datumlist.h"
-#include "datum.h"
+#include "objectlist.h"
+#include "object.h"
 
 typedef struct {
     catstruct *catalog;
     FILE *fd;
 } Catalog;
 
-void catalog_read_asciicat2(char **inputFiles, int numInputFiles);
-catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles);
-void catalog_free(catstruct **cats, int number);
-DatumList catalog_read_ascii_file(char *file);
+void        catalog_read_asciicat2(
+                char **inputFiles, 
+                int    numInputFiles);
+catstruct** catalog_read_fitscat(
+                char **inputFiles, 
+                int    numInputFiles);
+void        catalog_free(catstruct **cats, 
+                         int   number);
+ObjectList  catalog_read_ascii_file(char *file);
 
+void        test_fits_simple_print(
+                char **inputFies, 
+                int numFiles);
 #endif /* __CATALOG_H__ */
