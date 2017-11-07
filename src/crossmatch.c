@@ -13,43 +13,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "crossmatch.h"
-#include "object.h"
-
-/* 
- * Get the distance between two angles. Inputs and output
- * are in radians.
- *
- * See https://fr.wikipedia.org/wiki/Formule_de_haversine 
- * for the algorithm.
- */
-static inline double haversine(double  ra_A, 
-                               double dec_A,
-                               double  ra_B, 
-                               double dec_B) {
-
-    /* Why???
-    double distance;
-    double term;
-
-    term = sqrt(
-        pow(sin( (dec_B - dec_A) * 0.5) , 2) +
-        cos(dec_A) * cos(dec_B) *
-        pow(sin((ra_B - ra_A) * 0.5) , 2)
-    );
-
-    if (term >= 1.0f)
-        distance = M_PI;
-    else
-        distance = 2 * asin(term);
-    return distance;
-    */
-    return (2 * asin(sqrt(
-        pow(sin( (dec_B - dec_A) * 0.5) , 2) +
-        cos(dec_A) * cos(dec_B) *
-        pow(sin((ra_B - ra_A) * 0.5) , 2)
-    )));
-
-}
+#include "objects/object.h"
 
 /*
  * Take two ObjectList and count the number of match
@@ -62,7 +26,6 @@ void crossmatch_run(ObjectList *reference,
     Object splObject;
     distance_max = distance_max * M_PI/180;
     int i, j;
-    double distance;
 
     int count = 0;
     printf("hello radian\n");
@@ -72,13 +35,12 @@ void crossmatch_run(ObjectList *reference,
         for (j=0; j<samples->size; j++) {
             splObject = samples->objects[j];
             
-            distance = haversine(refObject.ra, refObject.dec,
-                                 splObject.ra, splObject.dec);
-
-            if (distance < distance_max)
+            if (object_areClose(refObject, splObject, distance_max))
                 count++;
+
         }
     }
+
     printf("count is %i\n",count);
     return;
 }

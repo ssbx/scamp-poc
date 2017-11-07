@@ -12,12 +12,12 @@
 #ifndef __OBJECT_H__
 #define __OBJECT_H__
 
+#include <stdbool.h>
+
 typedef struct {
     unsigned long long id;
-    double ra;      /* right assention degree (x) */
-    double raRad;   /* right assention rad (x) */
-    double dec;     /* declinaison deg   (y) */
-    double decRad;  /* declinaison rad   (y) */
+    double ra;      /* right assention (rad) (x) */
+    double dec;     /* declinaison     (rad) (y) */
     double orthoSD; /* ortho standard deviation */
     double decSD;   /* declinaison standard deviation? */
     double sd;      /* maximum standard deviation? */
@@ -29,5 +29,10 @@ Object object_create(
         double dec,
         double orthoSD,
         double decSD);
+
+bool object_areClose(
+        Object a, 
+        Object b, 
+        double limit);
 
 #endif /* __OBJECT_H__ */

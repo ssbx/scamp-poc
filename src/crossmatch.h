@@ -11,7 +11,7 @@
 
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
-#include <objectlist.h>
+#include <objects/objectlist.h>
 
 void crossmatch_run(
         ObjectList *reference,

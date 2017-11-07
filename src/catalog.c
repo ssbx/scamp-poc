@@ -13,15 +13,16 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include "object.h"
-#include "objectlist.h"
-#include "logger.h"
+#include "objects/object.h"
+#include "objects/objectlist.h"
+#include "logger/logger.h"
 #include "fits/fitscat.h"
 
 
 /*
  * Read a catalog with a very simple ASCII format.
  * Mainly used for testing.
+ * ObjectList must be freed with catalog_free_objects/1
  */
 ObjectList catalog_read_ascii_file(char *fileName) {
 	FILE *file;
@@ -48,6 +49,7 @@ void catalog_free_objects(ObjectList* d) {
 
 /*
  * Read a catalog of FITS LDAC format.
+ * Must be freed with catalog_free/2.
  */
 static catstruct* read_fitscat_file(char *fileName) {
     catstruct *catalog;
@@ -60,9 +62,9 @@ static catstruct* read_fitscat_file(char *fileName) {
 	return (catalog);
 }
 
-
 /*
- * Read several catalogs (FITS LDAC)
+ * Read several catalogs (FITS LDAC).
+ * Must be freed with cataloc_free/2
  */
 catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
     int i;
@@ -78,6 +80,9 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
 
 }
 
+/*
+ * Free catalogs created with  catalog_read_fitscat
+ */
 void catalog_free(catstruct **catalogs, int number) {
     free_cat(catalogs, number);
     free(catalogs);

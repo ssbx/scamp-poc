@@ -14,15 +14,15 @@
 #include <stdio.h>
 #include <string.h>
 
-static const int OBJECTLIST_SIZE_INIT = 200;
+static const int SIZE_STEP = 1000;
 
 /*
  * Initialize ObjectList structure
  */
 void objectlist_init(ObjectList *l) {
-    l->objects   = malloc(sizeof(Object) * OBJECTLIST_SIZE_INIT);
+    l->objects   = malloc(sizeof(Object) * SIZE_STEP);
     l->size     = 0;
-    l->max      = OBJECTLIST_SIZE_INIT;
+    l->max      = SIZE_STEP;
 }
 
 /*
@@ -37,8 +37,8 @@ void objectlist_free(ObjectList *l) {
  */
 void objectlist_add(ObjectList *l, Object d) {
     if (l->size == l->max) {
-        l->objects    = realloc(l->objects, sizeof(Object) * l->max * 2);
-        l->max      *= 2;
+        l->objects = realloc(l->objects, sizeof(Object) * (l->max + SIZE_STEP));
+        l->max    += SIZE_STEP;
     }
     l->objects[l->size] = d;
     l->size++;
@@ -55,9 +55,9 @@ void objectlist_rem(ObjectList *l, int i) {
     l->size--;
 
 	/* maybe realloc */
-    if (l->size * 2 < l->max) {
-        l->objects   = realloc(l->objects, sizeof(Object) * l->size + OBJECTLIST_SIZE_INIT);
-        l->max      = l->size + OBJECTLIST_SIZE_INIT;
+    if (l->size * 2 < l->max &&  l->max > 2 * SIZE_STEP ) {
+        l->objects   = realloc(l->objects, sizeof(Object) * l->size + SIZE_STEP);
+        l->max      = l->size + SIZE_STEP;
     }
 }
 
@@ -68,8 +68,8 @@ void objectlist_merge(ObjectList *l, ObjectList *m) {
     int newsize;
 
     newsize = l->size + m->size;
-    l->objects = realloc(l->objects, sizeof(Object) * newsize + OBJECTLIST_SIZE_INIT);
-    l->max    = newsize + OBJECTLIST_SIZE_INIT;
+    l->objects = realloc(l->objects, sizeof(Object) * newsize + SIZE_STEP);
+    l->max     = newsize + SIZE_STEP;
 
     memcpy(&l->objects[l->size], m->objects, m->size);
 
