@@ -27,4 +27,9 @@
 /src/scamp2
 /src/.deps/
 /src/fits/.deps/
+/src/.deps/
+/src/objects/.deps/
+/src/objects/.dirstamp
+/src/logger/.deps/
+/src/logger/.dirstamp
 /src/fits/libfits.a
