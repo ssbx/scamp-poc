@@ -1,11 +1,8 @@
-t1: all
-	./src/scamp2 -vvtf ./tests/data/fitscat/*.cat
+tests: all
+	./tests/scamp_test.sh
 
-t2: all
-	./src/scamp2 -vvt -d 3.546 ./tests/data/ascii/data*.txt
-
-test: t1 t2
-run: t2
+run: all
+	./src/scamp2 -vvt -d 181 ./tests/data/ascii/data*.txt
 
 .PHONY: run test
 
