@@ -18,19 +18,19 @@
 typedef struct {
     catstruct *catalog;
     FILE *fd;
-} Catalog;
+} Catalog_T;
 
-void        catalog_read_asciicat2(
+void        Catalog_read_asciicat2(
                 char **inputFiles,
                 int    numInputFiles);
-catstruct** catalog_read_fitscat(
+catstruct** Catalog_read_fitscat(
                 char **inputFiles,
                 int    numInputFiles);
-void        catalog_free(catstruct **cats,
+void        Catalog_free(catstruct **cats,
                          int   number);
-ObjectList  catalog_read_ascii_file(char *file);
+ObjectList_T  Catalog_read_ascii_file(char *file);
 
-void        test_fits_simple_print(
+void        Catalog_test_fits_simple_print(
                 char **inputFies,
                 int numFiles);
 #endif /* __CATALOG_H__ */

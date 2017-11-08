@@ -23,6 +23,11 @@ typedef struct {
     double sd;      /* maximum standard deviation? */
 } Object_T;
 
+
+/*
+ * Create and initialize an Object structure. Inputs are in degree,
+ * and transformed in radians.
+ */
 extern Object_T Object_new(
         unsigned long long id,
         double ra,
@@ -30,6 +35,11 @@ extern Object_T Object_new(
         double orthoSD,
         double decSD);
 
+/*
+ * Determine if the two objects position fit into the "limit" distance.
+ * "factor" should be set to 1.0f by default. Increase and decrease
+ * it to influence the match.
+ */
 extern bool Object_areClose(
         Object_T a,
         Object_T b,

@@ -15,15 +15,17 @@
 #include <stdio.h>
 #include "logger.h"
 
-static LoggerLevel L_LEVEL = LOGGER_NORMAL;
+static LoggerLevel_T L_LEVEL = LOGGER_NORMAL;
 
-void Logger_setLevel(int level) {
+void
+Logger_setLevel(int level) {
     if (level > LOGGER_DEBUG)
         level = LOGGER_DEBUG;
     L_LEVEL = level;
 }
 
-void Logger_log(LoggerLevel level, char *format, ...) {
+void
+Logger_log(LoggerLevel_T level, char *format, ...) {
     va_list args;
 
     if (level <= L_LEVEL) {

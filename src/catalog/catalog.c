@@ -24,9 +24,10 @@
  * Read a catalog with a very simple ASCII format. Mainly used for testing.
  * ObjectList must be freed with catalog_free_objects/1
  */
-ObjectList catalog_read_ascii_file(char *fileName) {
+ObjectList_T
+Catalog_read_ascii_file(char *fileName) {
     FILE *file;
-    ObjectList dlist;
+    ObjectList_T dlist;
     unsigned long long id;
     double ra, orthoSD, dec, decSD;
 
@@ -35,22 +36,24 @@ ObjectList catalog_read_ascii_file(char *fileName) {
         exit(EXIT_FAILURE);
     }
 
-    objectlist_init(&dlist);
+    Objectlist_init(&dlist);
     while (fscanf(file, "%llu %lf %lf %lf %lf\n",
                 &id, &ra, &orthoSD, &dec, &decSD) == 5) {
-        objectlist_add(&dlist, Object_new(id, ra, orthoSD, dec, decSD));
+        Objectlist_add(&dlist, Object_new(id, ra, orthoSD, dec, decSD));
     }
     return (dlist);
 }
 
-void catalog_free_objects(ObjectList* d) {
-    objectlist_free(d);
+void
+Catalog_free_objects(ObjectList_T* d) {
+    Objectlist_free(d);
 }
 
 /*
  * Read a catalog of FITS LDAC format. Must be freed with catalog_free/2.
  */
-static catstruct* read_fitscat_file(char *fileName) {
+static catstruct*
+read_fitscat_file(char *fileName) {
     catstruct *catalog;
 
     if ((catalog = read_cat(fileName)) == NULL) {
@@ -65,7 +68,8 @@ static catstruct* read_fitscat_file(char *fileName) {
  * Read several catalogs (FITS LDAC).
  * Must be freed with cataloc_free/2
  */
-catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
+catstruct**
+Catalog_read_fitscat(char **inputFiles, int numInputFiles) {
     int i;
     catstruct **catalogs;
     catalogs = malloc(sizeof(catstruct*) * numInputFiles);
@@ -82,7 +86,8 @@ catstruct** catalog_read_fitscat(char **inputFiles, int numInputFiles) {
 /*
  * Free catalogs created with  catalog_read_fitscat
  */
-void catalog_free(catstruct **catalogs, int number) {
+void
+Catalog_free(catstruct **catalogs, int number) {
     free_cat(catalogs, number);
     free(catalogs);
 }
@@ -90,13 +95,14 @@ void catalog_free(catstruct **catalogs, int number) {
 /*
  * Read several catalogs (ASCII)
  */
-void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
-    ObjectList dlist;
+void
+Catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
+    ObjectList_T dlist;
     Object_T d;
     int i, j;
 
     for (i=0; i < numInputFiles; i++) {
-        dlist = catalog_read_ascii_file(inputFiles[i]);
+        dlist = Catalog_read_ascii_file(inputFiles[i]);
         for (j=0; j < dlist.size; j++) {
             d = dlist.objects[j];
 
@@ -104,14 +110,15 @@ void catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
                                 (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
         }
     }
-    objectlist_free(&dlist);
+    Objectlist_free(&dlist);
 }
 
 /*
  * Fits table to ASCII
  */
 static const int MAX_OUTPUT = 2;
-void test_fits_simple_print(char **files, int numFiles) {
+void
+Catalog_test_fits_simple_print(char **files, int numFiles) {
     catstruct **catalogs;
     catstruct *catalog;
     tabstruct *table;
@@ -119,7 +126,7 @@ void test_fits_simple_print(char **files, int numFiles) {
     int flag;
 
     printf("will open %i files\n", numFiles);
-    catalogs = catalog_read_fitscat(files, numFiles);
+    catalogs = Catalog_read_fitscat(files, numFiles);
 
     for (i=0; i<numFiles; i++) {
         catalog = catalogs[i];
@@ -144,6 +151,6 @@ void test_fits_simple_print(char **files, int numFiles) {
         }
 
     }
-    catalog_free(catalogs, numFiles);
+    Catalog_free(catalogs, numFiles);
 
 }

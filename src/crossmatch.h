@@ -15,8 +15,8 @@
 #include "catalog/objectlist.h"
 
 void crossmatch_run(
-        ObjectList *reference,
-        ObjectList *samples,
+        ObjectList_T *reference,
+        ObjectList_T *samples,
         double      factor);
 
 #endif /* __CROSSMATCH_H__ */

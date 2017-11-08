@@ -27,17 +27,18 @@ typedef struct {
 } OptsInput;
 
 /*
- * Test ascii cross
+ * Test ASCII cross
  */
-void test_ascii_simple_cross(char **files, double matchFactor) {
-    ObjectList reference, samples;
-    reference = catalog_read_ascii_file(files[0]);
-    samples   = catalog_read_ascii_file(files[1]);
+void
+test_ascii_simple_cross(char **files, double matchFactor) {
+    ObjectList_T reference, samples;
+    reference = Catalog_read_ascii_file(files[0]);
+    samples   = Catalog_read_ascii_file(files[1]);
 
     crossmatch_run(&reference, &samples, matchFactor);
 
-    objectlist_free(&reference);
-    objectlist_free(&samples);
+    Objectlist_free(&reference);
+    Objectlist_free(&samples);
 }
 
 /*
@@ -87,7 +88,7 @@ main(int argc, char** argv) {
             test_ascii_simple_cross(opts_in.inputFiles, opts_in.matchFactor);
         } else {
             printf("Start fitscat test\n");
-            test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
+            Catalog_test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
         }
     }
 

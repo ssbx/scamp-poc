@@ -18,14 +18,40 @@ typedef struct {
     Object_T *objects;
     int      size;
     int      max;
-} ObjectList;
+} ObjectList_T;
 
-void      objectlist_init(ObjectList *l);
-void      objectlist_add(ObjectList *l, Object_T d);
-void      objectlist_rem(ObjectList *l, int i);
-void      objectlist_free(ObjectList *l);
-void      objectlist_merge(ObjectList *l, ObjectList *m);
-int       objectlist_length(ObjectList *l);
-Object_T* objectlist_get(ObjectList *l, int i);
+/*
+ * Initialize ObjectList structure
+ */
+void      Objectlist_init(ObjectList_T *l);
+
+/*
+ * Add a new Object to ObjectList, resize ObjectList if needed
+ */
+void      Objectlist_add(ObjectList_T *l, Object_T d);
+
+/*
+ * Remove a Object from ObjectList, resize ObjectList if appropriate
+ */
+void      Objectlist_rem(ObjectList_T *l, int i);
+
+/*
+ * Free ObjectList structure
+ */
+void      Objectlist_free(ObjectList_T *l);
+
+/*
+ * Merge object Objectlist_T "m" in Objectlist_T "l", freeing "m".
+ */
+void      Objectlist_merge(ObjectList_T *l, ObjectList_T *m);
+/*
+ * Return the number of elements of the list
+ */
+int       Objectlist_length(ObjectList_T *l);
+
+/*
+ * get the nth element of the list
+ */
+Object_T* Objectlist_get(ObjectList_T *l, int i);
 
 #endif /* __OBJECTLIST_H__ */

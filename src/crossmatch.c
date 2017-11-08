@@ -20,8 +20,8 @@
 /*
  * Take two ObjectList and count the number of match between them.
  */
-void crossmatch_run(ObjectList *reference,
-                    ObjectList *samples,
+void crossmatch_run(ObjectList_T *reference,
+                    ObjectList_T *samples,
                     double      factor) {
     Object_T refObject;
     Object_T splObject;

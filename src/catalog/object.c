@@ -15,11 +15,8 @@
 #include "math.h"
 #include "object.h"
 
-/*
- * Create and initialize an Object structure. Inputs are in degree,
- * and transformed in radians.
- */
-Object_T Object_new(
+Object_T
+Object_new(
         unsigned long long id,
         double ra, double orthoSD,
         double dec, double decSD) {
@@ -36,13 +33,8 @@ Object_T Object_new(
 
 }
 
-/*
- * Determine if the two objects position fit into the "limit" distance.
- * "factor" should be set to 1.0f by default. Increase and decrease
- * it to influence the match.
- *
- */
-bool Object_areClose(Object_T a, Object_T b, double factor) {
+bool
+Object_areClose(Object_T a, Object_T b, double factor) {
     double distance, limit;
 
     /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
@@ -79,4 +71,3 @@ bool Object_areClose(Object_T a, Object_T b, double factor) {
         return false;
 
 }
-

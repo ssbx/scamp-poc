@@ -18,26 +18,23 @@
 
 static const int SIZE_STEP = 1000;
 
-/*
- * Initialize ObjectList structure
- */
-void objectlist_init(ObjectList *l) {
+
+void
+Objectlist_init(ObjectList_T *l) {
     l->objects   = malloc(sizeof(Object_T) * SIZE_STEP);
     l->size     = 0;
     l->max      = SIZE_STEP;
 }
 
-/*
- * Free ObjectList structure
- */
-void objectlist_free(ObjectList *l) {
+
+void
+Objectlist_free(ObjectList_T *l) {
     free(l->objects);
 }
 
-/*
- * Add a new Object to ObjectList, resize ObjectList if needed
- */
-void objectlist_add(ObjectList *l, Object_T d) {
+
+void
+Objectlist_add(ObjectList_T *l, Object_T d) {
     if (l->size == l->max) {
         l->objects = realloc(l->objects, sizeof(Object_T) * (l->max + SIZE_STEP));
         l->max    += SIZE_STEP;
@@ -46,10 +43,9 @@ void objectlist_add(ObjectList *l, Object_T d) {
     l->size++;
 }
 
-/*
- * Remove a Object from ObjectList, resize ObjectList if appropriate
- */
-void objectlist_rem(ObjectList *l, int i) {
+
+void
+Objectlist_rem(ObjectList_T *l, int i) {
 	Object_T last;
 
     last = l->objects[l->size - 1];
@@ -63,10 +59,9 @@ void objectlist_rem(ObjectList *l, int i) {
     }
 }
 
-/*
- * Merge object list "m" in objectlist "l", freeing "m".
- */
-void objectlist_merge(ObjectList *l, ObjectList *m) {
+
+void
+Objectlist_merge(ObjectList_T *l, ObjectList_T *m) {
     int newsize;
 
     newsize = l->size + m->size;
@@ -75,20 +70,18 @@ void objectlist_merge(ObjectList *l, ObjectList *m) {
 
     memcpy(&l->objects[l->size], m->objects, m->size);
 
-    objectlist_free(m);
+    Objectlist_free(m);
 }
 
-/*
- * Return the number of elements of the list
- */
-int objectlist_length(ObjectList *l) {
+
+int
+Objectlist_length(ObjectList_T *l) {
     return l->size;
 }
 
-/*
- * get the nth element of the list
- */
-Object_T* objectlist_get(ObjectList *l, int i) {
+
+Object_T*
+Objectlist_get(ObjectList_T *l, int i) {
     if (i < l->size) {
         return &l->objects[i];
     }
