@@ -77,3 +77,20 @@ void objectlist_merge(ObjectList *l, ObjectList *m) {
 
     objectlist_free(m);
 }
+
+/*
+ * Return the number of elements of the list
+ */
+int objectlist_length(ObjectList *l) {
+    return l->size;
+}
+
+/*
+ * get the nth element of the list
+ */
+Object_T* objectlist_get(ObjectList *l, int i) {
+    if (i < l->size) {
+        return &l->objects[i];
+    }
+    return NULL;
+}

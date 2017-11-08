@@ -3,8 +3,10 @@
 
 # Files created by autogen.sh
 /Makefile.in
+/src/Makefile
 /src/Makefile.in
-/src/fits/Makefile.in
+/src/catalog/fits/Makefile.in
+/src/catalog/fits/Makefile
 /aclocal.m4
 /autom4te.cache/
 /config.guess
@@ -21,10 +23,12 @@
 /config.status
 /src/Makefile
 /src/fits/Makefile
+/src/catalog/.dirstamp
 
 # Build objects and targets
 *.o
 /src/scamp2
 /src/.deps/
-/src/fits/.deps/
-/src/fits/libfits.a
+/src/catalog/.deps/
+/src/catalog/fits/.deps/
+/src/catalog/fits/libfits.a

@@ -17,7 +17,6 @@
 #include <string.h>
 #include "object.h"
 #include "objectlist.h"
-#include "logger.h"
 #include "fits/fitscat.h"
 
 

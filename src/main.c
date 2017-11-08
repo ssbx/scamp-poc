@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "logger.h"
-#include "catalog.h"
 #include "crossmatch.h"
+#include "catalog/catalog.h"
 
 typedef enum {RUN_TEST, RUN_PROD}        RunType;
 typedef enum {FORMAT_ASCII, FORMAT_FITS} FileFormat;

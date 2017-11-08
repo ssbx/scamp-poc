@@ -20,10 +20,12 @@ typedef struct {
     int      max;
 } ObjectList;
 
-void objectlist_init(ObjectList *l);
-void objectlist_add(ObjectList *l, Object_T d);
-void objectlist_rem(ObjectList *l, int i);
-void objectlist_free(ObjectList *l);
-void objectlist_merge(ObjectList *l, ObjectList *m);
+void      objectlist_init(ObjectList *l);
+void      objectlist_add(ObjectList *l, Object_T d);
+void      objectlist_rem(ObjectList *l, int i);
+void      objectlist_free(ObjectList *l);
+void      objectlist_merge(ObjectList *l, ObjectList *m);
+int       objectlist_length(ObjectList *l);
+Object_T* objectlist_get(ObjectList *l, int i);
 
 #endif /* __OBJECTLIST_H__ */

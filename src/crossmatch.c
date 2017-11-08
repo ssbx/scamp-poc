@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "crossmatch.h"
-#include "object.h"
+#include "catalog/object.h"
 
 /*
  * Take two ObjectList and count the number of match between them.
@@ -41,7 +41,7 @@ void crossmatch_run(ObjectList *reference,
         }
     }
 
-    printf("count is %i\n",count);
+    printf("Number of matches: %i\n",count);
     return;
 }
 
