@@ -13,10 +13,10 @@
 #define __LOGGER_H__
 
 typedef enum {
-    LOGGER_QUIET   = 0,
-    LOGGER_NORMAL  = 1,
-    LOGGER_VERBOSE = 2,
-    LOGGER_DEBUG   = 3
+	LOGGER_QUIET   = 0,
+	LOGGER_NORMAL  = 1,
+	LOGGER_VERBOSE = 2,
+	LOGGER_DEBUG   = 3
 } LoggerLevel_T;
 
 /*

@@ -18,12 +18,12 @@
 typedef enum {RUN_TEST, RUN_PROD}        RunType;
 typedef enum {FORMAT_ASCII, FORMAT_FITS} FileFormat;
 typedef struct {
-    RunType    runType;
-    FileFormat fileFormat;
-    int        loglevel;
-    int        numInputFiles;
-    double     matchFactor;
-    char     **inputFiles;
+	RunType    runType;
+	FileFormat fileFormat;
+	int        loglevel;
+	int        numInputFiles;
+	double     matchFactor;
+	char     **inputFiles;
 } OptsInput;
 
 /*
@@ -31,14 +31,14 @@ typedef struct {
  */
 void
 test_ascii_simple_cross(char **files, double matchFactor) {
-    ObjectList_T reference, samples;
-    reference = Catalog_read_ascii_file(files[0]);
-    samples   = Catalog_read_ascii_file(files[1]);
+	ObjectList_T reference, samples;
+	reference = Catalog_read_ascii_file(files[0]);
+	samples   = Catalog_read_ascii_file(files[1]);
 
-    crossmatch_run(&reference, &samples, matchFactor);
+	Crossmatch_run(&reference, &samples, matchFactor);
 
-    Objectlist_free(&reference);
-    Objectlist_free(&samples);
+	Objectlist_free(&reference);
+	Objectlist_free(&samples);
 }
 
 /*
@@ -46,16 +46,16 @@ test_ascii_simple_cross(char **files, double matchFactor) {
  */
 int
 main(int argc, char** argv) {
-    int opt;
-    OptsInput opts_in;
+	int opt;
+	OptsInput opts_in;
 
 
-    /* Handle options BEGIN */
-    opts_in.loglevel = 1;
-    opts_in.runType = RUN_PROD;
-    opts_in.fileFormat = FORMAT_ASCII;
-    opts_in.inputFiles = NULL;
-    opts_in.numInputFiles = 0;
+	/* Handle options BEGIN */
+	opts_in.loglevel = 1;
+	opts_in.runType = RUN_PROD;
+	opts_in.fileFormat = FORMAT_ASCII;
+	opts_in.inputFiles = NULL;
+	opts_in.numInputFiles = 0;
 
 	while ((opt = getopt(argc, argv, "vtcf:")) != -1) {
 		switch (opt) {
@@ -77,22 +77,22 @@ main(int argc, char** argv) {
 		}
 	}
 
-    opts_in.inputFiles = argv + optind;
-    opts_in.numInputFiles = argc - optind;
-    /* Handle options END */
+	opts_in.inputFiles = argv + optind;
+	opts_in.numInputFiles = argc - optind;
+	/* Handle options END */
 
-    Logger_setLevel(opts_in.loglevel);
+	Logger_setLevel(opts_in.loglevel);
 
-    if (opts_in.runType ==  RUN_TEST) {
-        if (opts_in.fileFormat == FORMAT_ASCII) {
-            test_ascii_simple_cross(opts_in.inputFiles, opts_in.matchFactor);
-        } else {
-            printf("Start fitscat test\n");
-            Catalog_test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
-        }
-    }
+	if (opts_in.runType ==  RUN_TEST) {
+		if (opts_in.fileFormat == FORMAT_ASCII) {
+			test_ascii_simple_cross(opts_in.inputFiles, opts_in.matchFactor);
+		} else {
+			printf("Start fitscat test\n");
+			Catalog_test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
+		}
+	}
 
-    return (EXIT_SUCCESS);
+	return (EXIT_SUCCESS);
 
 }
 

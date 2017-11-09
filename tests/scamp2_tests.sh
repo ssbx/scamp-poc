@@ -9,9 +9,17 @@ if [ $? -eq 0 ]; then
 else
     echo "...done with ERRORS"
 fi
-#
+
 echo "Crossmatch two FITS LDAC catalogs files..."
 $SRCDIR/../src/scamp2 -vvt -f 1.0 $SRCDIR/data/fitscat/*.cat
+if [ $? -eq 0 ]; then
+    echo "...done"
+else
+    echo "...done with ERRORS"
+fi
+
+echo "Crossmatch and compute astro solution for two ASCII fields..."
+$SRCDIR/../src/scamp2 -vvt -f 1.0 $SRCDIR/data/ascii/field*.txt
 if [ $? -eq 0 ]; then
     echo "...done"
 else

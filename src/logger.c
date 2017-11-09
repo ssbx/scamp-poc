@@ -19,18 +19,18 @@ static LoggerLevel_T L_LEVEL = LOGGER_NORMAL;
 
 void
 Logger_setLevel(int level) {
-    if (level > LOGGER_DEBUG)
-        level = LOGGER_DEBUG;
-    L_LEVEL = level;
+	if (level > LOGGER_DEBUG)
+		level = LOGGER_DEBUG;
+	L_LEVEL = level;
 }
 
 void
 Logger_log(LoggerLevel_T level, char *format, ...) {
-    va_list args;
+	va_list args;
 
-    if (level <= L_LEVEL) {
-        va_start(args, format);
-        vprintf(format, args);
-        va_end(args);
-    }
+	if (level <= L_LEVEL) {
+		va_start(args, format);
+		vprintf(format, args);
+		va_end(args);
+	}
 }

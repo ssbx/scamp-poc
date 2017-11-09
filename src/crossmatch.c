@@ -20,28 +20,27 @@
 /*
  * Take two ObjectList and count the number of match between them.
  */
-void crossmatch_run(ObjectList_T *reference,
-                    ObjectList_T *samples,
-                    double      factor) {
-    Object_T refObject;
-    Object_T splObject;
-    int i, j;
+void Crossmatch_run(ObjectList_T *reference,
+					ObjectList_T *samples,
+					double        factor) {
+	Object_T refObject;
+	Object_T splObject;
+	int i, j;
 
-    int count = 0;
+	int count = 0;
 
-    for (i=0; i<reference->size; i++) {
-        refObject = reference->objects[i];
+	for (i=0; i<reference->size; i++) {
+		refObject = reference->objects[i];
 
-        for (j=0; j<samples->size; j++) {
-            splObject = samples->objects[j];
+		for (j=0; j<samples->size; j++) {
+			splObject = samples->objects[j];
 
-            if (Object_areClose(refObject, splObject, factor))
-                count++;
+			if (Object_areClose(refObject, splObject, factor))
+				count++;
 
-        }
-    }
+		}
+	}
 
-    printf("Number of matches: %i\n",count);
-    return;
+	printf("Number of matches: %i\n",count);
+	return;
 }
-
