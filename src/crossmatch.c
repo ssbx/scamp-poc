@@ -54,7 +54,7 @@ filterObjectsByRa(
 		double ra,
 		double sdMax) {
 
-	/* ObjectList is sorted by ra find the indexes in wich ra fits */
+	/* ObjectList is sorted by ra find the indexes in which ra fits */
 	*indexStart = findPositionGT(ref, ra - sdMax);
 	*indexEnd   = findPositionLT(ref, ra + sdMax);
 
@@ -83,7 +83,7 @@ Crossmatch_run(
 
 	count = matches = 0;
 
-	/* TODO divide in n parts (using sdMax and ) and use threads. Then merge */
+	/* TODO divide in n parts (using sdMax and) and use threads. Then merge */
 
 	for (i=0; i<samples->size; i++) {
 		testObject = samples->objects[i];
@@ -98,6 +98,9 @@ Crossmatch_run(
 
 			/*
 			 * Eliminate obvious non matches on declination.
+			 * TODO use a sorted by declination list and cross match merge
+			 * with ra candidates list (maybe sort by pointers both ra and dec
+			 * in the Objectlist_commit function).
 			 */
 			if (
 					(testObject.dec + sdMax) < refObject.dec ||
