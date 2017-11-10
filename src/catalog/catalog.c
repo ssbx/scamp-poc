@@ -19,34 +19,36 @@
 #include "objectlist.h"
 #include "fits/fitscat.h"
 
+typedef struct {
+	catstruct *catalog;
+	FILE *fd;
+} Catalog_T;
 
-/*
- * Read a catalog with a very simple ASCII format. Mainly used for testing.
- * ObjectList must be freed with catalog_free_objects/1
- */
+
 ObjectList_T
 Catalog_read_ascii_file(char *fileName) {
-    FILE *file;
-    ObjectList_T dlist;
-    unsigned long long id;
-    double ra, orthoSD, dec, decSD;
+	FILE *file;
+	ObjectList_T dlist;
+	unsigned long long id;
+	double ra, orthoSD, dec, decSD;
 
-    if ((file = fopen(fileName, "r")) == NULL) {
-        fprintf(stderr, "%s %s\n", fileName, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
+	if ((file = fopen(fileName, "r")) == NULL) {
+		fprintf(stderr, "%s %s\n", fileName, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
 
-    Objectlist_init(&dlist);
-    while (fscanf(file, "%llu %lf %lf %lf %lf\n",
-                &id, &ra, &orthoSD, &dec, &decSD) == 5) {
-        Objectlist_add(&dlist, Object_new(id, ra, orthoSD, dec, decSD));
-    }
-    return (dlist);
+	Objectlist_init(&dlist);
+	while (fscanf(file, "%llu %lf %lf %lf %lf\n",
+			&id, &ra, &orthoSD, &dec, &decSD) == 5) {
+		Objectlist_add(&dlist, Object_new(id, ra, orthoSD, dec, decSD));
+	}
+	Objectlist_commit(&dlist);
+	return (dlist);
 }
 
 void
 Catalog_free_objects(ObjectList_T* d) {
-    Objectlist_free(d);
+	Objectlist_free(d);
 }
 
 /*
@@ -54,32 +56,32 @@ Catalog_free_objects(ObjectList_T* d) {
  */
 static catstruct*
 read_fitscat_file(char *fileName) {
-    catstruct *catalog;
+	catstruct *catalog;
 
-    if ((catalog = read_cat(fileName)) == NULL) {
-        fprintf(stderr, "%s %s\n", fileName, strerror(errno));
-        exit(EXIT_FAILURE);
-    }
+	if ((catalog = read_cat(fileName)) == NULL) {
+		fprintf(stderr, "%s %s\n", fileName, strerror(errno));
+		exit(EXIT_FAILURE);
+	}
 
-    return (catalog);
+	return (catalog);
 }
 
 /*
  * Read several catalogs (FITS LDAC).
  * Must be freed with cataloc_free/2
  */
-catstruct**
+static catstruct**
 Catalog_read_fitscat(char **inputFiles, int numInputFiles) {
-    int i;
-    catstruct **catalogs;
-    catalogs = malloc(sizeof(catstruct*) * numInputFiles);
+	int i;
+	catstruct **catalogs;
+	catalogs = malloc(sizeof(catstruct*) * numInputFiles);
 
 #pragma omp parallel for
-    for (i=0; i < numInputFiles; i++) {
-        catalogs[i] = read_fitscat_file(inputFiles[i]);
-    }
+	for (i=0; i < numInputFiles; i++) {
+		catalogs[i] = read_fitscat_file(inputFiles[i]);
+	}
 
-    return (catalogs);
+	return (catalogs);
 
 }
 
@@ -88,8 +90,8 @@ Catalog_read_fitscat(char **inputFiles, int numInputFiles) {
  */
 void
 Catalog_free(catstruct **catalogs, int number) {
-    free_cat(catalogs, number);
-    free(catalogs);
+	free_cat(catalogs, number);
+	free(catalogs);
 }
 
 /*
@@ -97,20 +99,20 @@ Catalog_free(catstruct **catalogs, int number) {
  */
 void
 Catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
-    ObjectList_T dlist;
-    Object_T d;
-    int i, j;
+	ObjectList_T dlist;
+	Object_T d;
+	int i, j;
 
-    for (i=0; i < numInputFiles; i++) {
-        dlist = Catalog_read_ascii_file(inputFiles[i]);
-        for (j=0; j < dlist.size; j++) {
-            d = dlist.objects[j];
+	for (i=0; i < numInputFiles; i++) {
+		dlist = Catalog_read_ascii_file(inputFiles[i]);
+		for (j=0; j < dlist.size; j++) {
+			d = dlist.objects[j];
 
-            printf("id: %i %f %f %f %f\n",
-                                (int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
-        }
-    }
-    Objectlist_free(&dlist);
+			printf("id: %i %f %f %f %f\n",
+					(int) d.id, d.ra, d.dec, d.orthoSD, d.decSD);
+		}
+	}
+	Objectlist_free(&dlist);
 }
 
 /*
@@ -119,38 +121,38 @@ Catalog_read_asciicat2(char **inputFiles, int numInputFiles) {
 static const int MAX_OUTPUT = 2;
 void
 Catalog_test_fits_simple_print(char **files, int numFiles) {
-    catstruct **catalogs;
-    catstruct *catalog;
-    tabstruct *table;
-    int i, j;
-    int flag;
+	catstruct **catalogs;
+	catstruct *catalog;
+	tabstruct *table;
+	int i, j;
+	int flag;
 
-    printf("will open %i files\n", numFiles);
-    catalogs = Catalog_read_fitscat(files, numFiles);
+	printf("will open %i files\n", numFiles);
+	catalogs = Catalog_read_fitscat(files, numFiles);
 
-    for (i=0; i<numFiles; i++) {
-        catalog = catalogs[i];
-        printf("Iterate catalog %i %i\n", i, catalog->ntab);
+	for (i=0; i<numFiles; i++) {
+		catalog = catalogs[i];
+		printf("Iterate catalog %i %i\n", i, catalog->ntab);
 
-        j = 0;
-        table = catalog->tab;
-        flag = 0;
-        while (j < catalog->ntab) {
+		j = 0;
+		table = catalog->tab;
+		flag = 0;
+		while (j < catalog->ntab) {
 
-            if (!strcmp("LDAC_OBJECTS", table->extname) ||
-                    !strcmp("OBJECTS", table->extname))
-            {
-                show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag,
-                        0, SHOW_ASCII);
-            }
-            table = table->nexttab;
-            flag = 0;
-            j++;
-            if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
-                break;
-        }
+			if (!strcmp("LDAC_OBJECTS", table->extname) ||
+					!strcmp("OBJECTS", table->extname))
+			{
+				show_keys(table, NULL, NULL, 0, NULL, stdout, 1, flag,
+						0, SHOW_ASCII);
+			}
+			table = table->nexttab;
+			flag = 0;
+			j++;
+			if (j > MAX_OUTPUT) /* limit output to MAX_OUTPUT lines */
+				break;
+		}
 
-    }
-    Catalog_free(catalogs, numFiles);
+	}
+	Catalog_free(catalogs, numFiles);
 
 }

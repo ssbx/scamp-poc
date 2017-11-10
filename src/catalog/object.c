@@ -34,6 +34,16 @@ Object_new(
 }
 
 bool
+Object_canMatchInRa(Object_T a, Object_T b) {
+	return true;
+}
+
+bool
+Object_canMatchInDec(Object_T a, Object_T b) {
+	return true;
+}
+
+bool
 Object_areClose(Object_T a, Object_T b, double factor) {
     double distance, limit;
 

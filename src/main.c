@@ -11,6 +11,8 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <fitsio.h>
 #include "logger.h"
 #include "crossmatch.h"
 #include "catalog/catalog.h"
@@ -48,7 +50,6 @@ int
 main(int argc, char** argv) {
 	int opt;
 	OptsInput opts_in;
-
 
 	/* Handle options BEGIN */
 	opts_in.loglevel = 1;

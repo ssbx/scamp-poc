@@ -1,5 +1,4 @@
 SUBDIRS = catalog/fits
-
 bin_PROGRAMS = scamp2
 scamp2_SOURCES= main.c \
 		logger.h \
@@ -12,4 +11,4 @@ scamp2_SOURCES= main.c \
 		catalog/object.h \
 		catalog/objectlist.c \
 		catalog/objectlist.h
-scamp2_LDADD = $(srcdir)/catalog/fits/libfits.a -lm
+scamp2_LDADD = $(srcdir)/catalog/fits/libfits.a -lm -lcfitsio -lnsl

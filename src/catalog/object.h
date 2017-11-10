@@ -45,4 +45,11 @@ extern bool Object_areClose(
         Object_T b,
         double factor);
 
+/*
+ * Return true if the two objects may
+ */
+extern bool Object_canMatchInRa(Object_T a, Object_T b);
+
+extern bool Object_canMatchInDec(Object_T a, Object_T b);
+
 #endif /* __OBJECT_H__ */

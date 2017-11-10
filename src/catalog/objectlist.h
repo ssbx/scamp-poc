@@ -16,38 +16,50 @@
 
 typedef struct {
     Object_T *objects;
-    int      size;
-    int      max;
+    int      size;		/* current size of the list */
+    int      max;		/* used internally to realloc() */
+    bool	 commited;
 } ObjectList_T;
 
 /*
  * Initialize ObjectList structure
  */
-void      Objectlist_init(ObjectList_T *l);
+void Objectlist_init(ObjectList_T *l);
+
+/*
+ * Finalize ObjectList_T. We must not add new elements after this. Will sort
+ * objects by ra.
+ */
+void Objectlist_commit(ObjectList_T *l);
 
 /*
  * Add a new Object to ObjectList, resize ObjectList if needed
  */
-void      Objectlist_add(ObjectList_T *l, Object_T d);
+void Objectlist_add(ObjectList_T *l, Object_T d);
 
 /*
  * Remove a Object from ObjectList, resize ObjectList if appropriate
  */
-void      Objectlist_rem(ObjectList_T *l, int i);
+void Objectlist_rem(ObjectList_T *l, int i);
 
 /*
  * Free ObjectList structure
  */
-void      Objectlist_free(ObjectList_T *l);
+void Objectlist_free(ObjectList_T *l);
 
 /*
  * Merge object Objectlist_T "m" in Objectlist_T "l", freeing "m".
  */
-void      Objectlist_merge(ObjectList_T *l, ObjectList_T *m);
+void Objectlist_merge(ObjectList_T *l, ObjectList_T *m);
 /*
  * Return the number of elements of the list
  */
-int       Objectlist_length(ObjectList_T *l);
+int Objectlist_length(ObjectList_T *l);
+
+/*
+ * Get the object maximum sd from the list.
+ */
+double Objectlist_getMaxSd(ObjectList_T *l);
 
 /*
  * get the nth element of the list

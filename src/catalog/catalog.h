@@ -12,25 +12,13 @@
 #ifndef __CATALOG_H__
 #define __CATALOG_H__
 
-#include "fits/fitscat.h"
 #include "objectlist.h"
 
-typedef struct {
-    catstruct *catalog;
-    FILE *fd;
-} Catalog_T;
+/**
+ * Read a catalog with a very simple ASCII format. Mainly used for testing.
+ * ObjectList must be freed with catalog_free_objects/1
+ */
+ObjectList_T Catalog_read_ascii_file(char *file);
+void Catalog_test_fits_simple_print(char **inputFies, int numFiles);
 
-void        Catalog_read_asciicat2(
-                char **inputFiles,
-                int    numInputFiles);
-catstruct** Catalog_read_fitscat(
-                char **inputFiles,
-                int    numInputFiles);
-void        Catalog_free(catstruct **cats,
-                         int   number);
-ObjectList_T  Catalog_read_ascii_file(char *file);
-
-void        Catalog_test_fits_simple_print(
-                char **inputFies,
-                int numFiles);
 #endif /* __CATALOG_H__ */

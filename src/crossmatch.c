@@ -14,33 +14,110 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 #include "crossmatch.h"
 #include "catalog/object.h"
+
+typedef struct {
+
+} FilteredObjects;
+
+static unsigned long long
+findPositionLT(ObjectList_T *l, double raMax) {
+	/* TODO optimize with a quick search algorithm */
+	unsigned long long r;
+
+	for (r=l->size - 1; r >= 0; r--) {
+		if (l->objects[r].ra < raMax)
+			break;
+	}
+	return r;
+}
+
+static unsigned long long
+findPositionGT(ObjectList_T *l, double raMin) {
+	/* TODO optimize with a quick search algorithm */
+	unsigned long long r;
+
+	for (r=0; r<l->size; r++) {
+		if (l->objects[r].ra > raMin)
+			break;
+	}
+	return r;
+}
+
+static void
+filterObjectsByRa(
+		unsigned long long *indexStart,
+		unsigned long long *indexEnd,
+		ObjectList_T *ref,
+		double ra,
+		double sdMax) {
+
+	/* ObjectList is sorted by ra find the indexes in wich ra fits */
+	*indexStart = findPositionGT(ref, ra - sdMax);
+	*indexEnd   = findPositionLT(ref, ra + sdMax);
+
+}
 
 /*
  * Take two ObjectList and count the number of match between them.
  */
-void Crossmatch_run(ObjectList_T *reference,
-					ObjectList_T *samples,
-					double        factor) {
+void
+Crossmatch_run(
+		ObjectList_T *reference,
+		ObjectList_T *samples,
+		double        factor) {
+
 	Object_T refObject;
-	Object_T splObject;
-	int i, j;
+	Object_T testObject;
 
-	int count = 0;
+	double sdMaxRef, sdMaxTest, sdMax;
 
-	for (i=0; i<reference->size; i++) {
-		refObject = reference->objects[i];
+	int count, matches;
+	unsigned long long i, j, jStart, jEnd;
 
-		for (j=0; j<samples->size; j++) {
-			splObject = samples->objects[j];
+	sdMaxRef  = Objectlist_getMaxSd(reference);
+	sdMaxTest = Objectlist_getMaxSd(samples);
+	sdMax     = factor * sqrt(sdMaxRef * sdMaxRef + sdMaxTest * sdMaxTest);
 
-			if (Object_areClose(refObject, splObject, factor))
-				count++;
+	count = matches = 0;
+
+	/* TODO divide in n parts (using sdMax and ) and use threads. Then merge */
+
+	for (i=0; i<samples->size; i++) {
+		testObject = samples->objects[i];
+
+		/* Filter obvious non matches on right ascension */
+		filterObjectsByRa(&jStart, &jEnd, reference, testObject.ra, sdMax);
+		if (jEnd > jStart) /* No matching objects */
+			continue;
+
+		for (j = jStart; j <= jEnd; j++) {
+			refObject = reference->objects[j];
+
+			/*
+			 * Eliminate obvious non matches on declination.
+			 */
+			if (
+					(testObject.dec + sdMax) < refObject.dec ||
+					(testObject.dec - sdMax) > refObject.dec
+			) continue;
+
+			/*
+			 * Here, the object is a very good candidate for matching.
+			 */
+			count++;
+			if (Object_areClose(refObject, testObject, factor)) {
+				/* We got a MATCH!!! */
+				matches++;
+			}
 
 		}
 	}
 
-	printf("Number of matches: %i\n",count);
+	printf("Number of matches: %i\n",matches);
+	printf("Number of iterations: %i\n",count);
+
 	return;
 }

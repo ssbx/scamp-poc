@@ -24,6 +24,7 @@ Objectlist_init(ObjectList_T *l) {
     l->objects   = malloc(sizeof(Object_T) * SIZE_STEP);
     l->size     = 0;
     l->max      = SIZE_STEP;
+    l->commited = false;
 }
 
 
@@ -73,12 +74,45 @@ Objectlist_merge(ObjectList_T *l, ObjectList_T *m) {
     Objectlist_free(m);
 }
 
+static int
+filterByRa(const void *va, const void *vb) {
+	Object_T *a, *b;
+
+	a = (Object_T *) va;
+	b = (Object_T *) vb;
+
+	if (a->ra == b->ra)
+		return 0;
+	else if (a->ra > b->ra)
+		return 1;
+	else
+		return -1;
+}
+
+void
+Objectlist_commit(ObjectList_T *l) {
+	if (l->commited == true)
+		return;
+
+	l->commited = true;
+	qsort(l->objects, l->size, sizeof(Object_T), filterByRa);
+}
 
 int
 Objectlist_length(ObjectList_T *l) {
     return l->size;
 }
 
+double
+Objectlist_getMaxSd(ObjectList_T *l) {
+	int i;
+	double maxsd = 0;
+	for (i=0; i<l->size; i++) {
+		if (l->objects[i].sd > maxsd)
+			maxsd = l->objects[i].sd;
+	}
+	return maxsd;
+}
 
 Object_T*
 Objectlist_get(ObjectList_T *l, int i) {

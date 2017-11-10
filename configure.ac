@@ -9,7 +9,7 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AM_PROG_CC_C_O
 AC_OPENMP
 AC_PROG_RANLIB
-AC_SUBST(AM_CFLAGS, "-Wall -Werror $OPENMP_CFLAGS")
+AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
 
 dnl LIBS="-lcfitsio"
 dnl AC_CHECK_HEADERS([fitsio.h, cfitsio/fitsio.h])
