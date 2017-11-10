@@ -26,7 +26,7 @@ typedef struct {
 
 /*
  * Create and initialize an Object structure. Inputs are in degree,
- * and transformed in radians.
+ * and transformed in radiant.
  */
 extern Object_T Object_new(
         unsigned long long id,

@@ -15,12 +15,9 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
+#include <omp.h>
 #include "crossmatch.h"
 #include "catalog/object.h"
-
-typedef struct {
-
-} FilteredObjects;
 
 static unsigned long long
 findPositionLT(ObjectList_T *l, double raMax) {
@@ -79,13 +76,25 @@ Crossmatch_run(
 
 	sdMaxRef  = Objectlist_getMaxSd(reference);
 	sdMaxTest = Objectlist_getMaxSd(samples);
+	/* WARNING what if dec is max or min? */
 	sdMax     = factor * sqrt(sdMaxRef * sdMaxRef + sdMaxTest * sdMaxTest);
 
 	count = matches = 0;
 
-	/* TODO divide in n parts (using sdMax and) and use threads. Then merge */
-
-	for (i=0; i<samples->size; i++) {
+	/* TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+	 * Divide job for threads. Two possibilities:
+	 * - divide in N parts (using sdMax and Healpix) and use threads. Then
+	 * merge the results,
+	 * - directly divide jobs with for and openmp. Reference catalogs should be
+	 * big for this to be viable. Load of filling high number of jobs to
+	 * openmp must be taken in consideration.
+	 */
+#pragma omp parallel for \
+		reduction(+:matches), \
+		reduction(+:count), \
+		shared(samples, reference), \
+		private(i, j, testObject, refObject, jEnd, jStart)
+	for (i=0; i < samples->size; i++) {
 		testObject = samples->objects[i];
 
 		/* Filter obvious non matches on right ascension */
@@ -98,7 +107,7 @@ Crossmatch_run(
 
 			/*
 			 * Eliminate obvious non matches on declination.
-			 * TODO use a sorted by declination list and cross match merge
+			 * TODO Maybe use a sorted by declination list and cross match merge
 			 * with ra candidates list (maybe sort by pointers both ra and dec
 			 * in the Objectlist_commit function).
 			 */
@@ -108,11 +117,17 @@ Crossmatch_run(
 			) continue;
 
 			/*
-			 * Here, the object is a very good candidate for matching.
+			 * Here, refObject is a very good candidate for matching. It is
+			 * contained in a scare of (sdMax*sdMax) size centered on
+			 * testObject.
 			 */
+
+			printf("increase count %i\n", omp_get_thread_num());
 			count++;
 			if (Object_areClose(refObject, testObject, factor)) {
 				/* We got a MATCH!!! */
+
+				printf("increase matches %i\n", omp_get_thread_num());
 				matches++;
 			}
 
