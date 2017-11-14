@@ -19,6 +19,7 @@
 #include "crossmatch.h"
 #include "catalog/object.h"
 
+
 static unsigned long long
 findPositionLT(ObjectList_T *l, double raMax) {
 	/* TODO optimize with a quick search algorithm */
