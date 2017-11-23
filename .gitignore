@@ -27,7 +27,7 @@
 
 # Build objects and targets
 *.o
-/src/scamp2
+/src/scamppoc
 /src/.deps/
 /src/catalog/.deps/
 /src/catalog/fits/.deps/
