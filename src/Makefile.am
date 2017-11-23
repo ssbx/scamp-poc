@@ -1,5 +1,5 @@
-bin_PROGRAMS = scamp2
-scamp2_SOURCES= \
+bin_PROGRAMS = scamppoc
+scamppoc_SOURCES= \
 		main.c \
  		catalog.c \
 		catalog.h \
