@@ -11,21 +11,21 @@
  * (at your option) any later version.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <stdbool.h>
-#include <omp.h>
-#include "crossmatch.h"
-#include "catalog/object.h"
 
+
+#include <math.h>
+#include <omp.h>
+#include <stdio.h>
+
+#include "crossmatch.h"
+#include "object.h"
 
 static unsigned long long
-findPositionLT(ObjectList_T *l, double raMax) {
+findPositionLT(ObjectCat_T *l, double raMax) {
 	/* TODO optimize with a quick search algorithm */
 	unsigned long long r;
 
-	for (r=l->size - 1; r >= 0; r--) {
+	for (r = l->length - 1; r >= 0; r--) {
 		if (l->objects[r].ra < raMax)
 			break;
 	}
@@ -33,11 +33,11 @@ findPositionLT(ObjectList_T *l, double raMax) {
 }
 
 static unsigned long long
-findPositionGT(ObjectList_T *l, double raMin) {
+findPositionGT(ObjectCat_T *l, double raMin) {
 	/* TODO optimize with a quick search algorithm */
 	unsigned long long r;
 
-	for (r=0; r<l->size; r++) {
+	for (r=0; r<l->length; r++) {
 		if (l->objects[r].ra > raMin)
 			break;
 	}
@@ -48,7 +48,7 @@ static void
 filterObjectsByRa(
 		unsigned long long *indexStart,
 		unsigned long long *indexEnd,
-		ObjectList_T *ref,
+		ObjectCat_T *ref,
 		double ra,
 		double sdMax) {
 
@@ -59,47 +59,40 @@ filterObjectsByRa(
 }
 
 /*
- * Take two ObjectList and count the number of match between them.
+ * Take two ObjectCat_T and count the number of match between them.
  */
 void
 Crossmatch_run(
-		ObjectList_T *reference,
-		ObjectList_T *samples,
-		double        factor) {
+        ObjectCat_T *cat_A,
+        ObjectCat_T *cat_B,
+		double     factor) {
 
-	Object_T refObject;
-	Object_T testObject;
+	Object refObject;
+	Object testObject;
 
-	double sdMaxRef, sdMaxTest, sdMax;
+	double sdMaxA, sdMaxB, sdMax;
 
 	int count, matches;
 	unsigned long long i, j, jStart, jEnd;
 
-	sdMaxRef  = Objectlist_getMaxSd(reference);
-	sdMaxTest = Objectlist_getMaxSd(samples);
+	sdMaxA = cat_A->maxSd;
+	sdMaxB = cat_B->maxSd;
 	/* WARNING what if dec is max or min? */
-	sdMax     = factor * sqrt(sdMaxRef * sdMaxRef + sdMaxTest * sdMaxTest);
+	sdMax = factor * sqrt(sdMaxA * sdMaxA + sdMaxB * sdMaxB);
 
 	count = matches = 0;
 
-	/* TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
-	 * Divide job for threads. Two possibilities:
-	 * - divide in N parts (using sdMax and Healpix) and use threads. Then
-	 * merge the results,
-	 * - directly divide jobs with for and openmp. Reference catalogs should be
-	 * big for this to be viable. Load of filling high number of jobs to
-	 * openmp must be taken in consideration.
-	 */
 #pragma omp parallel for \
 		reduction(+:matches), \
 		reduction(+:count), \
 		shared(samples, reference), \
 		private(i, j, testObject, refObject, jEnd, jStart)
-	for (i=0; i < samples->size; i++) {
-		testObject = samples->objects[i];
+	for (i=0; i < cat_B->length; i++) {
+
+		testObject = cat_B->objects[i];
 
 		/* Filter obvious non matches on right ascension */
-		filterObjectsByRa(&jStart, &jEnd, reference, testObject.ra, sdMax);
+		filterObjectsByRa(&jStart, &jEnd, cat_A, testObject.ra, sdMax);
 		if (jEnd > jStart) /* No matching objects */
 			continue;
 
@@ -122,7 +115,6 @@ Crossmatch_run(
 			 * contained in a scare of (sdMax*sdMax) size centered on
 			 * testObject.
 			 */
-
 			printf("increase count %i\n", omp_get_thread_num());
 			count++;
 			if (Object_areClose(refObject, testObject, factor)) {
@@ -131,7 +123,6 @@ Crossmatch_run(
 				printf("increase matches %i\n", omp_get_thread_num());
 				matches++;
 			}
-
 		}
 	}
 
@@ -139,4 +130,25 @@ Crossmatch_run(
 	printf("Number of iterations: %i\n",count);
 
 	return;
+}
+
+
+bool
+Object_areClose(Object_T a, Object_T b, double factor) {
+    double distance, limit;
+
+    /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
+    distance = 2 * asin(sqrt(
+        pow(sin( (b.dec - a.dec) / 2) , 2) +
+        cos(a.dec) * cos(b.dec) *
+        pow(sin((b.ra - a.ra) / 2) , 2)
+    ));
+
+    limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
+
+    if (distance < limit)
+        return true;
+    else
+        return false;
+
 }

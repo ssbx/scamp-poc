@@ -10,88 +10,36 @@
  */
 
 #include <stdlib.h>
-#include <unistd.h>
 #include <stdio.h>
-#include <fitsio.h>
+
 #include "logger.h"
-#include "crossmatch.h"
-#include "catalog/catalog.h"
+#include "catalog.h"
+#include "chealpix.h"
 
-typedef enum {RUN_TEST, RUN_PROD}        RunType;
-typedef enum {FORMAT_ASCII, FORMAT_FITS} FileFormat;
-typedef struct {
-	RunType    runType;
-	FileFormat fileFormat;
-	int        loglevel;
-	int        numInputFiles;
-	double     matchFactor;
-	char     **inputFiles;
-} OptsInput;
-
-/*
- * Test ASCII cross
- */
-void
-test_ascii_simple_cross(char **files, double matchFactor) {
-	ObjectList_T reference, samples;
-	reference = Catalog_read_ascii_file(files[0]);
-	samples   = Catalog_read_ascii_file(files[1]);
-
-	Crossmatch_run(&reference, &samples, matchFactor);
-
-	Objectlist_free(&reference);
-	Objectlist_free(&samples);
-}
-
-/*
- * Our main function
+/**
+ * TODO:
+ * - btree for Object ipring
+ * - btree for Object id (and set? and field?)
+ * - cross match
  */
 int
 main(int argc, char** argv) {
-	int opt;
-	OptsInput opts_in;
 
-	/* Handle options BEGIN */
-	opts_in.loglevel = 1;
-	opts_in.runType = RUN_PROD;
-	opts_in.fileFormat = FORMAT_ASCII;
-	opts_in.inputFiles = NULL;
-	opts_in.numInputFiles = 0;
+    if (argc < 3)
+        Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-	while ((opt = getopt(argc, argv, "vtcf:")) != -1) {
-		switch (opt) {
-		case 'v':
-			opts_in.loglevel += 1;
-			break;
-		case 't':
-			opts_in.runType = RUN_TEST;
-			break;
-		case 'c':
-			opts_in.fileFormat = FORMAT_FITS;
-			break;
-		case 'f':
-			opts_in.matchFactor = atof(optarg);
-			break;
-		default:
-			abort();
+	Logger_setLevel(LOGGER_DEBUG);
 
-		}
-	}
+	Field field1;
+	Field field2;
 
-	opts_in.inputFiles = argv + optind;
-	opts_in.numInputFiles = argc - optind;
-	/* Handle options END */
 
-	Logger_setLevel(opts_in.loglevel);
+	Catalog_open(argv[1], &field1);
+	Catalog_open(argv[2], &field2);
+	// Catalog_dump(&field1);
 
-	if (opts_in.runType ==  RUN_TEST) {
-		if (opts_in.fileFormat == FORMAT_ASCII) {
-			test_ascii_simple_cross(opts_in.inputFiles, opts_in.matchFactor);
-		} else {
-			printf("Start fitscat test\n");
-			Catalog_test_fits_simple_print(opts_in.inputFiles, opts_in.numInputFiles);
-		}
-	}
+	Catalog_free(&field1);
+	Catalog_free(&field2);
 
 	return (EXIT_SUCCESS);
 

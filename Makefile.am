@@ -2,7 +2,7 @@ tests: all
 	./tests/scamp2_tests.sh
 
 run: all
-	./src/scamp2 -vvt -f 1.0 ./tests/data/ascii/data*.txt
+	./src/scamp2 ./tests/data/fitscat/data1.fits.cat ./tests/data/fitscat/data2.fits.cat
 
 .PHONY: run test
 

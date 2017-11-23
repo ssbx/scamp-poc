@@ -12,11 +12,15 @@
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
 
-#include "catalog/objectlist.h"
+#include "objectcat.h"
 
-void Crossmatch_run(
-		ObjectList_T *reference,
-		ObjectList_T *samples,
+typedef struct {
+
+} CrossmatchState_T;
+
+CrossmatchState_T Crossmatch_run(
+		ObjectCat_T *reference,
+		ObjectCat_T *samples,
 		double factor);
 
 

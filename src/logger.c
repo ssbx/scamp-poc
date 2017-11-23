@@ -13,19 +13,19 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+
 #include "logger.h"
 
-static LoggerLevel_T L_LEVEL = LOGGER_NORMAL;
+static LoggerLevel L_LEVEL = LOGGER_NORMAL;
 
 void
 Logger_setLevel(int level) {
-	if (level > LOGGER_DEBUG)
-		level = LOGGER_DEBUG;
 	L_LEVEL = level;
 }
 
 void
-Logger_log(LoggerLevel_T level, char *format, ...) {
+Logger_log(LoggerLevel level, char *format, ...) {
 	va_list args;
 
 	if (level <= L_LEVEL) {
@@ -33,4 +33,8 @@ Logger_log(LoggerLevel_T level, char *format, ...) {
 		vprintf(format, args);
 		va_end(args);
 	}
+
+	if (level == LOGGER_CRITICAL)
+	    abort();
+
 }

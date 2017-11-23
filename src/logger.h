@@ -13,11 +13,13 @@
 #define __LOGGER_H__
 
 typedef enum {
-	LOGGER_QUIET   = 0,
-	LOGGER_NORMAL  = 1,
-	LOGGER_VERBOSE = 2,
-	LOGGER_DEBUG   = 3
-} LoggerLevel_T;
+    LOGGER_CRITICAL = 0,
+    LOGGER_ERROR    = 3,
+	LOGGER_QUIET    = 5,
+	LOGGER_NORMAL   = 10,
+	LOGGER_VERBOSE  = 15,
+	LOGGER_DEBUG    = 20
+} LoggerLevel;
 
 /*
  * Set log level, can be of the enum LoggerLevel.
@@ -27,6 +29,6 @@ extern void Logger_setLevel(int level);
 /*
  * Log a message.
  */
-extern void Logger_log(LoggerLevel_T level, char *format, ...);
+extern void Logger_log(LoggerLevel level, char *format, ...);
 
 #endif /* __LOGGER_H__ */
