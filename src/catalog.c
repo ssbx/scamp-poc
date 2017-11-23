@@ -21,9 +21,7 @@
 #include "mem.h"
 #include "logger.h"
 
-#define EMPTY80 "                                                                               "
-
-long NSIDE = 226;
+long NSIDE = 256;
 
 static char* read_field_card(fitsfile*,int*,char*);
 
@@ -94,7 +92,6 @@ Catalog_open(char *filename, Field *field) {
         fits_movabs_hdu(fptr, i, &hdutype, &status);
         field_card = read_field_card(fptr, &nkeys, charnull);
 
-
         /*
          * create wcsprm with the image FITS header
          */
@@ -105,7 +102,10 @@ Catalog_open(char *filename, Field *field) {
             Logger_log(LOGGER_CRITICAL,
                     "Can not read WCS in sextractor field card\n");
 
-//        printf("Number of WCS coordinate representations found: %i with naxis %i\n", nwcs, wcs[0].naxis);
+
+        Logger_log(LOGGER_DEBUG,
+                "Number of WCS coordinate representations: %i with naxis %i\n",
+                nwcs, wcs[0].naxis);
 
         /*
          * Now we should have required informations in "struct wcsprm *wcs".
@@ -346,8 +346,7 @@ Catalog_dump(Field *field) {
  */
 static char*
 read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
-    int status = 0, anynull = 0, field_card_size, nchars, charpos, i;
-    char empty[] = EMPTY80;
+    int status = 0, anynull = 0, field_card_size, charpos, i;
     char *field_card;
     char *buff;
 
@@ -367,15 +366,14 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
      * single row single element data, but accept to increment the element count.
      */
     charpos = 0;
+    memset(field_card, ' ', field_card_size);
     for (i=0; i<*nkeys; i++) {
         fits_read_col(fptr, TSTRING, 1, 1, 1+i, 1, &charnull,
-                        &buff, &anynull, &status);
+                                &buff, &anynull, &status);
 
-        nchars = strlen(buff);
-        strncpy(&field_card[charpos], buff, nchars);
-        charpos += nchars;
-        strncpy(&field_card[charpos], empty, 80 - nchars);
-        charpos += 80 - nchars;
+
+        strncpy(&field_card[charpos], buff, strlen(buff));
+        charpos += 80;
 
     }
 
