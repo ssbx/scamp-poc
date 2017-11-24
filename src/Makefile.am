@@ -5,6 +5,8 @@ scamppoc_SOURCES= \
 		catalog.h \
 		crossmatch.c \
 		crossmatch.h \
+		chealpix.c \
+		chealpix.h \
 		logger.c \
 		logger.h \
 		mem.c \
