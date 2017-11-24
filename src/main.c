@@ -25,25 +25,26 @@
  */
 int
 main(int argc, char** argv) {
+	int i, j, nfields;
+	long nsides = 2048;
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
 	Logger_setLevel(LOGGER_DEBUG);
 
-	Field field1;
-	Field field2;
+	nfields = 2;
+	Field fields[nfields];
 
-	Catalog_open(argv[1], &field1);
-	Catalog_open(argv[2], &field2);
-	// Catalog_dump(&field1);
+	for (i=0, j=1; i<nfields; i++, j++)
+		Catalog_open(argv[1], &fields[i], nsides);
 
-	Crossmatch_cross(&field1, &field2);
+	ObjectZone *zone = Catalog_initzone(nsides);
+	Catalog_fillzone(fields, nfields, zone, nsides);
+	Crossmatch_cross(fields, nfields, zone);
 
-	sleep(60);
-
-	Catalog_free(&field1);
-	Catalog_free(&field2);
+	for (i=0; i<nfields; i++)
+		Catalog_freefield(&fields[i]);
 
 	return (EXIT_SUCCESS);
 

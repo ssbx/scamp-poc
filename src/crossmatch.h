@@ -14,7 +14,7 @@
 
 #include "catalog.h"
 
-extern void Crossmatch_cross(Field *white, Field *black);
+extern void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones);
 
 
 #endif /* __CROSSMATCH_H__ */

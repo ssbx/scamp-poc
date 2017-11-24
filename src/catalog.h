@@ -17,6 +17,10 @@
 
 #include <wcslib/wcshdr.h>
 
+extern long Catalog_SIDES;
+struct Set;
+struct Field;
+
 /**
  * Object structure represent a set entry. ra and dec are both represented
  * in degree (for wcslib) and radians (for healpix).
@@ -31,6 +35,9 @@ typedef struct Object {
     double decDeg;  /* dec in degree */
 
     long ipring;    /* position on healpix ring */
+
+    struct Set *set;
+
 
 } Object;
 
@@ -49,6 +56,8 @@ typedef struct Set {
     struct wcsprm *wcs;
     int nwcs;
 
+    struct Field *field;
+
 } Set;
 
 /**
@@ -59,7 +68,7 @@ typedef struct ObjectZone {
 
     Object **objects;   /* our pointers */
     int     nobjects;   /* number of pointer */
-    int     size;       /* for realloc if required */
+    int     size;       /* for reallocation if required */
 
 } ObjectZone;
 
@@ -71,28 +80,46 @@ typedef struct Field {
     Set *sets;
     int  nsets;
 
-    /*
-     * No matter the size of zone_hash, they will always be nside2npix(NSIDE)
-     */
-    ObjectZone *ipring_zone;
-
-
 } Field;
 
 /**
  * Open a catalog. Presently only support sextractor catalogs. The Field
  * structure given in input must be freed by the user with Catalog_free().
+ *
+ * Tread safe.
  */
-extern void Catalog_open(char *file, Field *field);
+extern void Catalog_open(char *file, Field *field, long nsides);
 
 /**
  * Print the content of catalogs. Used for debugging purpose.
+ *
+ * Thread safe.
  */
 extern void Catalog_dump(Field *field);
 
 /**
- * Free all memory allocated for this field.
+ * Free all memory allocated for a field.
+ *
+ * Thread safe.
  */
-extern void Catalog_free(Field *field);
+extern void Catalog_freefield(Field *field);
+
+/**
+ * Free all memory allocated for a zone.
+ *
+ * Thread safe.
+// */
+//extern void Catalog_freezone(ObjectZone *zone, nside);
+
+extern ObjectZone *Catalog_initzone(long nsides);
+
+extern void Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides);
+/**
+ * Create a hash like list containing
+ * all available healpix container for the nsides given.
+ *
+ * NOT thread safe.
+ */
+extern ObjectZone* Catalog_freeze(Field *field, int nfields, long nsides);
 
 #endif /* __CATALOG_H__ */
