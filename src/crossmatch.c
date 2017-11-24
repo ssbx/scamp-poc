@@ -23,15 +23,22 @@
 void Crossmatch_cross(Field *black, Field *white) {
 
     int i, j;
-    Object *obj_black;
+
+    /*
+     * We are matching obj_black agains all objects of the same zone
+     * (zone_white) from the field white.
+     */
+    Object      *obj_black;
+    ObjectZone  *zone_white;
 
     for (i=0; i<black->nsets; i++) {
         for (j=0; j<black->sets[i].nobjects; j++) {
             obj_black = &black->sets[i].objects[j];
-//            Logger_log(LOGGER_DEBUG,
-//                    "Wee need to find all objects from white field,"
-//                    "bellonging to obj_black ipring: %li\n",
-//                    obj_black->ipring);
+            zone_white = &white->ipring_zone[obj_black->ipring];
+//            if (zone_white->nobjects != 0)
+//                Logger_log(LOGGER_DEBUG,
+//                        "Black Object %li will try matching %i objects from field white\n",
+//                        obj_black->id, zone_white->nobjects);
 
         }
     }

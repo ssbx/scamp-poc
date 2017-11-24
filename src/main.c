@@ -11,6 +11,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "logger.h"
 #include "catalog.h"
@@ -38,6 +39,8 @@ main(int argc, char** argv) {
 	// Catalog_dump(&field1);
 
 	Crossmatch_cross(&field1, &field2);
+
+	sleep(60);
 
 	Catalog_free(&field1);
 	Catalog_free(&field2);

@@ -74,7 +74,7 @@ typedef struct Field {
     /*
      * No matter the size of zone_hash, they will always be nside2npix(NSIDE)
      */
-    ObjectZone *zone_hash;
+    ObjectZone *ipring_zone;
 
 
 } Field;

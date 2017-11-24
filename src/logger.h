@@ -18,7 +18,8 @@ typedef enum {
 	LOGGER_QUIET    = 5,
 	LOGGER_NORMAL   = 10,
 	LOGGER_VERBOSE  = 15,
-	LOGGER_DEBUG    = 20
+	LOGGER_DEBUG    = 20,
+	LOGGER_TRACE    = 25
 } LoggerLevel;
 
 /*

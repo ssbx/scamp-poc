@@ -21,7 +21,7 @@
 #include "mem.h"
 #include "logger.h"
 
-long NSIDE = 256;
+long NSIDE = 2056;
 
 static char* read_field_card(fitsfile*,int*,char*);
 static void insert_object_in_field_hash(Object*,Field*);
@@ -66,16 +66,17 @@ Catalog_open(char *filename, Field *field) {
 
     npix = nside2npix(NSIDE);
     Logger_log(LOGGER_DEBUG,
-            "Will divide sphere into %li parts for file %s\n",
-            npix, filename);
+            "Will divide sphere into %li parts for file %s"
+            " for a total size of %i MB\n",
+            npix, filename, npix * sizeof(ObjectZone)/1000000);
     /*
      * Create hash table like structure and initialize all ObjectZone
      * to zero.
      */
-    field->zone_hash = (ObjectZone*) CALLOC(sizeof(ObjectZone), npix);
+    field->ipring_zone = (ObjectZone*) CALLOC(sizeof(ObjectZone), npix);
     ObjectZone emptyZone = {NULL, 0, 0};
     for (i=0; i<npix; i++) {
-        field->zone_hash[i] = emptyZone;
+        field->ipring_zone[i] = emptyZone;
     }
 
     /*
@@ -98,7 +99,7 @@ Catalog_open(char *filename, Field *field) {
 
     for (i=2, l=0; i <= nhdus; i+=2, l++) {
 
-        Logger_log(LOGGER_DEBUG, "Reading fits file %s\n", filename);
+        Logger_log(LOGGER_TRACE, "Reading fits file %s\n", filename);
 
         /*
          * even hdu contain original image FITS header
@@ -117,7 +118,7 @@ Catalog_open(char *filename, Field *field) {
                     "Can not read WCS in sextractor field card\n");
 
 
-        Logger_log(LOGGER_DEBUG,
+        Logger_log(LOGGER_TRACE,
                 "Number of WCS coordinate representations: %i with naxis %i\n",
                 nwcs, wcs[0].naxis);
 
@@ -139,7 +140,7 @@ Catalog_open(char *filename, Field *field) {
             Logger_log(LOGGER_CRITICAL, "Error: this HDU is not sextractor table\n");
 
         fits_get_num_rows(fptr, &nrows, &status);
-        Logger_log(LOGGER_DEBUG, "Have %i rows in the table\n", nrows);
+        Logger_log(LOGGER_TRACE, "Have %i rows in the table\n", nrows);
 
 
         /*
@@ -281,7 +282,7 @@ Catalog_open(char *filename, Field *field) {
             }
         }
 
-        Logger_log(LOGGER_DEBUG, "File %s read. Create object set\n", filename);
+        Logger_log(LOGGER_TRACE, "File %s read. Create object set\n", filename);
 
 
         /*
@@ -343,10 +344,10 @@ Catalog_free(Field *field) {
 
     }
     for (i=0; i<nside2npix(NSIDE); i++) {
-        if (field->zone_hash[i].objects != NULL)
-            FREE(field->zone_hash[i].objects);
+        if (field->ipring_zone[i].objects != NULL)
+            FREE(field->ipring_zone[i].objects);
     }
-    FREE(field->zone_hash);
+    FREE(field->ipring_zone);
     FREE(field->sets);
 }
 
@@ -401,7 +402,7 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
 static void
 insert_object_in_field_hash(Object *obj, Field *field) {
     ObjectZone *zone;
-    zone = &field->zone_hash[obj->ipring];
+    zone = &field->ipring_zone[obj->ipring];
 
     /* First allocation */
     if (zone->objects == NULL) {
@@ -430,7 +431,7 @@ save_memory_for_field(Field *field) {
     int i;
     ObjectZone *zone;
     for (i=0; i<nside2npix(NSIDE); i++) {
-        zone = &field->zone_hash[i];
+        zone = &field->ipring_zone[i];
         if (zone->objects != NULL) {
             zone->objects = REALLOC(zone->objects, sizeof(Object*) * zone->nobjects);
         }
