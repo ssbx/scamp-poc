@@ -415,6 +415,15 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides) {
 	}
 }
 
+void
+Catalog_freezone(ObjectZone *zones, long nsides) {
+	int i;
+	for (i=0; i<nside2npix(nsides);i++) {
+		FREE(zones[i].objects);
+	}
+	FREE(zones);
+}
+
 /*
  * Static utilities
  */

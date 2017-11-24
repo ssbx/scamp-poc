@@ -112,14 +112,7 @@ extern void Catalog_freefield(Field *field);
 //extern void Catalog_freezone(ObjectZone *zone, nside);
 
 extern ObjectZone *Catalog_initzone(long nsides);
-
 extern void Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides);
-/**
- * Create a hash like list containing
- * all available healpix container for the nsides given.
- *
- * NOT thread safe.
- */
-extern ObjectZone* Catalog_freeze(Field *field, int nfields, long nsides);
+extern void Catalog_freezone(ObjectZone *zones, long nsides);
 
 #endif /* __CATALOG_H__ */

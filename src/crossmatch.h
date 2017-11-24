@@ -14,6 +14,10 @@
 
 #include "catalog.h"
 
+typedef struct Matches {
+
+} Matches;
+
 extern void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones);
 
 

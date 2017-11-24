@@ -36,15 +36,21 @@ main(int argc, char** argv) {
 	nfields = 2;
 	Field fields[nfields];
 
+	/* load fields */
 	for (i=0, j=1; i<nfields; i++, j++)
 		Catalog_open(argv[1], &fields[i], nsides);
 
+	/* create a kind of zone database ... */
 	ObjectZone *zone = Catalog_initzone(nsides);
 	Catalog_fillzone(fields, nfields, zone, nsides);
+
+	/* ... that will speed up cross matching */
 	Crossmatch_cross(fields, nfields, zone);
 
+	/* cleanup */
 	for (i=0; i<nfields; i++)
 		Catalog_freefield(&fields[i]);
+	Catalog_freezone(zone, nsides);
 
 	return (EXIT_SUCCESS);
 
