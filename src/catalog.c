@@ -24,12 +24,14 @@
 long NSIDE = 256;
 
 static char* read_field_card(fitsfile*,int*,char*);
+static void insert_object_in_field_hash(Object*,Field*);
+static void save_memory_for_field(Field*);
 
 void
 Catalog_open(char *filename, Field *field) {
     fitsfile *fptr;
     int i, j, k, l;
-    int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs;
+    int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs, npix;
     long nrows;
     char *field_card, *charnull;
     struct wcsprm *wcs;
@@ -46,9 +48,7 @@ Catalog_open(char *filename, Field *field) {
     floatnull   = 0.0;
     charnull    = ALLOC(sizeof(char) * 2); strcpy(charnull, " ");
 
-    Logger_log(LOGGER_DEBUG,
-            "Will divide sphere into %li parts for file %s\n",
-            nside2npix(NSIDE), filename);
+
 
     if (fits_open_file(&fptr, filename, READONLY, &status)) {
         if (status) {
@@ -62,6 +62,20 @@ Catalog_open(char *filename, Field *field) {
             Logger_log(LOGGER_CRITICAL,
                     "Read FITS HDUs number failed with status %i\n", status);
         }
+    }
+
+    npix = nside2npix(NSIDE);
+    Logger_log(LOGGER_DEBUG,
+            "Will divide sphere into %li parts for file %s\n",
+            npix, filename);
+    /*
+     * Create hash table like structure and initialize all ObjectZone
+     * to zero.
+     */
+    field->zone_hash = (ObjectZone*) CALLOC(sizeof(ObjectZone), npix);
+    ObjectZone emptyZone = {NULL, 0, 0};
+    for (i=0; i<npix; i++) {
+        field->zone_hash[i] = emptyZone;
     }
 
     /*
@@ -121,9 +135,8 @@ Catalog_open(char *filename, Field *field) {
          * Dump table and apply WCS transformation on objects.
          */
         fits_get_num_cols(fptr, &ncolumns, &status);
-        if (ncolumns != 21) {
-            printf("Error: this HDU is not sextractor table\n");
-        }
+        if (ncolumns != 21)
+            Logger_log(LOGGER_CRITICAL, "Error: this HDU is not sextractor table\n");
 
         fits_get_num_rows(fptr, &nrows, &status);
         Logger_log(LOGGER_DEBUG, "Have %i rows in the table\n", nrows);
@@ -291,6 +304,8 @@ Catalog_open(char *filename, Field *field) {
 
             set.objects[j] = obj;
 
+            insert_object_in_field_hash(&set.objects[j], field);
+
         }
 
 
@@ -314,6 +329,8 @@ Catalog_open(char *filename, Field *field) {
 
     fits_close_file(fptr, &status);
 
+    save_memory_for_field(field);
+
 }
 
 
@@ -325,6 +342,11 @@ Catalog_free(Field *field) {
         wcsvfree(&field->sets[i].nwcs, &field->sets[i].wcs);
 
     }
+    for (i=0; i<nside2npix(NSIDE); i++) {
+        if (field->zone_hash[i].objects != NULL)
+            FREE(field->zone_hash[i].objects);
+    }
+    FREE(field->zone_hash);
     FREE(field->sets);
 }
 
@@ -357,7 +379,6 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     }
 
     field_card = ALLOC(sizeof(char) * field_card_size);
-    buff       = ALLOC(sizeof(char) * 81);
 
     *nkeys = field_card_size / 80;
 
@@ -365,18 +386,54 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
      * XXX this is a hack. Fitsio do not know how to read this single column
      * single row single element data, but accept to increment the element count.
      */
-    charpos = 0;
     memset(field_card, ' ', field_card_size);
-    for (i=0; i<*nkeys; i++) {
-        fits_read_col(fptr, TSTRING, 1, 1, 1+i, 1, &charnull,
-                                &buff, &anynull, &status);
-
-
-        strncpy(&field_card[charpos], buff, strlen(buff));
-        charpos += 80;
+    for (i=0, charpos=0; i<*nkeys; i++,charpos+=80) {
+        buff = &field_card[charpos];
+        fits_read_col(
+              fptr, TSTRING, 1, 1, 1+i, 1, &charnull, &buff, &anynull, &status);
 
     }
 
     return field_card;
 }
 
+#define ZONE_BASE_SIZE 100
+static void
+insert_object_in_field_hash(Object *obj, Field *field) {
+    ObjectZone *zone;
+    zone = &field->zone_hash[obj->ipring];
+
+    /* First allocation */
+    if (zone->objects == NULL) {
+        zone->objects = ALLOC(sizeof(Object*) * ZONE_BASE_SIZE);
+        zone->size = ZONE_BASE_SIZE;
+        zone->nobjects = 0;
+    }
+
+    /* Need reallocation. Double the size */
+    if (zone->size == zone->nobjects) {
+        zone->objects = REALLOC(zone->objects, sizeof(Object*) * zone->size * 2);
+        zone->size *= 2;
+    }
+
+    /* append object */
+    zone->nobjects++;
+    zone->objects[zone->nobjects] = obj;
+
+}
+
+/**
+ * Realloc every ObjectZone.objects may save some space.
+ */
+static void
+save_memory_for_field(Field *field) {
+    int i;
+    ObjectZone *zone;
+    for (i=0; i<nside2npix(NSIDE); i++) {
+        zone = &field->zone_hash[i];
+        if (zone->objects != NULL) {
+            zone->objects = REALLOC(zone->objects, sizeof(Object*) * zone->nobjects);
+        }
+    }
+
+}

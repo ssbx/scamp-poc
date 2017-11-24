@@ -14,13 +14,13 @@
 
 #include "logger.h"
 #include "catalog.h"
-#include "chealpix.h"
+#include "crossmatch.h"
 
 /**
  * TODO:
- * - btree for Object ipring
- * - btree for Object id (and set? and field?)
- * - cross match
+ * - hash of Object ipring (in field)
+ * - array of pointer to objects charing the same ipring
+ * - crossmatch
  */
 int
 main(int argc, char** argv) {
@@ -33,10 +33,11 @@ main(int argc, char** argv) {
 	Field field1;
 	Field field2;
 
-
 	Catalog_open(argv[1], &field1);
 	Catalog_open(argv[2], &field2);
 	// Catalog_dump(&field1);
+
+	Crossmatch_cross(&field1, &field2);
 
 	Catalog_free(&field1);
 	Catalog_free(&field2);

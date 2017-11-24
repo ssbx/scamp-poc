@@ -30,7 +30,7 @@ typedef struct Object {
     double raDeg;   /* ra in degree */
     double decDeg;  /* dec in degree */
 
-    long ipring;   /* position on healpix ring */
+    long ipring;    /* position on healpix ring */
 
 } Object;
 
@@ -52,6 +52,18 @@ typedef struct Set {
 } Set;
 
 /**
+ * ObjectZone store pointers to every objects of a field, belonging to a
+ * common zone.
+ */
+typedef struct ObjectZone {
+
+    Object **objects;   /* our pointers */
+    int     nobjects;   /* number of pointer */
+    int     size;       /* for realloc if required */
+
+} ObjectZone;
+
+/**
  * A field represent a file containing Set(s).
  */
 typedef struct Field {
@@ -59,22 +71,28 @@ typedef struct Field {
     Set *sets;
     int  nsets;
 
+    /*
+     * No matter the size of zone_hash, they will always be nside2npix(NSIDE)
+     */
+    ObjectZone *zone_hash;
+
+
 } Field;
 
 /**
  * Open a catalog. Presently only support sextractor catalogs. The Field
  * structure given in input must be freed by the user with Catalog_free().
  */
-void Catalog_open(char *file, Field *field);
+extern void Catalog_open(char *file, Field *field);
 
 /**
  * Print the content of catalogs. Used for debugging purpose.
  */
-void Catalog_dump(Field *field);
+extern void Catalog_dump(Field *field);
 
 /**
  * Free all memory allocated for this field.
  */
-void Catalog_free(Field *field);
+extern void Catalog_free(Field *field);
 
 #endif /* __CATALOG_H__ */

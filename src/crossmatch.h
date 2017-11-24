@@ -12,16 +12,9 @@
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
 
-#include "objectcat.h"
+#include "catalog.h"
 
-typedef struct {
-
-} CrossmatchState_T;
-
-CrossmatchState_T Crossmatch_run(
-		ObjectCat_T *reference,
-		ObjectCat_T *samples,
-		double factor);
+extern void Crossmatch_cross(Field *white, Field *black);
 
 
 #endif /* __CROSSMATCH_H__ */

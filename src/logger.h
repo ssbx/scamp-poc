@@ -22,12 +22,13 @@ typedef enum {
 } LoggerLevel;
 
 /*
- * Set log level, can be of the enum LoggerLevel.
+ * Set log level.
  */
-extern void Logger_setLevel(int level);
+extern void Logger_setLevel(LoggerLevel level);
 
 /*
  * Log a message.
+ * TODO put this in a macro and print file and line number.
  */
 extern void Logger_log(LoggerLevel level, char *format, ...);
 

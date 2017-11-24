@@ -20,17 +20,23 @@
 static LoggerLevel L_LEVEL = LOGGER_NORMAL;
 
 void
-Logger_setLevel(int level) {
+Logger_setLevel(LoggerLevel level) {
 	L_LEVEL = level;
 }
 
 void
 Logger_log(LoggerLevel level, char *format, ...) {
+    FILE *output;
 	va_list args;
+
+	if (level < LOGGER_QUIET)
+	    output = stderr;
+	else
+	    output = stdout;
 
 	if (level <= L_LEVEL) {
 		va_start(args, format);
-		vprintf(format, args);
+		vfprintf(output, format, args);
 		va_end(args);
 	}
 

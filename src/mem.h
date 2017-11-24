@@ -23,7 +23,7 @@ void* Mem_realloc(void *ptr, long nbytes);
 #define ALLOC(nbytes)  Mem_alloc(nbytes)
 #define CALLOC(count, nbytes) Mem_calloc(count, nbytes)
 #define FREE(ptr) Mem_free(ptr); ptr = 0;
-#define REALLOC(ptr, nbytes) ((ptr) = Mem_realloc(ptr, nbytes))
+#define REALLOC(ptr, nbytes) Mem_realloc(ptr, nbytes)
 #define NEW(element) Mem_alloc(sizeof(element))
 
 #endif /* _MEM_H_ */
