@@ -431,6 +431,10 @@ Catalog_freezone(ObjectZone *zones, long nsides) {
 static void
 insert_object_in_zone(Object *obj, ObjectZone *z) {
 
+	/*
+	 * TODO ObjectZone.objects should be a pointer to an array
+	 * (where index refer to fields) of array of objects.
+	 */
     /* First allocation */
     if (z->objects == NULL) {
 

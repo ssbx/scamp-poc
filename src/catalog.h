@@ -70,6 +70,13 @@ typedef struct ObjectZone {
     int     nobjects;   /* number of pointer */
     int     size;       /* for reallocation if required */
 
+//    TODO pointer to an array indexed by field to arrays
+//    of pointers to Objects
+//    Object ***objects;
+//    int nobjects[];
+//    int size[];
+//    int nfields;
+
 } ObjectZone;
 
 /**
