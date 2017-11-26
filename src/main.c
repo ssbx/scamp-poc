@@ -19,9 +19,11 @@
 
 /**
  * TODO:
- * - hash of Object ipring (in field)
- * - array of pointer to objects charing the same ipring
- * - crossmatch
+ * 1 - array of pointers of pixring (ObjectZone*),
+ * 2 - get neighbours,
+ * 3 - crossmatch (easy),
+ * 4 - crossmatch wile loading file. Tricky but will iterate objects once at
+ * load time.
  */
 int
 main(int argc, char** argv) {
