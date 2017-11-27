@@ -146,6 +146,10 @@ void pix2vec_nest64(int64_t nside, int64_t ipix, double *vec);
 /*! Sets \a vec to the Cartesian vector pointing in the direction of the center
     of pixel \a ipix in RING scheme at resolution \a nside. */
 void pix2vec_ring64(int64_t nside, int64_t ipix, double *vec);
+/*! Return neighbours of pix in NEST scheme. Neighbours must be an array
+    of 8 long minimu. Negative number in neighbours, meeans it is innexistant.
+    There can be 7 to 8 valid neighbours. */
+void neighbours_nest(long nside, long pix, long *neighbours);
 
 /* FITS operations */
 /* --------------- */

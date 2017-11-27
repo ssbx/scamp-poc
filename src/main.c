@@ -17,7 +17,7 @@
 #include "catalog.h"
 #include "crossmatch.h"
 
-#include "chealpix_more.h"
+#include "chealpix.h"
 
 /**
  * TODO:
@@ -42,31 +42,30 @@ main(int argc, char** argv) {
 	nfields = 2;
 	Field fields[nfields];
 
-	/* load fields */
-	for (i=0, j=1; i<nfields; i++, j++)
-		Catalog_open(argv[1], &fields[i], nsides);
-
-
-	/* create a kind of zone database ... */
-	ObjectZone *zone = Catalog_initzone(nsides);
-	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
-
-	/* ... that will speed up cross matching */
-	Crossmatch_crossfields(fields, nfields, zone);
-	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
-
-	/* cleanup */
-	for (i=0; i<nfields; i++)
-		Catalog_freefield(&fields[i]);
-	Catalog_freezone(zone, nsides);
-
+//	/* load fields */
+//	for (i=0, j=1; i<nfields; i++, j++)
+//		Catalog_open(argv[1], &fields[i], nsides);
+//
+//
+//	/* create a kind of zone database ... */
+//	ObjectZone *zone = Catalog_initzone(nsides);
+//	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
+//
+//	/* ... that will speed up cross matching */
+//	Crossmatch_crossfields(fields, nfields, zone);
+//	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
+//
+//	/* cleanup */
+//	for (i=0; i<nfields; i++)
+//		Catalog_freefield(&fields[i]);
+//	Catalog_freezone(zone, nsides);
+//
 
 	long neigh[8];
-	int nneigh = neighbours_nest(nsides, 1, neigh);
+	neighbours_nest(nsides, 1, neigh);
 
-	printf("nneight is %i\n", nneigh);
-	for (i=0; j< nneigh; i++) {
-	    printf("neigh number is %li\n", neigh[i]);
+	for (i=0; i< 8; i++) {
+	    printf("neigh number is %i %li\n", i, neigh[i]);
 	}
 
 
