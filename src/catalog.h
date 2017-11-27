@@ -66,16 +66,9 @@ typedef struct Set {
  */
 typedef struct ObjectZone {
 
-    Object **objects;   /* our pointers */
+    Object  **objects;   /* our pointers */
     int     nobjects;   /* number of pointer */
     int     size;       /* for reallocation if required */
-
-//    TODO pointer to an array indexed by field to arrays
-//    of pointers to Objects
-//    Object ***objects;
-//    int nobjects[];
-//    int size[];
-//    int nfields;
 
 } ObjectZone;
 
@@ -119,7 +112,7 @@ extern void Catalog_freefield(Field *field);
 //extern void Catalog_freezone(ObjectZone *zone, nside);
 
 extern ObjectZone *Catalog_initzone(long nsides);
-extern void Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides);
+extern long Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long *zoneindex);
 extern void Catalog_freezone(ObjectZone *zones, long nsides);
 
 #endif /* __CATALOG_H__ */

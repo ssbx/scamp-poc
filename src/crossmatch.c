@@ -20,11 +20,27 @@
 #include "crossmatch.h"
 #include "logger.h"
 
+void
+Crossmatch_crosszone(ObjectZone *zones, long *zoneindex, long nzoneindex) {
+
+    long i, j, k;
+    ObjectZone *zone;
+
+    for (i=0; i<nzoneindex; i++) {
+        zone = &zones[i];
+        Logger_log(LOGGER_DEBUG, "Got %li objects here\n", zone->nobjects);
+    }
+
+}
+
 void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones) {
 
     int i, j, k;
     Object obj;
     ObjectZone objzone;
+
+    /* TODO TODO TODO TODO
+     * Iterate over healpix zones, better than objects */
 
     /*
      * We are matching all objects from any fields including the
@@ -32,6 +48,7 @@ void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones) {
      * TODO filter matches to remove matches from the original
      * field, and matches coming from the same field for an object
      * (keep the best).
+     * TODO we could match healpix rings instead.
      */
     for (i=0; i<nfields; i++) {
     	for (j=0; j<fields[i].nsets; j++) {
@@ -45,8 +62,6 @@ void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones) {
 
     			Logger_log(LOGGER_TRACE,
     					"Have found %i matches for %i\n",objzone.nobjects,obj.id);
-    			Logger_log(LOGGER_TRACE,
-    					"Object 1 id is %li\n", objzone.objects[0]->id);
     		}
     	}
     }
@@ -114,11 +129,6 @@ void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones) {
 //
 //	count = matches = 0;
 //
-// pragma omp parallel for \
-//		reduction(+:matches), \
-//		reduction(+:count), \
-//		shared(samples, reference), \
-//		private(i, j, testObject, refObject, jEnd, jStart)
 //	for (i=0; i < cat_B->length; i++) {
 //
 //		testObject = cat_B->objects[i];

@@ -351,7 +351,7 @@ Catalog_initzone(long nsides) {
 
 	Logger_log(LOGGER_DEBUG,
 			"Will allocate room for zones. It will take %i MB\n",
-			sizeof(ObjectZone) * npix / 1000000);
+			sizeof(ObjectZone*) * npix / 1000000);
 
 	zones = (ObjectZone*) ALLOC(sizeof(ObjectZone) * npix);
 
@@ -372,13 +372,16 @@ static int cmp_objects_on_ra(const void *a, const void *b) {
 	return (*aa)->ra == (*bb)->ra ? 0 : ((*aa)->ra < (*bb)->ra ? -1 : 1);
 }
 
-void
-Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides) {
-	int i, j, k;
+long
+Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long *zoneindex) {
+	long i;
+	int j, k;
 	Field *field;
 	Set *set;
 	Object *obj;
 	ObjectZone *z;
+	long nzone, nzone_size;
+
 	long total_nobjects;
 	total_nobjects = 0;
 	for (i=0; i<nfields; i++) {
@@ -397,22 +400,53 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides) {
 
 	Logger_log(LOGGER_DEBUG,
 			"Total size for zones is %li MB\n",
-			(nside2npix(nsides) * sizeof(ObjectZone) +
-					total_nobjects * sizeof(Object*)) / 1000000);
+			(nside2npix(nsides) * sizeof(ObjectZone*) +
+					total_nobjects * sizeof(Object)) / 1000000);
 	/*
-	 * Reallocate to save some room,
+	 * Reallocate to save some room, store available zones in zoneindex.
 	 * And sort by right ascension.
 	 */
+	nzone = 0;
+	zoneindex = (long*) ALLOC(sizeof(long) * 1000);
+	nzone_size = 1000;
+
 	for (i=0; i<nside2npix(nsides);i++) {
 		z = &zones[i];
 		if (z->objects == NULL)
 			continue;
+
+		/*
+		 * Fill zone index
+		 */
+		if (nzone == nzone_size) {
+		    REALLOC(zoneindex, sizeof(long) * nzone_size * 2);
+		    nzone_size = 2 * nzone_size;
+		}
+
+		zoneindex[nzone] = i;
+		nzone++;
+
+		/*
+		 * Realloc z
+		 */
 		z->objects = REALLOC(z->objects, sizeof(ObjectZone*) * z->nobjects);
 		Logger_log(LOGGER_TRACE,
 				"Have %i matches for zone %i\n",
 				z->nobjects, i);
+
+		/*
+		 * Sort
+		 */
 		qsort(z->objects, z->nobjects, sizeof(Object*), cmp_objects_on_ra);
 	}
+
+	/*
+	 * Realloc zoneindex
+	 */
+	//REALLOC(zoneindex, sizeof(long) * nzone);
+
+	return nzone;
+
 }
 
 void

@@ -26,7 +26,9 @@
 int
 main(int argc, char** argv) {
 	int i, j, nfields;
-	long nsides = 2048;
+	long nsides = 8192;
+	long nzoneindex;
+	long *zoneindex = NULL;
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
@@ -40,12 +42,16 @@ main(int argc, char** argv) {
 	for (i=0, j=1; i<nfields; i++, j++)
 		Catalog_open(argv[1], &fields[i], nsides);
 
+
 	/* create a kind of zone database ... */
 	ObjectZone *zone = Catalog_initzone(nsides);
-	Catalog_fillzone(fields, nfields, zone, nsides);
+	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, zoneindex);
+
+	Logger_log(LOGGER_DEBUG, "Got %li zones for all fields\n", nzoneindex);
 
 	/* ... that will speed up cross matching */
-	Crossmatch_cross(fields, nfields, zone);
+	//Crossmatch_cross(fields, nfields, zone);
+	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
 
 	/* cleanup */
 	for (i=0; i<nfields; i++)
