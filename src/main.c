@@ -17,6 +17,8 @@
 #include "catalog.h"
 #include "crossmatch.h"
 
+#include "chealpix_more.h"
+
 /**
  * TODO:
  * - hash of Object ipring (in field)
@@ -47,17 +49,24 @@ main(int argc, char** argv) {
 	ObjectZone *zone = Catalog_initzone(nsides);
 	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
 
-	Logger_log(LOGGER_DEBUG, "Got %li zones for all fields\n", nzoneindex);
-    Logger_log(LOGGER_DEBUG, "ttttttttttttttttttt %p\n", zoneindex);
-
 	/* ... that will speed up cross matching */
-	//Crossmatch_cross(fields, nfields, zone);
+	Crossmatch_crossfields(fields, nfields, zone);
 	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
 
 	/* cleanup */
 	for (i=0; i<nfields; i++)
 		Catalog_freefield(&fields[i]);
 	Catalog_freezone(zone, nsides);
+
+
+	long neigh[8];
+	int nneigh = neighbours_nest(nsides, 1, neigh);
+
+	printf("nneight is %i\n", nneigh);
+	for (i=0; j< nneigh; i++) {
+	    printf("neigh number is %li\n", neigh[i]);
+	}
+
 
 	return (EXIT_SUCCESS);
 

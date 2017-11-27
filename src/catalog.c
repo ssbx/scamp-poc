@@ -289,7 +289,7 @@ Catalog_open(char *filename, Field *field, long nsides) {
             obj.ra      = world[k]   * M_PI/180;
             obj.dec     = world[k+1] * M_PI/180;
 
-            ang2pix_ring(nsides, obj.dec, obj.ra, &obj.ipring);
+            ang2pix_nest(nsides, obj.dec, obj.ra, &obj.ipring);
 
             set.objects[j] = obj;
             obj.set = &field->sets[l];
