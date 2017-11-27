@@ -885,42 +885,60 @@ void ring2nest64(int64_t nside, int64_t ipring, int64_t *ipnest) {
     ring2xyf64(nside, ipring, &ix, &iy, &face_num);
     *ipnest = xyf2nest64(nside, ix, iy, face_num);
 }
-
 static void swap_int(int *a, int *b) {int c = *a; *a = *b; *b = c;}
 void neighbours_nest(long nside, long pix, long *neighbours) {
-    int i, ix, iy, face_num;
+    int i, x, y, nbnum, ix, iy, face_num;
     long nsm1;
     nest2xyf(nside, pix, &ix, &iy, &face_num);
     nsm1 = nside -1;
 
+    printf("%i %i %i\n", ix, iy, face_num);
+    for (i=0; i<8; i++) {
+        neighbours[i] = 0;
+    }
+
     if ((ix>0) && (ix<nsm1) && (iy>0) && (iy<nsm1)) {
+        printf("hello not implemented\n");
         // TODO what spread_bits does
     } else {
         for (i=0; i<8; i++) {
             printf("hello set %i\n", i);
 
-            int x = ix + nb_xoffset[i];
-            int y = iy + nb_yoffset[i];
-            int nbnum = 4;
+            x = ix + nb_xoffset[i];
+            y = iy + nb_yoffset[i];
+            nbnum = 4;
+
             if (x<0) {
+                printf("path a\n");
                 x += nside;
                 nbnum -= 1;
             } else if (x >= nside) {
+                printf("path b\n");
                 x -= nside;
                 nbnum -= 3;
             } else if (y >= nside) {
+                printf("path c\n");
                 y -= nside;
                 nbnum += 3;
             }
             int f = nb_facearray[nbnum][face_num];
             if (f >= 0) {
                 int bits = nb_swaparray[nbnum][face_num>>2];
-                if (bits & 1)
+                printf("path g %i\n", face_num);
+                printf("path g %i\n", face_num>>2);
+                if (bits & 1) {
+                    printf("path d\n");
                     x = nside - x - 1;
-                if (bits & 2)
+                }
+                if (bits & 2) {
+                    printf("path e\n");
                     y = nside - y - 1;
-                if (bits & 4)
+                }
+                if (bits & 4) {
+                    printf("path f\n");
                     swap_int(&x, &y);
+                }
+
                 neighbours[i] = xyf2nest(nside, x,y,f);
             } else {
                 neighbours[i] = -1;
