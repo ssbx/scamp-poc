@@ -45,9 +45,10 @@ main(int argc, char** argv) {
 
 	/* create a kind of zone database ... */
 	ObjectZone *zone = Catalog_initzone(nsides);
-	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, zoneindex);
+	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
 
 	Logger_log(LOGGER_DEBUG, "Got %li zones for all fields\n", nzoneindex);
+    Logger_log(LOGGER_DEBUG, "ttttttttttttttttttt %p\n", zoneindex);
 
 	/* ... that will speed up cross matching */
 	//Crossmatch_cross(fields, nfields, zone);

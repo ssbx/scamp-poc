@@ -373,7 +373,7 @@ static int cmp_objects_on_ra(const void *a, const void *b) {
 }
 
 long
-Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long *zoneindex) {
+Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long **zoneindex) {
 	long i;
 	int j, k;
 	Field *field;
@@ -407,7 +407,7 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, lon
 	 * And sort by right ascension.
 	 */
 	nzone = 0;
-	zoneindex = (long*) ALLOC(sizeof(long) * 1000);
+	*zoneindex = (long*) ALLOC(sizeof(long) * 1000);
 	nzone_size = 1000;
 
 	for (i=0; i<nside2npix(nsides);i++) {
@@ -415,24 +415,26 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, lon
 		if (z->objects == NULL)
 			continue;
 
-		/*
-		 * Fill zone index
-		 */
-		if (nzone == nzone_size) {
-		    REALLOC(zoneindex, sizeof(long) * nzone_size * 2);
-		    nzone_size = 2 * nzone_size;
-		}
-
-		zoneindex[nzone] = i;
-		nzone++;
 
 		/*
 		 * Realloc z
 		 */
 		z->objects = REALLOC(z->objects, sizeof(ObjectZone*) * z->nobjects);
-		Logger_log(LOGGER_TRACE,
-				"Have %i matches for zone %i\n",
+		Logger_log(LOGGER_DEBUG,
+				"Have %i matches for zone %li\n",
 				z->nobjects, i);
+
+        /*
+         * Fill zone index
+         */
+        if (nzone == nzone_size) {
+            REALLOC(*zoneindex, sizeof(long) * nzone_size * 2);
+            nzone_size = 2 * nzone_size;
+        }
+
+        Logger_log(LOGGER_DEBUG, "store %li to zoneindex\n", i);
+        (*zoneindex)[nzone] = i;
+        nzone++;
 
 		/*
 		 * Sort
@@ -443,7 +445,7 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, lon
 	/*
 	 * Realloc zoneindex
 	 */
-	//REALLOC(zoneindex, sizeof(long) * nzone);
+	//REALLOC(*zoneindex, sizeof(long) * nzone);
 
 	return nzone;
 

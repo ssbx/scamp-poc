@@ -23,17 +23,20 @@
 void
 Crossmatch_crosszone(ObjectZone *zones, long *zoneindex, long nzoneindex) {
 
-    long i, j, k;
+    long i;
+    long index;
     ObjectZone *zone;
 
-    for (i=0; i<nzoneindex; i++) {
-        zone = &zones[i];
+    Logger_log(LOGGER_DEBUG, "What the fuck\n");
+    for (i=0; i < nzoneindex; i++) {
+        index = zoneindex[i];
+        zone = &zones[index];
         Logger_log(LOGGER_DEBUG, "Got %li objects here\n", zone->nobjects);
     }
 
 }
 
-void Crossmatch_cross(Field *fields, int nfields, ObjectZone *zones) {
+void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone *zones) {
 
     int i, j, k;
     Object obj;
