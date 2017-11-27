@@ -17,6 +17,8 @@
 #include "catalog.h"
 #include "crossmatch.h"
 
+#include "chealpix_more.h"
+
 /**
  * TODO:
  * 1 - array of pointers of pixring (ObjectZone*),
@@ -27,25 +29,46 @@
  */
 int
 main(int argc, char** argv) {
+	int i, j, nfields;
+	long nsides = 8192;
+	long nzoneindex;
+	long *zoneindex = NULL;
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
 	Logger_setLevel(LOGGER_DEBUG);
 
-	Field field1;
-	Field field2;
+	nfields = 2;
+	Field fields[nfields];
 
-	Catalog_open(argv[1], &field1);
-	Catalog_open(argv[2], &field2);
-	// Catalog_dump(&field1);
+	/* load fields */
+	for (i=0, j=1; i<nfields; i++, j++)
+		Catalog_open(argv[1], &fields[i], nsides);
 
-	Crossmatch_cross(&field1, &field2);
 
-	sleep(60);
+	/* create a kind of zone database ... */
+	ObjectZone *zone = Catalog_initzone(nsides);
+	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
 
-	Catalog_free(&field1);
-	Catalog_free(&field2);
+	/* ... that will speed up cross matching */
+	Crossmatch_crossfields(fields, nfields, zone);
+	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
+
+	/* cleanup */
+	for (i=0; i<nfields; i++)
+		Catalog_freefield(&fields[i]);
+	Catalog_freezone(zone, nsides);
+
+
+	long neigh[8];
+	int nneigh = neighbours_nest(nsides, 1, neigh);
+
+	printf("nneight is %i\n", nneigh);
+	for (i=0; j< nneigh; i++) {
+	    printf("neigh number is %li\n", neigh[i]);
+	}
+
 
 	return (EXIT_SUCCESS);
 

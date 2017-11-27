@@ -9,17 +9,11 @@
  * (at your option) any later version.
  */
 
-#ifndef __CROSSMATCH_H__
-#define __CROSSMATCH_H__
+#ifndef __CHEALPIXMORE_H__
+#define __CHEALPIXMORE_H__
 
-#include "catalog.h"
+int neighbours_nest(long ipix, long nsides, long *neighbours) {
+	return 0;
+}
 
-typedef struct Matches {
-
-} Matches;
-
-extern void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone *zones);
-extern void Crossmatch_crosszone(ObjectZone *zones, long *zoneindex, long nzoneindex);
-
-
-#endif /* __CROSSMATCH_H__ */
+#endif /* __CHEALPIXMORE_H__ */

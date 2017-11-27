@@ -21,14 +21,11 @@
 #include "mem.h"
 #include "logger.h"
 
-long NSIDE = 2056;
-
 static char* read_field_card(fitsfile*,int*,char*);
-static void insert_object_in_field_hash(Object*,Field*);
-static void save_memory_for_field(Field*);
+static void insert_object_in_zone(Object*, ObjectZone*);
 
 void
-Catalog_open(char *filename, Field *field) {
+Catalog_open(char *filename, Field *field, long nsides) {
     fitsfile *fptr;
     int i, j, k, l;
     int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs, npix;
@@ -64,20 +61,10 @@ Catalog_open(char *filename, Field *field) {
         }
     }
 
-    npix = nside2npix(NSIDE);
+    npix = nside2npix(nsides);
     Logger_log(LOGGER_DEBUG,
-            "Will divide sphere into %li parts for file %s"
-            " for a total size of %i MB\n",
-            npix, filename, npix * sizeof(ObjectZone)/1000000);
-    /*
-     * Create hash table like structure and initialize all ObjectZone
-     * to zero.
-     */
-    field->ipring_zone = (ObjectZone*) CALLOC(sizeof(ObjectZone), npix);
-    ObjectZone emptyZone = {NULL, 0, 0};
-    for (i=0; i<npix; i++) {
-        field->ipring_zone[i] = emptyZone;
-    }
+            "Will divide sphere into %li parts for file %s\n",
+            npix, filename);
 
     /*
      * We are ignoring the first "standard" HDU
@@ -292,6 +279,7 @@ Catalog_open(char *filename, Field *field) {
         set.nobjects = nrows;
         set.wcs = wcs;
         set.nwcs = nwcs;
+        set.field = field;
         Object obj;
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
@@ -301,11 +289,10 @@ Catalog_open(char *filename, Field *field) {
             obj.ra      = world[k]   * M_PI/180;
             obj.dec     = world[k+1] * M_PI/180;
 
-            ang2pix_ring(NSIDE, obj.dec, obj.ra, &obj.ipring);
+            ang2pix_nest(nsides, obj.dec, obj.ra, &obj.ipring);
 
             set.objects[j] = obj;
-
-            insert_object_in_field_hash(&set.objects[j], field);
+            obj.set = &field->sets[l];
 
         }
 
@@ -330,24 +317,16 @@ Catalog_open(char *filename, Field *field) {
 
     fits_close_file(fptr, &status);
 
-    save_memory_for_field(field);
-
 }
 
 
 void
-Catalog_free(Field *field) {
+Catalog_freefield(Field *field) {
     int i;
     for (i=0; i<field->nsets; i++) {
         FREE(field->sets[i].objects);
         wcsvfree(&field->sets[i].nwcs, &field->sets[i].wcs);
-
     }
-    for (i=0; i<nside2npix(NSIDE); i++) {
-        if (field->ipring_zone[i].objects != NULL)
-            FREE(field->ipring_zone[i].objects);
-    }
-    FREE(field->ipring_zone);
     FREE(field->sets);
 }
 
@@ -364,9 +343,154 @@ Catalog_dump(Field *field) {
     }
 }
 
+ObjectZone *
+Catalog_initzone(long nsides) {
+	ObjectZone *zones, zone;
+	long npix, i;
+	npix = nside2npix(nsides);
+
+	Logger_log(LOGGER_DEBUG,
+			"Will allocate room for zones. It will take %i MB\n",
+			sizeof(ObjectZone*) * npix / 1000000);
+
+	zones = (ObjectZone*) ALLOC(sizeof(ObjectZone) * npix);
+
+	/* XXX omp parallel */
+	zone.objects = NULL;
+	zone.nobjects = 0;
+	zone.size = 0;
+	for (i=0; i<npix; i++) {
+		zones[i] = zone;
+	}
+	return zones;
+}
+
+static int cmp_objects_on_ra(const void *a, const void *b) {
+	Object **aa, **bb;
+	aa = (Object**) a;
+	bb = (Object**) b;
+	return (*aa)->ra == (*bb)->ra ? 0 : ((*aa)->ra < (*bb)->ra ? -1 : 1);
+}
+
+long
+Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long **zoneindex) {
+	long i;
+	int j, k;
+	Field *field;
+	Set *set;
+	Object *obj;
+	ObjectZone *z;
+	long nzone, nzone_size;
+
+	long total_nobjects;
+	total_nobjects = 0;
+	for (i=0; i<nfields; i++) {
+		field = &fields[i];
+		for (j=0; j<field->nsets; j++) {
+			set = &field->sets[j];
+			total_nobjects += set->nobjects;
+			for (k=0; k<set->nobjects; k++) {
+
+				obj  = &set->objects[k];
+				insert_object_in_zone(obj, &zones[obj->ipring]);
+
+			}
+		}
+	}
+
+	Logger_log(LOGGER_DEBUG,
+			"Total size for zones is %li MB\n",
+			(nside2npix(nsides) * sizeof(ObjectZone*) +
+					total_nobjects * sizeof(Object)) / 1000000);
+	/*
+	 * Reallocate to save some room, store available zones in zoneindex.
+	 * And sort by right ascension.
+	 */
+	nzone = 0;
+	*zoneindex = (long*) ALLOC(sizeof(long) * 1000);
+	nzone_size = 1000;
+
+	for (i=0; i<nside2npix(nsides);i++) {
+		z = &zones[i];
+		if (z->objects == NULL)
+			continue;
+
+
+		/*
+		 * Realloc z
+		 */
+		z->objects = REALLOC(z->objects, sizeof(ObjectZone*) * z->nobjects);
+		Logger_log(LOGGER_DEBUG,
+				"Have %i matches for zone %li\n",
+				z->nobjects, i);
+
+        /*
+         * Fill zone index
+         */
+        if (nzone == nzone_size) {
+            REALLOC(*zoneindex, sizeof(long) * nzone_size * 2);
+            nzone_size = 2 * nzone_size;
+        }
+
+        Logger_log(LOGGER_DEBUG, "store %li to zoneindex\n", i);
+        (*zoneindex)[nzone] = i;
+        nzone++;
+
+		/*
+		 * Sort
+		 */
+		qsort(z->objects, z->nobjects, sizeof(Object*), cmp_objects_on_ra);
+	}
+
+	/*
+	 * Realloc zoneindex
+	 */
+	//REALLOC(*zoneindex, sizeof(long) * nzone);
+
+	return nzone;
+
+}
+
+void
+Catalog_freezone(ObjectZone *zones, long nsides) {
+	int i;
+	for (i=0; i<nside2npix(nsides);i++) {
+		FREE(zones[i].objects);
+	}
+	FREE(zones);
+}
+
 /*
  * Static utilities
  */
+#define ZONE_BASE_SIZE 100
+static void
+insert_object_in_zone(Object *obj, ObjectZone *z) {
+
+	/*
+	 * TODO ObjectZone.objects should be a pointer to an array
+	 * (where index refer to fields) of array of objects.
+	 */
+    /* First allocation */
+    if (z->objects == NULL) {
+
+        z->objects = ALLOC(sizeof(Object*) * ZONE_BASE_SIZE);
+        z->size = ZONE_BASE_SIZE;
+        z->nobjects = 0;
+
+    } else if (z->size == z->nobjects) { /* need realloc */
+
+        z->objects = REALLOC(z->objects, sizeof(Object*) * z->size * 2);
+        z->size *= 2;
+
+    }
+
+    /* append object */
+    z->objects[z->nobjects] = obj;
+    z->nobjects++;
+
+}
+
 static char*
 read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     int status = 0, anynull = 0, field_card_size, charpos, i;
@@ -396,45 +520,4 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     }
 
     return field_card;
-}
-
-#define ZONE_BASE_SIZE 100
-static void
-insert_object_in_field_hash(Object *obj, Field *field) {
-    ObjectZone *zone;
-    zone = &field->ipring_zone[obj->ipring];
-
-    /* First allocation */
-    if (zone->objects == NULL) {
-        zone->objects = ALLOC(sizeof(Object*) * ZONE_BASE_SIZE);
-        zone->size = ZONE_BASE_SIZE;
-        zone->nobjects = 0;
-    }
-
-    /* Need reallocation. Double the size */
-    if (zone->size == zone->nobjects) {
-        zone->objects = REALLOC(zone->objects, sizeof(Object*) * zone->size * 2);
-        zone->size *= 2;
-    }
-
-    /* append object */
-    zone->nobjects++;
-    zone->objects[zone->nobjects] = obj;
-
-}
-
-/**
- * Realloc every ObjectZone.objects may save some space.
- */
-static void
-save_memory_for_field(Field *field) {
-    int i;
-    ObjectZone *zone;
-    for (i=0; i<nside2npix(NSIDE); i++) {
-        zone = &field->ipring_zone[i];
-        if (zone->objects != NULL) {
-            zone->objects = REALLOC(zone->objects, sizeof(Object*) * zone->nobjects);
-        }
-    }
-
 }

@@ -20,10 +20,6 @@ dnl wcs
 AC_CHECK_HEADER([wcslib/wcs.h],,AC_MSG_ERROR(Could not find wcshdr.h),)
 AC_CHECK_LIB(wcs, wcspih,,AC_MSG_ERROR(Could not find wcslib))
 
-dnl healpix
-AC_CHECK_HEADER(chealpix.h,,AC_MSG_ERROR(Could not find chealpix.h),)
-AC_CHECK_LIB(chealpix, npix2nside,,AC_MSG_ERROR(Could not find chealpix))
-
 dnl maths
 AC_CHECK_HEADER(math.h,,AC_MSG_ERROR(Not any math.h),)
 AC_CHECK_LIB(m, sqrt,,AC_MSG_ERROR(Could not find math lib))

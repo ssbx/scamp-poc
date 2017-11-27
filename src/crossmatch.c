@@ -20,27 +20,53 @@
 #include "crossmatch.h"
 #include "logger.h"
 
-void Crossmatch_cross(Field *black, Field *white) {
+void
+Crossmatch_crosszone(ObjectZone *zones, long *zoneindex, long nzoneindex) {
 
-    int i, j;
+    long i;
+    long index;
+    ObjectZone *zone;
+
+    Logger_log(LOGGER_DEBUG, "What the fuck\n");
+    for (i=0; i < nzoneindex; i++) {
+        index = zoneindex[i];
+        zone = &zones[index];
+        Logger_log(LOGGER_DEBUG, "Got %li objects here\n", zone->nobjects);
+    }
+
+}
+
+void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone *zones) {
+
+    int i, j, k;
+    Object obj;
+    ObjectZone objzone;
+
+    /* TODO TODO TODO TODO
+     * Iterate over healpix zones, better than objects */
 
     /*
-     * We are matching obj_black agains all objects of the same zone
-     * (zone_white) from the field white.
+     * We are matching all objects from any fields including the
+     * one we are matching on.
+     * TODO filter matches to remove matches from the original
+     * field, and matches coming from the same field for an object
+     * (keep the best).
+     * TODO we could match healpix rings instead.
      */
-    Object      *obj_black;
-    ObjectZone  *zone_white;
+    for (i=0; i<nfields; i++) {
+    	for (j=0; j<fields[i].nsets; j++) {
+    		for (k=0; k<fields[i].sets[j].nobjects; k++) {
+    			obj = fields[i].sets[j].objects[k];
 
-    for (i=0; i<black->nsets; i++) {
-        for (j=0; j<black->sets[i].nobjects; j++) {
-            obj_black = &black->sets[i].objects[j];
-            zone_white = &white->ipring_zone[obj_black->ipring];
-//            if (zone_white->nobjects != 0)
-//                Logger_log(LOGGER_DEBUG,
-//                        "Black Object %li will try matching %i objects from field white\n",
-//                        obj_black->id, zone_white->nobjects);
+    			/* TODO XXX BUG it is not enough to have matches on border
+    			 * of zones. We must also take adjacent zones.
+    			 */
+    			objzone = zones[obj.ipring]; /* zones objects are sorted by right ascension */
 
-        }
+    			Logger_log(LOGGER_TRACE,
+    					"Have found %i matches for %i\n",objzone.nobjects,obj.id);
+    		}
+    	}
     }
 }
 
@@ -106,11 +132,6 @@ void Crossmatch_cross(Field *black, Field *white) {
 //
 //	count = matches = 0;
 //
-// pragma omp parallel for \
-//		reduction(+:matches), \
-//		reduction(+:count), \
-//		shared(samples, reference), \
-//		private(i, j, testObject, refObject, jEnd, jStart)
 //	for (i=0; i < cat_B->length; i++) {
 //
 //		testObject = cat_B->objects[i];
