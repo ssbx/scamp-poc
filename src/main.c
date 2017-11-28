@@ -21,53 +21,42 @@
 
 /**
  * TODO:
- * 1 - array of pointers of pixring (ObjectZone*),
- * 2 - get neighbours,
- * 3 - crossmatch (easy),
- * 4 - crossmatch wile loading file. Tricky but will iterate objects once at
- * load time.
+ * 1 - get nsides depending of the max error from all files.
+ * 2 - crossmatch with as little as possible objects,
  */
 int
 main(int argc, char** argv) {
 	int i, j, nfields;
-	long nsides = 4;
-	long nzoneindex;
-	long *zoneindex = NULL;
+	long nsides = 8192; // set to 5120 give strange results (see doc)
+	long *zoneindex, nzones;
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-	Logger_setLevel(LOGGER_DEBUG);
+	Logger_setLevel(LOGGER_TRACE);
 
 	nfields = 2;
 	Field fields[nfields];
 
-//	/* load fields */
-//	for (i=0, j=1; i<nfields; i++, j++)
-//		Catalog_open(argv[1], &fields[i], nsides);
-//
-//
-//	/* create a kind of zone database ... */
-//	ObjectZone *zone = Catalog_initzone(nsides);
-//	nzoneindex = Catalog_fillzone(fields, nfields, zone, nsides, &zoneindex);
-//
-//	/* ... that will speed up cross matching */
-//	Crossmatch_crossfields(fields, nfields, zone);
-//	Crossmatch_crosszone(zone, zoneindex, nzoneindex);
-//
-//	/* cleanup */
-//	for (i=0; i<nfields; i++)
-//		Catalog_freefield(&fields[i]);
-//	Catalog_freezone(zone, nsides);
-//
+	/* load fields */
+	for (i=0, j=1; i<nfields; i++, j++)
+		Catalog_open(argv[j], &fields[i], nsides);
 
-	long neigh[8];
-	neighbours_nest(nsides, 5, neigh);
 
-	for (i=0; i< 8; i++) {
-	    printf("neigh number is %i %li\n", i, neigh[i]);
-	}
+	/* create a kind of zone database ... */
+	ObjectZone **zones = Catalog_initzone(nsides);
+	zoneindex = Catalog_fillzone(fields, nfields, zones, nsides, &nzones);
 
+	/* ... that will speed up cross matching */
+//	Crossmatch_crossfields(fields, nfields, zones);
+	Crossmatch_crosszone(zones, zoneindex, nzones);
+
+	/* cleanup */
+	for (i=0; i<nfields; i++)
+		Catalog_freefield(&fields[i]);
+	 Catalog_freezone(zones, nsides);
+
+	 Logger_log(LOGGER_DEBUG, "For nside 16384, size is %li MB\n", sizeof(void*) * (nside2npix(10240) / 1000000));
 
 	return (EXIT_SUCCESS);
 

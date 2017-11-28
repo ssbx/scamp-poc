@@ -21,54 +21,68 @@
 #include "logger.h"
 
 void
-Crossmatch_crosszone(ObjectZone *zones, long *zoneindex, long nzoneindex) {
-
+Crossmatch_crosszone(ObjectZone **zones, long *zoneindex, long nzones) {
     long i;
-    long index;
-    ObjectZone *zone;
+    int j;
+    ObjectZone *current;
+    long *neighbors;
 
-    Logger_log(LOGGER_DEBUG, "What the fuck\n");
-    for (i=0; i < nzoneindex; i++) {
-        index = zoneindex[i];
-        zone = &zones[index];
-        Logger_log(LOGGER_DEBUG, "Got %li objects here\n", zone->nobjects);
+    for (i=0; i<nzones; i++) {
+        int nneigh = 0;
+        current = zones[zoneindex[i]];
+        neighbors = current->neighbors;
+
+        ObjectZone *neigbor_zone;
+        for (j=0; j<8; j++) {
+            if (neighbors[j] < 0 || zones[neighbors[j]] == NULL)
+                continue;
+
+            neigbor_zone = zones[neighbors[j]];
+            nneigh += neigbor_zone->nobjects;
+        }
+
+        Logger_log(LOGGER_TRACE,
+                "Must match all %li objects with neighbors objects (%li) for a total of %li matches.\n",
+                current->nobjects, nneigh, (current->nobjects + nneigh - 1) * current->nobjects);
+
     }
 
 }
 
-void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone *zones) {
-
-    int i, j, k;
-    Object obj;
-    ObjectZone objzone;
-
-    /* TODO TODO TODO TODO
-     * Iterate over healpix zones, better than objects */
-
-    /*
-     * We are matching all objects from any fields including the
-     * one we are matching on.
-     * TODO filter matches to remove matches from the original
-     * field, and matches coming from the same field for an object
-     * (keep the best).
-     * TODO we could match healpix rings instead.
-     */
-    for (i=0; i<nfields; i++) {
-    	for (j=0; j<fields[i].nsets; j++) {
-    		for (k=0; k<fields[i].sets[j].nobjects; k++) {
-    			obj = fields[i].sets[j].objects[k];
-
-    			/* TODO XXX BUG it is not enough to have matches on border
-    			 * of zones. We must also take adjacent zones.
-    			 */
-    			objzone = zones[obj.ipring]; /* zones objects are sorted by right ascension */
-
-    			Logger_log(LOGGER_TRACE,
-    					"Have found %i matches for %i\n",objzone.nobjects,obj.id);
-    		}
-    	}
-    }
-}
+//void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone **zones) {
+//
+//    int i, j, k;
+//    Object obj;
+//    ObjectZone *objzone;
+//
+//    /* TODO TODO TODO TODO
+//     * Iterate over healpix zones, better than objects */
+//
+//    /*
+//     * We are matching all objects from any fields including the
+//     * one we are matching on.
+//     * TODO filter matches to remove matches from the original
+//     * field, and matches coming from the same field for an object
+//     * (keep the best).
+//     * TODO we could match healpix rings instead.
+//     */
+//    for (i=0; i<nfields; i++) {
+//    	for (j=0; j<fields[i].nsets; j++) {
+//    		for (k=0; k<fields[i].sets[j].nobjects; k++) {
+//    			obj = fields[i].sets[j].objects[k];
+//
+//    			/*
+//    			 * TODO XXX BUG it is not enough to have matches on border
+//    			 * of zones. We must also take adjacent zones.
+//    			 */
+//    			objzone = zones[obj.pix_nest]; /* zones objects are sorted by right ascension */
+//
+//    			Logger_log(LOGGER_TRACE,
+//    					"Have found %i matches for %i\n",objzone->nobjects,obj.id);
+//    		}
+//    	}
+//    }
+//}
 
 //static unsigned long long
 //findPositionLT(ObjectCat_T *l, double raMax) {

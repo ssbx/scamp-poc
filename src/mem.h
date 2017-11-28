@@ -22,7 +22,7 @@ void* Mem_realloc(void *ptr, long nbytes);
 /* TODO crash on alloc error */
 #define ALLOC(nbytes)  Mem_alloc(nbytes)
 #define CALLOC(count, nbytes) Mem_calloc(count, nbytes)
-#define FREE(ptr) Mem_free(ptr); ptr = 0;
+#define FREE(ptr) {Mem_free(ptr); ptr = 0;}
 #define REALLOC(ptr, nbytes) Mem_realloc(ptr, nbytes)
 #define NEW(element) Mem_alloc(sizeof(element))
 

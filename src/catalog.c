@@ -22,7 +22,7 @@
 #include "logger.h"
 
 static char* read_field_card(fitsfile*,int*,char*);
-static void insert_object_in_zone(Object*, ObjectZone*);
+static void insert_object_in_zone(Object*, ObjectZone**, long pix_nest, long nsides);
 
 void
 Catalog_open(char *filename, Field *field, long nsides) {
@@ -289,7 +289,7 @@ Catalog_open(char *filename, Field *field, long nsides) {
             obj.ra      = world[k]   * M_PI/180;
             obj.dec     = world[k+1] * M_PI/180;
 
-            ang2pix_nest(nsides, obj.dec, obj.ra, &obj.ipring);
+            ang2pix_nest(nsides, obj.dec, obj.ra, &obj.pix_nest);
 
             set.objects[j] = obj;
             obj.set = &field->sets[l];
@@ -343,9 +343,9 @@ Catalog_dump(Field *field) {
     }
 }
 
-ObjectZone *
+ObjectZone **
 Catalog_initzone(long nsides) {
-	ObjectZone *zones, zone;
+	ObjectZone **zones;
 	long npix, i;
 	npix = nside2npix(nsides);
 
@@ -353,17 +353,16 @@ Catalog_initzone(long nsides) {
 			"Will allocate room for zones. It will take %i MB\n",
 			sizeof(ObjectZone*) * npix / 1000000);
 
-	zones = (ObjectZone*) ALLOC(sizeof(ObjectZone) * npix);
+	zones = (ObjectZone**) ALLOC(sizeof(ObjectZone*) * npix);
 
-	/* XXX omp parallel */
-	zone.objects = NULL;
-	zone.nobjects = 0;
-	zone.size = 0;
+#pragma omp simd
 	for (i=0; i<npix; i++) {
-		zones[i] = zone;
+		zones[i] = NULL;
 	}
+
 	return zones;
 }
+
 
 static int cmp_objects_on_ra(const void *a, const void *b) {
 	Object **aa, **bb;
@@ -372,15 +371,17 @@ static int cmp_objects_on_ra(const void *a, const void *b) {
 	return (*aa)->ra == (*bb)->ra ? 0 : ((*aa)->ra < (*bb)->ra ? -1 : 1);
 }
 
-long
-Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, long **zoneindex) {
+#define PIX_INDEX_BASE_SISE 1000
+long*
+Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones, long nsides, long *nzones) {
 	long i;
 	int j, k;
 	Field *field;
 	Set *set;
 	Object *obj;
 	ObjectZone *z;
-	long nzone, nzone_size;
+	long *pixindex;
+	long pixindex_size;
 
 	long total_nobjects;
 	total_nobjects = 0;
@@ -392,7 +393,7 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, lon
 			for (k=0; k<set->nobjects; k++) {
 
 				obj  = &set->objects[k];
-				insert_object_in_zone(obj, &zones[obj->ipring]);
+				insert_object_in_zone(obj, zones, obj->pix_nest, nsides);
 
 			}
 		}
@@ -402,60 +403,54 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone *zones, long nsides, lon
 			"Total size for zones is %li MB\n",
 			(nside2npix(nsides) * sizeof(ObjectZone*) +
 					total_nobjects * sizeof(Object)) / 1000000);
-	/*
-	 * Reallocate to save some room, store available zones in zoneindex.
-	 * And sort by right ascension.
-	 */
-	nzone = 0;
-	*zoneindex = (long*) ALLOC(sizeof(long) * 1000);
-	nzone_size = 1000;
 
+
+	pixindex = ALLOC(sizeof(long) * PIX_INDEX_BASE_SISE);
+	pixindex_size = PIX_INDEX_BASE_SISE;
+	*nzones = 0;
 	for (i=0; i<nside2npix(nsides);i++) {
-		z = &zones[i];
-		if (z->objects == NULL)
+		z = zones[i];
+		if (z == NULL)
 			continue;
-
 
 		/*
 		 * Realloc z
 		 */
 		z->objects = REALLOC(z->objects, sizeof(ObjectZone*) * z->nobjects);
-		Logger_log(LOGGER_DEBUG,
+		Logger_log(LOGGER_TRACE,
 				"Have %i matches for zone %li\n",
 				z->nobjects, i);
-
-        /*
-         * Fill zone index
-         */
-        if (nzone == nzone_size) {
-            REALLOC(*zoneindex, sizeof(long) * nzone_size * 2);
-            nzone_size = 2 * nzone_size;
-        }
-
-        Logger_log(LOGGER_DEBUG, "store %li to zoneindex\n", i);
-        (*zoneindex)[nzone] = i;
-        nzone++;
 
 		/*
 		 * Sort
 		 */
 		qsort(z->objects, z->nobjects, sizeof(Object*), cmp_objects_on_ra);
+
+		/*
+		 * Append to pixindex
+		 */
+		if (*nzones == pixindex_size) {
+		    pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size * 2);
+		    pixindex_size *= 2;
+		}
+		pixindex[*nzones] = i;
+		(*nzones)++;
+
 	}
 
-	/*
-	 * Realloc zoneindex
-	 */
-	//REALLOC(*zoneindex, sizeof(long) * nzone);
-
-	return nzone;
-
+	pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size);
+	return pixindex;
 }
 
 void
-Catalog_freezone(ObjectZone *zones, long nsides) {
-	int i;
+Catalog_freezone(ObjectZone **zones, long nsides) {
+	long i;
+	ObjectZone *zone;
 	for (i=0; i<nside2npix(nsides);i++) {
-		FREE(zones[i].objects);
+	    zone = zones[i];
+	    if (zone != NULL) {
+	        FREE(zone->objects);
+	    }
 	}
 	FREE(zones);
 }
@@ -465,21 +460,24 @@ Catalog_freezone(ObjectZone *zones, long nsides) {
  */
 #define ZONE_BASE_SIZE 100
 static void
-insert_object_in_zone(Object *obj, ObjectZone *z) {
+insert_object_in_zone(Object *obj, ObjectZone **zones, long index, long nsides) {
+    ObjectZone *z;
 
-	/*
-	 * TODO ObjectZone.objects should be a pointer to an array
-	 * (where index refer to fields) of array of objects.
-	 */
+    if (zones[index] == NULL) {
+        zones[index] = ALLOC(sizeof(ObjectZone));
+        zones[index]->objects = NULL;
+        neighbours_nest(nsides, index, zones[index]->neighbors);
+    }
+    z = zones[index];
+
     /* First allocation */
-    if (z->objects == NULL) {
 
+    if (z->objects == NULL) {
         z->objects = ALLOC(sizeof(Object*) * ZONE_BASE_SIZE);
         z->size = ZONE_BASE_SIZE;
         z->nobjects = 0;
 
     } else if (z->size == z->nobjects) { /* need realloc */
-
         z->objects = REALLOC(z->objects, sizeof(Object*) * z->size * 2);
         z->size *= 2;
 
