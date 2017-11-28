@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     long nsides = 16;
     long neigh[8];
 
-    for (i=1; i<nside2npix(nsides); i++) {
+    for (i=0; i<nside2npix(nsides); i++) {
         neighbours_nest(nsides, i, neigh);
         printf("For %li\n", i);
         for (j=0; j<8; j++) {

@@ -925,7 +925,6 @@ void neighbours_nest(long nside, long pix, long *neighbours) {
     nest2xyf(nside, pix, &ix, &iy, &face_num);
     long order = nside2order(nside);
     nsm1 = nside -1;
-
     if ((ix>0) && (ix<nsm1) && (iy>0) && (iy<nsm1)) {
         long fpix = (long) face_num << (2 * order);
         long px0 = spread_bits(ix);
@@ -956,7 +955,7 @@ void neighbours_nest(long nside, long pix, long *neighbours) {
                 nbnum -= 1;
             } else if (x >= nside) {
                 x -= nside;
-                nbnum -= 3;
+                nbnum +=1;
             }
             if (y < 0) {
                 y += nside;
