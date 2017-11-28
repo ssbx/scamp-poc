@@ -19,7 +19,7 @@ typedef struct Matches {
 } Matches;
 
 //extern void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone **zones);
-extern void Crossmatch_crosszone(ObjectZone **zones, long *zoneindex, long nzoneindex);
+extern void Crossmatch_crosszone(HealpixCell **zones, long *zoneindex, long nzoneindex);
 
 
 #endif /* __CROSSMATCH_H__ */

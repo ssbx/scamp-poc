@@ -22,7 +22,7 @@
 #include "logger.h"
 
 static char* read_field_card(fitsfile*,int*,char*);
-static void insert_object_in_zone(Object*, ObjectZone**, long pix_nest, long nsides);
+static void insert_object_in_zone(Object*, HealpixCell**, long pix_nest, long nsides);
 
 void
 Catalog_open(char *filename, Field *field, long nsides) {
@@ -343,17 +343,17 @@ Catalog_dump(Field *field) {
     }
 }
 
-ObjectZone **
+HealpixCell **
 Catalog_initzone(long nsides) {
-	ObjectZone **zones;
+	HealpixCell **zones;
 	long npix, i;
 	npix = nside2npix(nsides);
 
 	Logger_log(LOGGER_DEBUG,
 			"Will allocate room for zones. It will take %i MB\n",
-			sizeof(ObjectZone*) * npix / 1000000);
+			sizeof(HealpixCell*) * npix / 1000000);
 
-	zones = (ObjectZone**) ALLOC(sizeof(ObjectZone*) * npix);
+	zones = (HealpixCell**) ALLOC(sizeof(HealpixCell*) * npix);
 
 #pragma omp simd
 	for (i=0; i<npix; i++) {
@@ -373,13 +373,13 @@ static int cmp_objects_on_ra(const void *a, const void *b) {
 
 #define PIX_INDEX_BASE_SISE 1000
 long*
-Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones, long nsides, long *nzones) {
+Catalog_fillzone(Field *fields, int nfields, HealpixCell **zones, long nsides, long *nzones) {
 	long i;
 	int j, k;
 	Field *field;
 	Set *set;
 	Object *obj;
-	ObjectZone *z;
+	HealpixCell *z;
 	long *pixindex;
 	long pixindex_size;
 
@@ -401,7 +401,7 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones, long nsides, lo
 
 	Logger_log(LOGGER_DEBUG,
 			"Total size for zones is %li MB\n",
-			(nside2npix(nsides) * sizeof(ObjectZone*) +
+			(nside2npix(nsides) * sizeof(HealpixCell*) +
 					total_nobjects * sizeof(Object)) / 1000000);
 
 
@@ -416,7 +416,7 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones, long nsides, lo
 		/*
 		 * Realloc z
 		 */
-		z->objects = REALLOC(z->objects, sizeof(ObjectZone*) * z->nobjects);
+		z->objects = REALLOC(z->objects, sizeof(HealpixCell*) * z->nobjects);
 		Logger_log(LOGGER_TRACE,
 				"Have %i matches for zone %li\n",
 				z->nobjects, i);
@@ -443,9 +443,9 @@ Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones, long nsides, lo
 }
 
 void
-Catalog_freezone(ObjectZone **zones, long nsides) {
+Catalog_freezone(HealpixCell **zones, long nsides) {
 	long i;
-	ObjectZone *zone;
+	HealpixCell *zone;
 	for (i=0; i<nside2npix(nsides);i++) {
 	    zone = zones[i];
 	    if (zone != NULL) {
@@ -460,11 +460,11 @@ Catalog_freezone(ObjectZone **zones, long nsides) {
  */
 #define ZONE_BASE_SIZE 100
 static void
-insert_object_in_zone(Object *obj, ObjectZone **zones, long index, long nsides) {
-    ObjectZone *z;
+insert_object_in_zone(Object *obj, HealpixCell **zones, long index, long nsides) {
+    HealpixCell *z;
 
     if (zones[index] == NULL) {
-        zones[index] = ALLOC(sizeof(ObjectZone));
+        zones[index] = ALLOC(sizeof(HealpixCell));
         zones[index]->objects = NULL;
         neighbours_nest(nsides, index, zones[index]->neighbors);
     }

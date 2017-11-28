@@ -72,7 +72,7 @@ typedef struct ObjectZone {
 
     long neighbors[8];
 
-} ObjectZone;
+} HealpixCell;
 
 /**
  * A field represent a file containing Set(s).
@@ -111,19 +111,19 @@ extern void Catalog_freefield(Field *field);
  *
  * Thread safe.
  */
-extern void Catalog_freezone(ObjectZone **zones, long nsides);
+extern void Catalog_freezone(HealpixCell **zones, long nsides);
 
 /**
  * Allocate memory for the key/value pixels store (ObjectZone).
  * Must be freed by Catalog_freezone/2
  */
-extern ObjectZone **Catalog_initzone(long nsides);
+extern HealpixCell **Catalog_initzone(long nsides);
 
 /**
  * Return an array of pixel id used by the fields in the nested scheme.
  * Set "nzone" to the size of the array. Array must be freed by the user.
  */
-extern long* Catalog_fillzone(Field *fields, int nfields, ObjectZone **zones,
+extern long* Catalog_fillzone(Field *fields, int nfields, HealpixCell **zones,
                                 long nsides, long *nzone);
 
 #endif /* __CATALOG_H__ */

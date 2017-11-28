@@ -44,7 +44,7 @@ main(int argc, char** argv) {
 
 
 	/* create a kind of zone database ... */
-	ObjectZone **zones = Catalog_initzone(nsides);
+	HealpixCell **zones = Catalog_initzone(nsides);
 	zoneindex = Catalog_fillzone(fields, nfields, zones, nsides, &nzones);
 
 	/* ... that will speed up cross matching */

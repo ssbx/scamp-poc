@@ -21,10 +21,10 @@
 #include "logger.h"
 
 void
-Crossmatch_crosszone(ObjectZone **zones, long *zoneindex, long nzones) {
+Crossmatch_crosszone(HealpixCell **zones, long *zoneindex, long nzones) {
     long i;
     int j;
-    ObjectZone *current;
+    HealpixCell *current;
     long *neighbors;
 
     for (i=0; i<nzones; i++) {
@@ -32,7 +32,7 @@ Crossmatch_crosszone(ObjectZone **zones, long *zoneindex, long nzones) {
         current = zones[zoneindex[i]];
         neighbors = current->neighbors;
 
-        ObjectZone *neigbor_zone;
+        HealpixCell *neigbor_zone;
         for (j=0; j<8; j++) {
             if (neighbors[j] < 0 || zones[neighbors[j]] == NULL)
                 continue;
