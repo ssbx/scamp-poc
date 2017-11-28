@@ -62,7 +62,7 @@ main(int argc, char** argv) {
 //
 
 	long neigh[8];
-	neighbours_nest(nsides, 5, neigh);
+	neighbours_nest(nsides, 100, neigh);
 
 	for (i=0; i< 8; i++) {
 	    printf("neigh number is %i %li\n", i, neigh[i]);

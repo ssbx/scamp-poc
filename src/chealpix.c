@@ -85,20 +85,17 @@ static const short ctab[] = {
 #undef X
 #undef Y
 #undef Z
-        };
+};
 /* utab[m] = (short)(
  (m&0x1 )       | ((m&0x2 ) << 1) | ((m&0x4 ) << 2) | ((m&0x8 ) << 3)
  | ((m&0x10) << 4) | ((m&0x20) << 5) | ((m&0x40) << 6) | ((m&0x80) << 7)); */
-static const short utab[] = {
 #define Z(a) 0x##a##0, 0x##a##1, 0x##a##4, 0x##a##5
 #define Y(a) Z(a##0), Z(a##1), Z(a##4), Z(a##5)
 #define X(a) Y(a##0), Y(a##1), Y(a##4), Y(a##5)
-        X(0), X(1), X(4), X(5)
+static const short utab[] = {X(0), X(1), X(4), X(5)};
 #undef X
 #undef Y
 #undef Z
-        };
-
 static const int jrll[] = { 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
 static const int jpll[] = { 1, 3, 5, 7, 0, 2, 4, 6, 1, 3, 5, 7 };
 static const int nb_xoffset[] = {-1, -1, 0, 1, 1, 1, 0, -1};
@@ -113,7 +110,6 @@ const int nb_facearray[][12] =
     { -1,-1,-1,-1, 7, 4, 5, 6,-1,-1,-1,-1 },   // W
     {  3, 0, 1, 2, 3, 0, 1, 2, 4, 5, 6, 7 },   // NW
     {  2, 3, 0, 1,-1,-1,-1,-1, 0, 1, 2, 3 } }; // N
-
 const int nb_swaparray[][3] =
   { { 0,0,3 },   // S
     { 0,0,6 },   // SE
@@ -125,9 +121,47 @@ const int nb_swaparray[][3] =
     { 6,0,0 },   // NW
     { 3,0,0 } }; // N
 
+static long ilog2(long arg) {
+#ifdef __GNUC__
+        if (arg == 0)
+                return 0;
+        return 8 * sizeof(long) - 1 - __builtin_clzl(arg);
+#endif
+        int res = 0;
+        while (arg > 0xFFFF) {
+                res += 16;
+                arg >>= 16;
+        }
+        if (arg > 0x00FF) {
+                res |= 8;
+                arg >>= 8;
+        }
+        if (arg > 0x000F) {
+                res |= 4;
+                arg >>= 4;
+        }
+        if (arg > 0x0003) {
+                res |= 2;
+                arg >>= 2;
+        }
+        if (arg > 0x0001) {
+                res |= 1;
+        }
+        return res;
+}
+
+static long nside2order(long nside) {
+        return ((nside) & (nside - 1)) ? -1 : ilog2(nside);
+}
+
+static int spread_bits(int v) {
+    return utab[v & 0xff] | (utab[(v >> 8) & 0xff] << 16);
+}
+static void swap_int(int *a, int *b) {int c = *a; *a = *b; *b = c;}
+
 #ifndef __BMI2__
 
-static int xyf2nest(int nside, int ix, int iy, int face_num) {
+static long xyf2nest(long nside, int ix, int iy, int face_num) {
     return (face_num * nside * nside)
             + (utab[ix & 0xff] | (utab[ix >> 8] << 16) | (utab[iy & 0xff] << 1)
                     | (utab[iy >> 8] << 17));
@@ -885,61 +919,68 @@ void ring2nest64(int64_t nside, int64_t ipring, int64_t *ipnest) {
     ring2xyf64(nside, ipring, &ix, &iy, &face_num);
     *ipnest = xyf2nest64(nside, ix, iy, face_num);
 }
-static void swap_int(int *a, int *b) {int c = *a; *a = *b; *b = c;}
 void neighbours_nest(long nside, long pix, long *neighbours) {
     int i, x, y, nbnum, ix, iy, face_num;
     long nsm1;
     nest2xyf(nside, pix, &ix, &iy, &face_num);
+    long order = nside2order(nside);
     nsm1 = nside -1;
 
-    printf("%i %i %i\n", ix, iy, face_num);
-    for (i=0; i<8; i++) {
-        neighbours[i] = 0;
-    }
-
     if ((ix>0) && (ix<nsm1) && (iy>0) && (iy<nsm1)) {
-        printf("hello not implemented\n");
-        // TODO what spread_bits does
+        long fpix = (long) face_num << (2 * order);
+        long px0 = spread_bits(ix);
+        long py0 = spread_bits(iy) << 1;
+        long pxp = spread_bits(ix + 1);
+        long pyp = spread_bits(iy + 1) << 1;
+        long pxm = spread_bits(ix - 1);
+        long pym = spread_bits(iy - 1) << 1;
+
+        neighbours[0] = fpix + pxm + py0;
+        neighbours[1] = fpix + pxm + pyp;
+        neighbours[2] = fpix + px0 + pyp;
+        neighbours[3] = fpix + pxp + pyp;
+        neighbours[4] = fpix + pxp + py0;
+        neighbours[5] = fpix + pxp + pym;
+        neighbours[6] = fpix + px0 + pym;
+        neighbours[7] = fpix + pxm + pym;
+
+
     } else {
         for (i=0; i<8; i++) {
-            printf("hello set %i\n", i);
-
             x = ix + nb_xoffset[i];
             y = iy + nb_yoffset[i];
             nbnum = 4;
 
             if (x<0) {
-                printf("path a\n");
                 x += nside;
                 nbnum -= 1;
             } else if (x >= nside) {
-                printf("path b\n");
                 x -= nside;
                 nbnum -= 3;
+            }
+            if (y < 0) {
+                y += nside;
+                nbnum -= 3;
             } else if (y >= nside) {
-                printf("path c\n");
                 y -= nside;
                 nbnum += 3;
             }
             int f = nb_facearray[nbnum][face_num];
             if (f >= 0) {
                 int bits = nb_swaparray[nbnum][face_num>>2];
-                printf("path g %i\n", face_num);
-                printf("path g %i\n", face_num>>2);
                 if (bits & 1) {
-                    printf("path d\n");
                     x = nside - x - 1;
                 }
                 if (bits & 2) {
-                    printf("path e\n");
                     y = nside - y - 1;
                 }
+
                 if (bits & 4) {
-                    printf("path f\n");
                     swap_int(&x, &y);
                 }
 
                 neighbours[i] = xyf2nest(nside, x,y,f);
+
             } else {
                 neighbours[i] = -1;
             }
