@@ -14,40 +14,216 @@
 
 
 #include <math.h>
-#include <omp.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "crossmatch.h"
 #include "logger.h"
+#include "mem.h"
+#include "chealpix.h"
+
+static void insert_object_in_cell(Object*, HealpixCell**, long, long);
 
 void
-Crossmatch_crosszone(HealpixCell **zones, long *zoneindex, long nzones) {
+Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
+                        long ncells, double radius) {
     long i;
     int j;
     HealpixCell *current;
     long *neighbors;
 
-    for (i=0; i<nzones; i++) {
+    for (i=0; i<ncells; i++) {
         int nneigh = 0;
-        current = zones[zoneindex[i]];
+        current = cells[cellindex[i]];
         neighbors = current->neighbors;
 
-        HealpixCell *neigbor_zone;
+        HealpixCell *neighbor_cell;
         for (j=0; j<8; j++) {
-            if (neighbors[j] < 0 || zones[neighbors[j]] == NULL)
+            if (neighbors[j] < 0 || cells[neighbors[j]] == NULL)
                 continue;
 
-            neigbor_zone = zones[neighbors[j]];
-            nneigh += neigbor_zone->nobjects;
+            neighbor_cell = cells[neighbors[j]];
+            nneigh += neighbor_cell->nobjects;
         }
 
         Logger_log(LOGGER_TRACE,
-                "Must match all %li objects with neighbors objects (%li) for a total of %li matches.\n",
-                current->nobjects, nneigh, (current->nobjects + nneigh - 1) * current->nobjects);
+                "Must match all %li objects with neighbors objects"
+                "(%li) for a total of %li matches.\n",
+                current->nobjects, nneigh,
+                (current->nobjects + nneigh - 1) * current->nobjects);
 
     }
 
 }
+
+
+HealpixCell **
+Crossmatch_initCells(long nsides) {
+    HealpixCell **cells;
+    long npix, i;
+    npix = nside2npix(nsides);
+
+    Logger_log(LOGGER_DEBUG,
+            "Will allocate room for cells. It will take %i MB\n",
+            sizeof(HealpixCell*) * npix / 1000000);
+
+    cells = (HealpixCell**) ALLOC(sizeof(HealpixCell*) * npix);
+
+#pragma omp simd
+    for (i=0; i<npix; i++) {
+        cells[i] = NULL;
+    }
+
+    return cells;
+}
+
+
+static int cmp_objects_on_ra(const void *a, const void *b) {
+    Object **aa, **bb;
+    aa = (Object**) a;
+    bb = (Object**) b;
+    return (*aa)->ra == (*bb)->ra ? 0 : ((*aa)->ra < (*bb)->ra ? -1 : 1);
+}
+
+#define PIX_INDEX_BASE_SISE 1000
+long*
+Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
+                    long nsides, long *ncells) {
+    long i;
+    int j, k;
+    Field *field;
+    Set *set;
+    Object *obj;
+    HealpixCell *cell;
+    long *pixindex;
+    long pixindex_size;
+
+    long total_nobjects;
+    total_nobjects = 0;
+    for (i=0; i<nfields; i++) {
+        field = &fields[i];
+        for (j=0; j<field->nsets; j++) {
+            set = &field->sets[j];
+            total_nobjects += set->nobjects;
+            for (k=0; k<set->nobjects; k++) {
+
+                obj  = &set->objects[k];
+                insert_object_in_cell(obj, cells, obj->pix_nest, nsides);
+
+            }
+        }
+    }
+
+    Logger_log(LOGGER_DEBUG,
+            "Total size for cells is %li MB\n",
+            (nside2npix(nsides) * sizeof(HealpixCell*) +
+                    total_nobjects * sizeof(Object)) / 1000000);
+
+
+    pixindex = ALLOC(sizeof(long) * PIX_INDEX_BASE_SISE);
+    pixindex_size = PIX_INDEX_BASE_SISE;
+    *ncells = 0;
+    for (i=0; i<nside2npix(nsides);i++) {
+        cell = cells[i];
+        if (cell == NULL)
+            continue;
+
+        /*
+         * Realloc z
+         */
+        cell->objects = REALLOC(cell->objects,
+                                sizeof(HealpixCell*) * cell->nobjects);
+
+        /*
+         * Sort
+         */
+        qsort(cell->objects,cell->nobjects,sizeof(Object*),cmp_objects_on_ra);
+
+        /*
+         * Append to pixindex
+         */
+        if (*ncells == pixindex_size) {
+            pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size * 2);
+            pixindex_size *= 2;
+        }
+        pixindex[*ncells] = i;
+        (*ncells)++;
+
+    }
+
+    pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size);
+    return pixindex;
+}
+
+void
+Crossmatch_freeCells(HealpixCell **cells, long nsides) {
+    long i;
+    HealpixCell *cell;
+    for (i=0; i<nside2npix(nsides);i++) {
+        cell = cells[i];
+        if (cell != NULL) {
+            FREE(cell->objects);
+        }
+    }
+    FREE(cells);
+}
+
+/*
+ * Static utilities
+ */
+#define CELL_BASE_SIZE 100
+static void
+insert_object_in_cell(Object *obj, HealpixCell **cells,
+                        long index, long nsides) {
+    HealpixCell *cell;
+
+    if (cells[index] == NULL) {
+        cells[index] = ALLOC(sizeof(HealpixCell));
+        cells[index]->objects = NULL;
+        neighbours_nest(nsides, index, cells[index]->neighbors);
+    }
+    cell = cells[index];
+
+    /* First allocation */
+
+    if (cell->objects == NULL) {
+        cell->objects = ALLOC(sizeof(Object*) * CELL_BASE_SIZE);
+        cell->size = CELL_BASE_SIZE;
+        cell->nobjects = 0;
+
+    } else if (cell->size == cell->nobjects) { /* need realloc */
+        cell->objects = REALLOC(cell->objects,
+                                sizeof(Object*) * cell->size * 2);
+        cell->size *= 2;
+
+    }
+
+    /* append object */
+    cell->objects[cell->nobjects] = obj;
+    cell->nobjects++;
+
+}
+
+//double
+//Object_areClose(Object_T a, Object_T b, double factor) {
+//    double distance, limit;
+//
+//    /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
+//    distance = 2 * asin(sqrt(
+//        pow(sin( (b.dec - a.dec) / 2) , 2) +
+//        cos(a.dec) * cos(b.dec) *
+//        pow(sin((b.ra - a.ra) / 2) , 2)
+//    ));
+//
+//    limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
+//
+//    if (distance < limit)
+//        return true;
+//    else
+//        return false;
+//
+//}
+
 
 //void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone **zones) {
 //
@@ -192,22 +368,4 @@ Crossmatch_crosszone(HealpixCell **zones, long *zoneindex, long nzones) {
 //}
 //
 //
-//bool
-//Object_areClose(Object_T a, Object_T b, double factor) {
-//    double distance, limit;
-//
-//    /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
-//    distance = 2 * asin(sqrt(
-//        pow(sin( (b.dec - a.dec) / 2) , 2) +
-//        cos(a.dec) * cos(b.dec) *
-//        pow(sin((b.ra - a.ra) / 2) , 2)
-//    ));
-//
-//    limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
-//
-//    if (distance < limit)
-//        return true;
-//    else
-//        return false;
-//
-//}
+

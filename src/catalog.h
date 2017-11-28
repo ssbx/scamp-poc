@@ -17,7 +17,6 @@
 
 #include <wcslib/wcshdr.h>
 
-extern long Catalog_SIDES;
 struct Set;
 struct Field;
 
@@ -60,19 +59,6 @@ typedef struct Set {
 
 } Set;
 
-/**
- * ObjectZone store pointers to every objects of a field, belonging to a
- * common zone.
- */
-typedef struct ObjectZone {
-
-    Object  **objects;  /* our pointers */
-    int     nobjects;   /* number of pointer */
-    int     size;       /* for reallocation if required */
-
-    long neighbors[8];
-
-} HealpixCell;
 
 /**
  * A field represent a file containing Set(s).
@@ -90,40 +76,25 @@ typedef struct Field {
  *
  * Tread safe.
  */
-extern void Catalog_open(char *file, Field *field, long nsides);
+extern void
+Catalog_open(char *file, Field *field, long nsides);
 
 /**
  * Print the content of catalogs. Used for debugging purpose.
  *
  * Thread safe.
  */
-extern void Catalog_dump(Field *field);
+extern void
+Catalog_dump(Field *field);
 
 /**
  * Free all memory allocated for a field.
  *
  * Thread safe.
  */
-extern void Catalog_freefield(Field *field);
+extern void
+Catalog_freeField(Field *field);
 
-/**
- * Free all memory allocated for a zone.
- *
- * Thread safe.
- */
-extern void Catalog_freezone(HealpixCell **zones, long nsides);
 
-/**
- * Allocate memory for the key/value pixels store (ObjectZone).
- * Must be freed by Catalog_freezone/2
- */
-extern HealpixCell **Catalog_initzone(long nsides);
-
-/**
- * Return an array of pixel id used by the fields in the nested scheme.
- * Set "nzone" to the size of the array. Array must be freed by the user.
- */
-extern long* Catalog_fillzone(Field *fields, int nfields, HealpixCell **zones,
-                                long nsides, long *nzone);
 
 #endif /* __CATALOG_H__ */

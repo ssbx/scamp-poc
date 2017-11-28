@@ -28,12 +28,13 @@ int
 main(int argc, char** argv) {
 	int i, j, nfields;
 	long nsides = 8192; // set to 5120 give strange results (see doc)
-	long *zoneindex, nzones;
+	long *cellindex, ncells;
+	double radius_arcsec = 2.0; /* in arcsec */
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-	Logger_setLevel(LOGGER_TRACE);
+	Logger_setLevel(LOGGER_DEBUG);
 
 	nfields = 2;
 	Field fields[nfields];
@@ -43,18 +44,18 @@ main(int argc, char** argv) {
 		Catalog_open(argv[j], &fields[i], nsides);
 
 
-	/* create a kind of zone database ... */
-	HealpixCell **zones = Catalog_initzone(nsides);
-	zoneindex = Catalog_fillzone(fields, nfields, zones, nsides, &nzones);
+	/* create an effective hash like cell array ... */
+	HealpixCell **cells = Crossmatch_initCells(nsides);
+	cellindex = Crossmatch_fillCells(fields, nfields, cells, nsides, &ncells);
 
 	/* ... that will speed up cross matching */
-//	Crossmatch_crossfields(fields, nfields, zones);
-	Crossmatch_crosszone(zones, zoneindex, nzones);
+//	Crossmatch_crossfields(fields, nfields, cells);
+	Crossmatch_crossCells(cells, cellindex, ncells, radius_arcsec);
 
 	/* cleanup */
 	for (i=0; i<nfields; i++)
-		Catalog_freefield(&fields[i]);
-	 Catalog_freezone(zones, nsides);
+		Catalog_freeField(&fields[i]);
+	 Crossmatch_freeCells(cells, nsides);
 
 	 Logger_log(LOGGER_DEBUG, "For nside 16384, size is %li MB\n", sizeof(void*) * (nside2npix(10240) / 1000000));
 

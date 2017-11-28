@@ -14,7 +14,6 @@
 
 #include <string.h>
 #include <fitsio.h>
-#include <math.h>
 #include <chealpix.h>
 
 #include "catalog.h"
@@ -22,7 +21,8 @@
 #include "logger.h"
 
 static char* read_field_card(fitsfile*,int*,char*);
-static void insert_object_in_zone(Object*, HealpixCell**, long pix_nest, long nsides);
+
+static double PI_DIV_180 = 3.141592653589793238462643383279502884197 / 180;
 
 void
 Catalog_open(char *filename, Field *field, long nsides) {
@@ -124,7 +124,8 @@ Catalog_open(char *filename, Field *field, long nsides) {
          */
         fits_get_num_cols(fptr, &ncolumns, &status);
         if (ncolumns != 21)
-            Logger_log(LOGGER_CRITICAL, "Error: this HDU is not sextractor table\n");
+            Logger_log(LOGGER_CRITICAL,
+                    "Error: this HDU is not sextractor table\n");
 
         fits_get_num_rows(fptr, &nrows, &status);
         Logger_log(LOGGER_TRACE, "Have %i rows in the table\n", nrows);
@@ -286,8 +287,8 @@ Catalog_open(char *filename, Field *field, long nsides) {
             obj.id      = col_number[j];
             obj.raDeg   = world[k];
             obj.decDeg  = world[k+1];
-            obj.ra      = world[k]   * M_PI/180;
-            obj.dec     = world[k+1] * M_PI/180;
+            obj.ra      = world[k]   * PI_DIV_180;
+            obj.dec     = world[k+1] * PI_DIV_180;
 
             ang2pix_nest(nsides, obj.dec, obj.ra, &obj.pix_nest);
 
@@ -321,7 +322,7 @@ Catalog_open(char *filename, Field *field, long nsides) {
 
 
 void
-Catalog_freefield(Field *field) {
+Catalog_freeField(Field *field) {
     int i;
     for (i=0; i<field->nsets; i++) {
         FREE(field->sets[i].objects);
@@ -343,152 +344,6 @@ Catalog_dump(Field *field) {
     }
 }
 
-HealpixCell **
-Catalog_initzone(long nsides) {
-	HealpixCell **zones;
-	long npix, i;
-	npix = nside2npix(nsides);
-
-	Logger_log(LOGGER_DEBUG,
-			"Will allocate room for zones. It will take %i MB\n",
-			sizeof(HealpixCell*) * npix / 1000000);
-
-	zones = (HealpixCell**) ALLOC(sizeof(HealpixCell*) * npix);
-
-#pragma omp simd
-	for (i=0; i<npix; i++) {
-		zones[i] = NULL;
-	}
-
-	return zones;
-}
-
-
-static int cmp_objects_on_ra(const void *a, const void *b) {
-	Object **aa, **bb;
-	aa = (Object**) a;
-	bb = (Object**) b;
-	return (*aa)->ra == (*bb)->ra ? 0 : ((*aa)->ra < (*bb)->ra ? -1 : 1);
-}
-
-#define PIX_INDEX_BASE_SISE 1000
-long*
-Catalog_fillzone(Field *fields, int nfields, HealpixCell **zones, long nsides, long *nzones) {
-	long i;
-	int j, k;
-	Field *field;
-	Set *set;
-	Object *obj;
-	HealpixCell *z;
-	long *pixindex;
-	long pixindex_size;
-
-	long total_nobjects;
-	total_nobjects = 0;
-	for (i=0; i<nfields; i++) {
-		field = &fields[i];
-		for (j=0; j<field->nsets; j++) {
-			set = &field->sets[j];
-			total_nobjects += set->nobjects;
-			for (k=0; k<set->nobjects; k++) {
-
-				obj  = &set->objects[k];
-				insert_object_in_zone(obj, zones, obj->pix_nest, nsides);
-
-			}
-		}
-	}
-
-	Logger_log(LOGGER_DEBUG,
-			"Total size for zones is %li MB\n",
-			(nside2npix(nsides) * sizeof(HealpixCell*) +
-					total_nobjects * sizeof(Object)) / 1000000);
-
-
-	pixindex = ALLOC(sizeof(long) * PIX_INDEX_BASE_SISE);
-	pixindex_size = PIX_INDEX_BASE_SISE;
-	*nzones = 0;
-	for (i=0; i<nside2npix(nsides);i++) {
-		z = zones[i];
-		if (z == NULL)
-			continue;
-
-		/*
-		 * Realloc z
-		 */
-		z->objects = REALLOC(z->objects, sizeof(HealpixCell*) * z->nobjects);
-		Logger_log(LOGGER_TRACE,
-				"Have %i matches for zone %li\n",
-				z->nobjects, i);
-
-		/*
-		 * Sort
-		 */
-		qsort(z->objects, z->nobjects, sizeof(Object*), cmp_objects_on_ra);
-
-		/*
-		 * Append to pixindex
-		 */
-		if (*nzones == pixindex_size) {
-		    pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size * 2);
-		    pixindex_size *= 2;
-		}
-		pixindex[*nzones] = i;
-		(*nzones)++;
-
-	}
-
-	pixindex = REALLOC(pixindex, sizeof(long) * pixindex_size);
-	return pixindex;
-}
-
-void
-Catalog_freezone(HealpixCell **zones, long nsides) {
-	long i;
-	HealpixCell *zone;
-	for (i=0; i<nside2npix(nsides);i++) {
-	    zone = zones[i];
-	    if (zone != NULL) {
-	        FREE(zone->objects);
-	    }
-	}
-	FREE(zones);
-}
-
-/*
- * Static utilities
- */
-#define ZONE_BASE_SIZE 100
-static void
-insert_object_in_zone(Object *obj, HealpixCell **zones, long index, long nsides) {
-    HealpixCell *z;
-
-    if (zones[index] == NULL) {
-        zones[index] = ALLOC(sizeof(HealpixCell));
-        zones[index]->objects = NULL;
-        neighbours_nest(nsides, index, zones[index]->neighbors);
-    }
-    z = zones[index];
-
-    /* First allocation */
-
-    if (z->objects == NULL) {
-        z->objects = ALLOC(sizeof(Object*) * ZONE_BASE_SIZE);
-        z->size = ZONE_BASE_SIZE;
-        z->nobjects = 0;
-
-    } else if (z->size == z->nobjects) { /* need realloc */
-        z->objects = REALLOC(z->objects, sizeof(Object*) * z->size * 2);
-        z->size *= 2;
-
-    }
-
-    /* append object */
-    z->objects[z->nobjects] = obj;
-    z->nobjects++;
-
-}
-
 static char*
 read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     int status = 0, anynull = 0, field_card_size, charpos, i;
@@ -507,7 +362,8 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
 
     /*
      * XXX this is a hack. Fitsio do not know how to read this single column
-     * single row single element data, but accept to increment the element count.
+     * single row single element data, but accept to increment
+     * the element count.
      */
     memset(field_card, ' ', field_card_size);
     for (i=0, charpos=0; i<*nkeys; i++,charpos+=80) {

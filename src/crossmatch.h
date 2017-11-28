@@ -18,8 +18,47 @@ typedef struct Matches {
 
 } Matches;
 
-//extern void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone **zones);
-extern void Crossmatch_crosszone(HealpixCell **zones, long *zoneindex, long nzoneindex);
+/**
+ * HealpixCell store pointers to every objects of a field, belonging to a
+ * common healpix pixel.
+ */
+typedef struct HealpixCell {
 
+    Object  **objects;  /* our pointers */
+    int     nobjects;   /* number of pointer */
+    int     size;       /* for reallocation if required */
+
+    long neighbors[8];
+
+} HealpixCell;
+
+/*
+ * Cross match fields with filed HealpixCell's.
+ */
+extern void
+Crossmatch_crossCells(HealpixCell **zones, long *zoneindex,
+                        long nzoneindex, double radius);
+/**
+ * Free all memory allocated for a zone.
+ *
+ * Thread safe.
+ */
+extern void
+Crossmatch_freeCells(HealpixCell **zones, long nsides);
+
+/**
+ * Allocate memory for the key/value pixels store (ObjectZone).
+ * Must be freed by Catalog_freezone/2
+ */
+extern HealpixCell **
+Crossmatch_initCells(long nsides);
+
+/**
+ * Return an array of pixel id used by the fields in the nested scheme.
+ * Set "nzone" to the size of the array. Array must be freed by the user.
+ */
+extern long*
+Crossmatch_fillCells(Field *fields, int nfields,
+                    HealpixCell **cells, long nsides, long *nzone);
 
 #endif /* __CROSSMATCH_H__ */
