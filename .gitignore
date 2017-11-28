@@ -5,8 +5,8 @@
 /Makefile.in
 /src/Makefile
 /src/Makefile.in
-/src/catalog/fits/Makefile.in
-/src/catalog/fits/Makefile
+/tests/Makefile
+/tests/Makefile.in
 /aclocal.m4
 /autom4te.cache/
 /config.guess
@@ -28,7 +28,9 @@
 # Build objects and targets
 *.o
 /src/scamppoc
+/tests/testChealpixNeighboursNest
 /src/.deps/
+/tests/.deps/
 /src/catalog/.deps/
 /src/catalog/fits/.deps/
 /src/catalog/fits/libfits.a
