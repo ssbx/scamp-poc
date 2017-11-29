@@ -987,6 +987,28 @@ void neighbours_nest(long nside, long pix, long *neighbours) {
     }
 }
 
+void
+vect_prod(double*vector_A, double *vector_B, double*vector_C) {
+    vector_C[0] = vector_A[1] * vector_B[2] - vector_A[2] * vector_B[1];
+    vector_C[1] = vector_A[2] * vector_B[0] - vector_A[0] * vector_B[2];
+    vector_C[2] = vector_A[0] * vector_B[1] - vector_A[1] * vector_B[0];
+}
+static double
+dot_product(double *vector_A, double *vector_B) {
+    double result = 0;
+    result += vector_A[0] * vector_B[0];
+    result += vector_A[1] * vector_B[1];
+    result += vector_A[2] * vector_B[2];
+    return result;
+}
+double
+angdist(double *vector_A, double *vector_B) {
+    double sprod, vprod, vector_C[3];
+    sprod = dot_product(vector_A, vector_B);
+    vect_prod(vector_A, vector_B, vector_C);
+    vprod = sqrt(dot_product(vector_C, vector_C));
+    return atan2(vprod, sprod);
+}
 
 #ifdef ENABLE_FITSIO
 

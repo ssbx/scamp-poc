@@ -150,7 +150,10 @@ void pix2vec_ring64(int64_t nside, int64_t ipix, double *vec);
     of 8 long minimum. Negative number in neighbors, means it is inexistent.
     There can be 7 to 8 valid neighbors. */
 void neighbours_nest(long nside, long pix, long *neighbours);
-
+/*! Returns the distance angle between two vectors in radian. Vectors do not
+    have to be normalized */
+double angdist(double *vector_A, double *vector_B);
+void vect_prod(double*vector_A, double *vector_B, double*vector_C);
 /* FITS operations */
 /* --------------- */
 
