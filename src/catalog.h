@@ -22,19 +22,29 @@ struct Field;
 
 /**
  * Object structure represent a set entry. ra and dec are both represented
- * in degree (for wcslib) and radians (for healpix).
+ * in degree (for wcslib), radiant and vectors (for healpix).
  */
 typedef struct Object {
 
-    long    id;     /* same as "number" in sextractor catalog */
+    /* same as "number" in sextractor catalog */
+    long    id;
+
+    /* Default unit is radiant, used by healpix */
     double  ra;     /* right ascension (rad) (x) world coordinates */
     double  dec;    /* declination     (rad) (y) world coordinates */
 
+    /* Degrees used by WCS */
     double raDeg;   /* ra in degree */
     double decDeg;  /* dec in degree */
 
-    long pix_nest;    /* position on healpix nested scheme */
+    /* Representation as vector used to determinate the angle distance
+     * with another vector in the cross-match algorithm (see angdist) */
+    double vector[3];
 
+    /* position on healpix nested scheme */
+    long pix_nest;
+
+    /* Object belonging to this set */
     struct Set *set;
 
 

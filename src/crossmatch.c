@@ -24,6 +24,10 @@
 
 static void insert_object_in_cell(Object*, HealpixCell**, long, long);
 
+/*
+ * TODO voir query_disc (fortran). If used, neighbours_nest is useless.
+ * TODO voir angdist
+ */
 void
 Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
                         long ncells, double radius) {
@@ -119,7 +123,6 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
             (nside2npix(nsides) * sizeof(HealpixCell*) +
                     total_nobjects * sizeof(Object)) / 1000000);
 
-
     pixindex = ALLOC(sizeof(long) * PIX_INDEX_BASE_SISE);
     pixindex_size = PIX_INDEX_BASE_SISE;
     *ncells = 0;
@@ -132,7 +135,7 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
          * Realloc z
          */
         cell->objects = REALLOC(cell->objects,
-                                sizeof(HealpixCell*) * cell->nobjects);
+                                sizeof(Object*) * cell->nobjects);
 
         /*
          * Sort
