@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-    Logger_setLevel(LOGGER_DEBUG);
+    Logger_setLevel(LOGGER_TRACE);
 
     nfields = 2;
     Field fields[nfields];
@@ -64,7 +64,6 @@ int main(int argc, char** argv) {
         Catalog_freeField(&fields[i]);
     Crossmatch_freeCells(cells, nsides);
 
-    printf("size of 16384 %li MB\n", sizeof(void*) * nside2npix(16384) / 1000000);
     return (EXIT_SUCCESS);
 
 }

@@ -16,19 +16,18 @@
 #include <fitsio.h>
 #include <chealpix.h>
 
+#include "global.h"
 #include "catalog.h"
 #include "mem.h"
 #include "logger.h"
 
 static char* read_field_card(fitsfile*,int*,char*);
 
-static double PI_DIV_180 = 3.141592653589793238462643383279502884197 / 180;
-
 void
 Catalog_open(char *filename, Field *field, long nsides) {
     fitsfile *fptr;
     int i, j, k, l;
-    int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs, npix;
+    int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs;
     long nrows;
     char *field_card, *charnull;
     struct wcsprm *wcs;
@@ -60,11 +59,6 @@ Catalog_open(char *filename, Field *field, long nsides) {
                     "Read FITS HDUs number failed with status %i\n", status);
         }
     }
-
-    npix = nside2npix(nsides);
-    Logger_log(LOGGER_DEBUG,
-            "Will divide sphere into %li parts for file %s\n",
-            npix, filename);
 
     /*
      * We are ignoring the first "standard" HDU
@@ -287,10 +281,8 @@ Catalog_open(char *filename, Field *field, long nsides) {
             obj.id      = col_number[j];
             obj.raDeg   = world[k];
             obj.decDeg  = world[k+1];
-            obj.ra      = world[k]   * PI_DIV_180;
-            obj.dec     = world[k+1] * PI_DIV_180;
-
-            ang2pix_nest(nsides, obj.dec, obj.ra, &obj.pix_nest);
+            obj.ra      = world[k]   * SC_PI_DIV_180;
+            obj.dec     = world[k+1] * SC_PI_DIV_180;
 
             set.objects[j] = obj;
             obj.set = &field->sets[l];

@@ -68,8 +68,8 @@ Crossmatch_initCells(long nsides) {
     npix = nside2npix(nsides);
 
     Logger_log(LOGGER_DEBUG,
-            "Will allocate room for cells. It will take %i MB\n",
-            sizeof(HealpixCell*) * npix / 1000000);
+            "Will allocate room for %li cells. It will take %i MB\n",
+            npix, sizeof(HealpixCell*) * npix / 1000000);
 
     cells = (HealpixCell**) ALLOC(sizeof(HealpixCell*) * npix);
 
@@ -112,6 +112,8 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
             for (k=0; k<set->nobjects; k++) {
 
                 obj  = &set->objects[k];
+                ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
+                ang2vec(obj->dec, obj->ra, obj->vector);
                 insert_object_in_cell(obj, cells, obj->pix_nest, nsides);
 
             }
