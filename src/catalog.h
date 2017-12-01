@@ -17,8 +17,10 @@
 
 #include <wcslib/wcshdr.h>
 
+struct Object;
 struct Set;
 struct Field;
+
 
 /**
  * Object structure represent a set entry. ra and dec are both represented
@@ -47,6 +49,15 @@ typedef struct Object {
     /* Object belonging to this set */
     struct Set *set;
 
+    /* Best matching object from another field */
+    struct Object *bestMatch;
+
+    /* Best distance is the distance to bestMatch in radiant. It is initialized
+     * in the Crossmatch_crossSeel function to the value of max radius and used
+     * in the cross matching algorithm. May contain a value (initial radius)
+     * without a bestMatch object
+     */
+    double bestMatchDistance;
 
 } Object;
 
@@ -87,7 +98,7 @@ typedef struct Field {
  * Tread safe.
  */
 extern void
-Catalog_open(char *file, Field *field, long nsides);
+Catalog_open(char *file, Field *field);
 
 /**
  * Print the content of catalogs. Used for debugging purpose.

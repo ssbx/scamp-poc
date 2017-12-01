@@ -24,7 +24,7 @@
 static char* read_field_card(fitsfile*,int*,char*);
 
 void
-Catalog_open(char *filename, Field *field, long nsides) {
+Catalog_open(char *filename, Field *field) {
     fitsfile *fptr;
     int i, j, k, l;
     int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs;

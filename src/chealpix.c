@@ -1024,6 +1024,7 @@ pixdistance_nest(long nside) {
             continue;
         pix2vec_nest(nside, refpixel, v1);
         pix2vec_nest(nside, neighbours[i], v2);
+        break;
     }
     return angdist(v1, v2);
 

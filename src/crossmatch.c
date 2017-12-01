@@ -16,46 +16,149 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
+#include "global.h"
 #include "crossmatch.h"
 #include "logger.h"
 #include "mem.h"
 #include "chealpix.h"
-
 static void insert_object_in_cell(Object*, HealpixCell**, long, long);
+static void crossmatch(Object* current, Object* test, double radius);
+#define NNEIGHBORS 8
 
 /*
- * TODO voir query_disc (fortran). If used, neighbours_nest is useless.
- * TODO voir angdist
+ * TODO see query_disc (fortran). If used, neighbours_nest is useless.
+ * TODO see angdist
  */
 void
 Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
-                        long ncells, double radius) {
+                        long ncells, double radius_arcsec) {
     long i;
-    int j;
-    HealpixCell *current;
-    long *neighbors;
 
+    /*
+     * Iterate over HealpixCell structure which old pointers to objects
+     * belonging to him.
+     *
+     * Define functions inside loop, for future omp usage.
+     */
     for (i=0; i<ncells; i++) {
-        int nneigh = 0;
-        current = cells[cellindex[i]];
-        neighbors = current->neighbors;
+        /* arcsec to radiant */
+        double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
 
-        HealpixCell *neighbor_cell;
-        for (j=0; j<8; j++) {
-            if (neighbors[j] < 0 || cells[neighbors[j]] == NULL)
-                continue;
+        HealpixCell *current_cell = cells[cellindex[i]];
+        long nmatches = 0;
+        long j, k, l;
+        long *neighbor_cells = current_cell->neighbors;
 
-            neighbor_cell = cells[neighbors[j]];
-            nneigh += neighbor_cell->nobjects;
+        Object *current_obj;
+        Object *test_obj;
+
+
+        for (j=0; j<current_cell->nobjects; j++) {
+            current_obj = current_cell->objects[j];
+            current_obj->bestMatchDistance = radius;
+
+            /*
+             * First cross match with objects of the cell between them
+             */
+            for(k=0; k<current_cell->nobjects; k++) {
+                test_obj = current_cell->objects[k];
+
+                crossmatch(current_obj, test_obj, radius);
+
+            }
+
+            /*
+             * Then iterate against neighbors cells
+             */
+            long neighbor_indexes;
+            HealpixCell *test_cell;
+            for (k=0; k<NNEIGHBORS; k++) {
+                neighbor_indexes = neighbor_cells[k];
+
+                /*
+                 * Continue if there is no such neighbor pixel can have
+                 * 7 on 8 neighbors. Non existing cells are set to -1
+                 */
+                if (neighbor_indexes < 0)
+                    continue;
+
+                test_cell = cells[neighbor_indexes];
+                /*
+                 * Does the cell exists? It may be a neighbor of current cell,
+                 * but not be initialized because it does not contains
+                 * any objects.
+                 */
+                if (test_cell == NULL)
+                    continue;
+
+                /*
+                 * Then iterate over objects.
+                 */
+                for (l=0; l<test_cell->nobjects; l++) {
+                    test_obj = test_cell->objects[l];
+                    crossmatch(current_obj, test_obj, radius);
+
+                }
+            }
+            if (current_obj->bestMatch != NULL)
+                nmatches++;
         }
 
-        Logger_log(LOGGER_TRACE,
-                "Must match all %li objects with neighbors objects"
-                "(%li) for a total of %li matches.\n",
-                current->nobjects, nneigh,
-                (current->nobjects + nneigh - 1) * current->nobjects);
+        /*
+         * For debugging purpose only
+         */
+//        HealpixCell *neighbor_cell = cells[cellindex[i]];
+//
+//        for (j=0; j<8; j++) {
+//            if (neighbors[j] < 0 || cells[neighbors[j]] == NULL)
+//                continue;
+//            neighbor_cell = cells[neighbors[j]];
+//            nneigh += neighbor_cell->nobjects;
+//        }
+//
+//        Logger_log(LOGGER_TRACE,
+//                "Have matched all %li objects with neighbors objects"
+//                "(%li) for a total of %li matches.\n",
+//                current->nobjects, nneigh,
+//                (current->nobjects + nneigh - 1) * current->nobjects);
 
+        Logger_log(LOGGER_DEBUG,
+                "Crossmatch end. Got %li matches for cell %li!\n", nmatches,i);
+    }
+
+
+}
+
+static void
+crossmatch(Object *current_obj, Object *test_obj, double radius) {
+    /*
+     * pass if object is of the same field
+     */
+    if (current_obj->set->field == test_obj->set->field)
+        return;
+
+    /*
+     * pass if dec is not in a good range
+     */
+    if (abs(current_obj->dec - test_obj->dec) > radius)
+        return;
+
+    /*
+     * Cross match then!
+     *
+     * Get distance between objects (rad)
+     */
+    double distance_rad = angdist(current_obj->vector, test_obj->vector);
+
+    /*
+     * If distance is less than previous (or radius) update
+     * best_distance and set test_obj to currentObj.bestMatch
+     */
+    if (distance_rad < current_obj->bestMatchDistance) {
+        current_obj->bestMatch = test_obj;
+        current_obj->bestMatchDistance = distance_rad;
     }
 
 }
@@ -64,19 +167,13 @@ Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
 HealpixCell **
 Crossmatch_initCells(long nsides) {
     HealpixCell **cells;
-    long npix, i;
-    npix = nside2npix(nsides);
+    long npix = nside2npix(nsides);
 
-    Logger_log(LOGGER_DEBUG,
+    Logger_log(LOGGER_TRACE,
             "Will allocate room for %li cells. It will take %i MB\n",
             npix, sizeof(HealpixCell*) * npix / 1000000);
 
-    cells = (HealpixCell**) ALLOC(sizeof(HealpixCell*) * npix);
-
-#pragma omp simd
-    for (i=0; i<npix; i++) {
-        cells[i] = NULL;
-    }
+    cells = (HealpixCell**) CALLOC(npix, sizeof(HealpixCell*));
 
     return cells;
 }
@@ -112,6 +209,7 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
             for (k=0; k<set->nobjects; k++) {
 
                 obj  = &set->objects[k];
+                obj->bestMatch = NULL;
                 ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
                 ang2vec(obj->dec, obj->ra, obj->vector);
                 insert_object_in_cell(obj, cells, obj->pix_nest, nsides);
@@ -120,7 +218,7 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
         }
     }
 
-    Logger_log(LOGGER_DEBUG,
+    Logger_log(LOGGER_TRACE,
             "Total size for cells is %li MB\n",
             (nside2npix(nsides) * sizeof(HealpixCell*) +
                     total_nobjects * sizeof(Object)) / 1000000);

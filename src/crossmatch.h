@@ -37,7 +37,7 @@ typedef struct HealpixCell {
  */
 extern void
 Crossmatch_crossCells(HealpixCell **zones, long *zoneindex,
-                        long nzoneindex, double radius);
+                        long nzoneindex, double radius_arcsec);
 /**
  * Free all memory allocated for a zone.
  *
