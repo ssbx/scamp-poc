@@ -489,6 +489,7 @@ void pix2vec_ring(long nside, long ipix, double *vec) {
 void pix2vec_nest(long nside, long ipix, double *vec) {
     double z, phi;
     pix2ang_nest_z_phi(nside, ipix, &z, &phi);
+    printf("not a number? %0.50f %0.50f\n", z, phi);
     double stheta = sqrt((1. - z) * (1. + z));
     vec[0] = stheta * cos(phi);
     vec[1] = stheta * sin(phi);
@@ -1012,12 +1013,16 @@ angdist(double *vector_A, double *vector_B) {
 
 double
 pixdistance_nest(long nside) {
+    printf("what\n ");
     int i;
     double v1[3], v2[3];
     long neighbours[8];
     long refpixel;
     /* use a random pixel somewhere */
     refpixel = nside2npix(nside) / 2;
+    printf("long is %i long, int64 is %i long\n", sizeof(long), sizeof(int64_t));
+    printf("nsides is %li\n", nside2npix(nside));
+    printf("refpixel %li\n", refpixel);
     neighbours_nest(nside, refpixel, neighbours);
     for (i=0; i<8; i++) {
         if (neighbours[i] < 0)
@@ -1026,6 +1031,7 @@ pixdistance_nest(long nside) {
         pix2vec_nest(nside, neighbours[i], v2);
         break;
     }
+    printf("v1 %0.50f %0.50f %0.50f\n", v1[0], v1[1], v1[2]);
     return angdist(v1, v2);
 
 }

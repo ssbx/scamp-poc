@@ -49,7 +49,7 @@ Crossmatch_crossCells(HealpixCell **zones, long *zoneindex, long nzoneindex,
  * Thread safe.
  */
 extern void
-Crossmatch_freeCells(HealpixCell **zones, long nsides);
+Crossmatch_freeCells(HealpixCell **zones, long *cellindex, long ncells);
 
 /**
  * Allocate memory for the key/value pixels store (ObjectZone).

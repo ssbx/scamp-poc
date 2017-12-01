@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <time.h>
+#include <math.h>
 
 #include "global.h"
 #include "logger.h"
@@ -31,14 +32,14 @@
 int main(int argc, char** argv) {
     int i, j, nfields;
     clock_t c;
-    long nsides = 8192; /* a power of 2 */
+    long nsides = pow(2,14); /* a power 15 would be greet (5 arc sec wide) */
     long *cellindex, ncells;
     double radius_arcsec = 2.0; /* in arcsec */
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-    Logger_setLevel(LOGGER_DEBUG);
+    Logger_setLevel(LOGGER_NORMAL);
 
     nfields = 10;
     Field fields[10];
@@ -102,7 +103,7 @@ int main(int argc, char** argv) {
     c = clock();
     for (i = 0; i < nfields; i++)
         Catalog_freeField(&fields[i]);
-    Crossmatch_freeCells(cells, nsides);
+    Crossmatch_freeCells(cells, cellindex, ncells);
     c = clock() - c;
     printf("Took %f seconds cleaning up\n", (double)c / CLOCKS_PER_SEC);
 

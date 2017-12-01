@@ -62,6 +62,7 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
                         long ncells, double radius_arcsec) {
     long i;
 
+    long nbmatches = 0;
     /*
      * Iterate over HealpixCell structure which old pointers to objects
      * belonging to him.
@@ -128,8 +129,10 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
 
                 }
             }
-            if (current_obj->bestMatch != NULL)
+            if (current_obj->bestMatch != NULL) {
                 nmatches++;
+                nbmatches++;
+            }
         }
 
         /*
@@ -153,7 +156,8 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
         Logger_log(LOGGER_DEBUG,
                 "Crossmatch end. Got %li matches for cell %li!\n", nmatches,i);
     }
-
+    Logger_log(LOGGER_NORMAL,
+            "Crossmatch end. Got %li matches for all cells!\n", nbmatches);
 
 }
 
@@ -192,10 +196,10 @@ crossmatch(Object *current_obj, Object *test_obj, double radius) {
 
 HealpixCell **
 Crossmatch_initCells(long nsides) {
-    HealpixCell **cells;
+    HealpixCell **cells = NULL;
     long npix = nside2npix(nsides);
 
-    Logger_log(LOGGER_TRACE,
+    Logger_log(LOGGER_NORMAL,
             "Will allocate room for %li cells. It will take %i MB\n",
             npix, sizeof(HealpixCell*) * npix / 1000000);
 
@@ -285,14 +289,11 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
 }
 
 void
-Crossmatch_freeCells(HealpixCell **cells, long nsides) {
+Crossmatch_freeCells(HealpixCell **cells, long *cellindex, long ncells) {
     long i;
     HealpixCell *cell;
-    for (i=0; i<nside2npix(nsides);i++) {
-        cell = cells[i];
-        if (cell != NULL) {
-            FREE(cell->objects);
-        }
+    for (i=0; i<ncells; i++) {
+        FREE(cells[cellindex[i]]->objects);
     }
     FREE(cells);
 }
