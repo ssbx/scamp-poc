@@ -25,14 +25,40 @@
 #include "chealpix.h"
 static void insert_object_in_cell(Object*, HealpixCell**, long, long);
 static void crossmatch(Object* current, Object* test, double radius);
+static void crossmatch_querydisc_algo(HealpixCell **cells, long *cellindex,
+                        long ncells, double radius_arcsec);
+static void crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
+                        long ncells, double radius_arcsec);
 #define NNEIGHBORS 8
 
-/*
- * TODO see query_disc (fortran). If used, neighbours_nest is useless.
- * TODO see angdist
- */
+
+
 void
 Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
+                        long ncells, double radius_arcsec, CrossmatchAlgo algo) {
+    switch (algo) {
+    case ALGO_NEIGHBORS:
+        crossmatch_neighbors_algo(cells,cellindex,ncells,radius_arcsec);
+        break;
+    case ALGO_QUERYDISC:
+        crossmatch_querydisc_algo(cells,cellindex,ncells,radius_arcsec);
+        break;
+    }
+}
+
+static void
+crossmatch_querydisc_algo(HealpixCell **cells, long *cellindex,
+                        long ncells, double radius_arcsec) {
+    /*
+     * TODO see query_disc (fortran) as an alternative method.
+     * - 1 implement it (and tests)
+     * - 2 try!
+     */
+
+}
+
+static void
+crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
                         long ncells, double radius_arcsec) {
     long i;
 

@@ -14,6 +14,11 @@
 
 #include "catalog.h"
 
+typedef enum {
+    ALGO_NEIGHBORS,
+    ALGO_QUERYDISC
+} CrossmatchAlgo;
+
 typedef struct Matches {
 
 } Matches;
@@ -36,8 +41,8 @@ typedef struct HealpixCell {
  * Cross match fields with filed HealpixCell's.
  */
 extern void
-Crossmatch_crossCells(HealpixCell **zones, long *zoneindex,
-                        long nzoneindex, double radius_arcsec);
+Crossmatch_crossCells(HealpixCell **zones, long *zoneindex, long nzoneindex,
+                        double radius_arcsec, CrossmatchAlgo algo);
 /**
  * Free all memory allocated for a zone.
  *

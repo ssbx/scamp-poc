@@ -38,10 +38,10 @@ int main(int argc, char** argv) {
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
-    Logger_setLevel(LOGGER_NORMAL);
+    Logger_setLevel(LOGGER_DEBUG);
 
-    nfields = 20;
-    Field fields[20];
+    nfields = 10;
+    Field fields[10];
     c = clock();
     Catalog_open(argv[1], &fields[0]);
     Catalog_open(argv[1], &fields[1]);
@@ -54,16 +54,16 @@ int main(int argc, char** argv) {
     Catalog_open(argv[2], &fields[8]);
     Catalog_open(argv[2], &fields[9]);
 //
-    Catalog_open(argv[1], &fields[10]);
-    Catalog_open(argv[1], &fields[11]);
-    Catalog_open(argv[1], &fields[12]);
-    Catalog_open(argv[1], &fields[13]);
-    Catalog_open(argv[1], &fields[14]);
-    Catalog_open(argv[2], &fields[15]);
-    Catalog_open(argv[2], &fields[16]);
-    Catalog_open(argv[2], &fields[17]);
-    Catalog_open(argv[2], &fields[18]);
-    Catalog_open(argv[2], &fields[19]);
+//    Catalog_open(argv[1], &fields[10]);
+//    Catalog_open(argv[1], &fields[11]);
+//    Catalog_open(argv[1], &fields[12]);
+//    Catalog_open(argv[1], &fields[13]);
+//    Catalog_open(argv[1], &fields[14]);
+//    Catalog_open(argv[2], &fields[15]);
+//    Catalog_open(argv[2], &fields[16]);
+//    Catalog_open(argv[2], &fields[17]);
+//    Catalog_open(argv[2], &fields[18]);
+//    Catalog_open(argv[2], &fields[19]);
 //
 //    Catalog_open(argv[1], &fields[20]);
 //    Catalog_open(argv[1], &fields[21]);
@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
 
     /* ... that will speed up cross matching */
     c = clock();
-    Crossmatch_crossCells(cells, cellindex, ncells, radius_arcsec);
+    Crossmatch_crossCells(cells, cellindex, ncells, radius_arcsec, ALGO_NEIGHBORS);
     c = clock() - c;
     printf("Took %f seconds to cross match cell objects\n", (double)c / CLOCKS_PER_SEC);
 
