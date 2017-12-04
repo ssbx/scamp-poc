@@ -36,3 +36,4 @@
 /src/catalog/fits/.deps/
 /src/catalog/fits/libfits.a
 .dirstamp
+/.deps

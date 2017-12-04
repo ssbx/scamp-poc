@@ -45,6 +45,11 @@ Crossmatch_crossFields(Field *fields, int nfields,
                         long nsides, double radius_arcsec, CrossmatchAlgo algo) {
     long ncells;
     long *cellindex;
+
+    ChealpixSphere *sphere = NULL;
+    ChealpixSphere_generate(sphere, fields, nfields, nsides);
+
+
     HealPixel **cells = init_cells(nsides);
     cellindex = fill_cells(fields, nfields, cells, nsides, &ncells);
     cross_cells(cells, cellindex, ncells, radius_arcsec, algo);

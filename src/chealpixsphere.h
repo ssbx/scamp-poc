@@ -22,6 +22,7 @@
  * common healpix pixel.
  */
 typedef struct HealPixel {
+    long    id;
 
     Object  **objects;  /* our pointers */
     int     nobjects;   /* number of pointer */
@@ -31,5 +32,17 @@ typedef struct HealPixel {
 
 } HealPixel;
 
+typedef struct ChealpixSphere {
+
+    HealPixel   *pixels;
+    long        npixels;
+    long        size;
+
+} ChealpixSphere;
+
+extern void
+ChealpixSphere_generate(
+        ChealpixSphere *sphere, Field *fields,
+        int nfields, long nsides);
 
 #endif /* SRC_CHEALPIXSPHERE_H_ */
