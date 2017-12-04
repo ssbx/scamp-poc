@@ -18,7 +18,7 @@
 int
 main(int argc, char **argv) {
 
-    int i, j , k;
+    int i, j;
     long nsides = pow(2,13);
     long *cellindex, ncells;
     double radius_arcsec = 2.0;
@@ -39,6 +39,8 @@ main(int argc, char **argv) {
     Set s;
     Object obj, *obj_bm;
 
+
+
     for (i=0; i<f1.nsets; i++) {
         s = f1.sets[i];
         for (j=0; j<s.nobjects; j++) {
@@ -47,6 +49,7 @@ main(int argc, char **argv) {
 
             // Every objects should match something
             if (obj_bm == NULL) {
+                fprintf(stderr,"%li %f %f\n ", obj.id, obj.dec, obj.ra);
                 fprintf(stderr, "\nOrphan object should not occur for set %i object %i\n", i, j);
                 status = 1;
                 continue;
@@ -62,6 +65,20 @@ main(int argc, char **argv) {
             // match distance must be zero
             if (obj.bestMatchDistance > 0.0f) {
                 fprintf(stderr, "\nBest distance should be 0 %0.50f ", obj.bestMatchDistance);
+                status = 1;
+                continue;
+            }
+
+            // objects matches must share the same nest id
+            if (obj.pix_nest != obj_bm->pix_nest) {
+                fprintf(stderr, "\n Object should share the pix id %i %i %li", i,j,obj.pix_nest);
+                status = 1;
+                continue;
+            }
+
+            // object id must be the same id
+            if (obj.id != obj_bm->id) {
+                fprintf(stderr, "\n Object should share the same id %i %i %li", i,j,obj.id);
                 status = 1;
                 continue;
             }

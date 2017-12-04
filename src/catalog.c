@@ -45,7 +45,6 @@ Catalog_open(char *filename, Field *field) {
     charnull    = ALLOC(sizeof(char) * 2); strcpy(charnull, " ");
 
 
-
     if (fits_open_file(&fptr, filename, READONLY, &status)) {
         if (status) {
             Logger_log(LOGGER_CRITICAL,
@@ -59,6 +58,7 @@ Catalog_open(char *filename, Field *field) {
                     "Read FITS HDUs number failed with status %i\n", status);
         }
     }
+
 
     /*
      * We are ignoring the first "standard" HDU
@@ -266,15 +266,15 @@ Catalog_open(char *filename, Field *field) {
 
         Logger_log(LOGGER_TRACE, "File %s read. Create object set\n", filename);
 
-
         /*
          * Create a set of objects (a CCD)
          */
-        set.objects = ALLOC(sizeof(Object) * nrows);
-        set.nobjects = nrows;
-        set.wcs = wcs;
-        set.nwcs = nwcs;
-        set.field = field;
+        field->sets[l].objects = ALLOC(sizeof(Object) * nrows);
+        field->sets[l].nobjects = nrows;
+        field->sets[l].wcs = wcs;
+        field->sets[l].nwcs = nwcs;
+        field->sets[l].field = field;
+
         Object obj;
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
@@ -283,9 +283,9 @@ Catalog_open(char *filename, Field *field) {
             obj.decDeg  = world[k+1];
             obj.ra      = world[k]   * SC_PI_DIV_180;
             obj.dec     = world[k+1] * SC_PI_DIV_180;
+            obj.set     = &field->sets[l];
 
-            set.objects[j] = obj;
-            obj.set = &field->sets[l];
+            field->sets[l].objects[j] = obj;
 
         }
 
@@ -293,7 +293,7 @@ Catalog_open(char *filename, Field *field) {
         /*
          * Add it in the field structure
          */
-        field->sets[l] = set;
+
 
         FREE(col_number);
         FREE(x_image);

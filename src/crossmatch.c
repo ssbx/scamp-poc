@@ -61,8 +61,8 @@ static void
 crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
                         long ncells, double radius_arcsec) {
     long i;
-
     long nbmatches = 0;
+
     /*
      * Iterate over HealpixCell structure which old pointers to objects
      * belonging to him.
@@ -164,6 +164,7 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
 
 static void
 crossmatch(Object *current_obj, Object *test_obj, double radius) {
+
     /*
      * pass if object is of the same field
      */
@@ -173,8 +174,8 @@ crossmatch(Object *current_obj, Object *test_obj, double radius) {
     /*
      * pass if dec is not in a good range
      */
-//    if (abs(current_obj->dec - test_obj->dec) > radius)
-//        return;
+    if (abs(current_obj->dec - test_obj->dec) > radius)
+        return;
 
     /*
      * Cross match then!
@@ -232,15 +233,19 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
 
     long total_nobjects;
     total_nobjects = 0;
+
     for (i=0; i<nfields; i++) {
         field = &fields[i];
+
         for (j=0; j<field->nsets; j++) {
             set = &field->sets[j];
+
             total_nobjects += set->nobjects;
             for (k=0; k<set->nobjects; k++) {
 
-                obj  = &set->objects[k];
+                obj = &set->objects[k];
                 obj->bestMatch = NULL;
+
                 ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
                 ang2vec(obj->dec, obj->ra, obj->vector);
                 insert_object_in_cell(obj, cells, obj->pix_nest, nsides);
