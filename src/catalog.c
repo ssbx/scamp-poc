@@ -31,7 +31,6 @@ Catalog_open(char *filename, Field *field) {
     long nrows;
     char *field_card, *charnull;
     struct wcsprm *wcs;
-    Set set;
 
     // short shortnull;
     int   anynull;
