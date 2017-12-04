@@ -30,10 +30,9 @@
  *
  */
 int main(int argc, char** argv) {
-    int i, j, nfields;
+    int i, nfields;
     clock_t c;
     long nsides = pow(2,14); /* a power 15 would be greet (5 arc sec wide) */
-    long *cellindex, ncells;
     double radius_arcsec = 2.0; /* in arcsec */
 
     if (argc < 3)
@@ -41,19 +40,19 @@ int main(int argc, char** argv) {
 
     Logger_setLevel(LOGGER_NORMAL);
 
-    nfields = 10;
-    Field fields[10];
+    nfields = 2;
+    Field fields[2];
     c = clock();
     Catalog_open(argv[1], &fields[0]);
-    Catalog_open(argv[1], &fields[1]);
-    Catalog_open(argv[1], &fields[2]);
-    Catalog_open(argv[1], &fields[3]);
-    Catalog_open(argv[1], &fields[4]);
-    Catalog_open(argv[2], &fields[5]);
-    Catalog_open(argv[2], &fields[6]);
-    Catalog_open(argv[2], &fields[7]);
-    Catalog_open(argv[2], &fields[8]);
-    Catalog_open(argv[2], &fields[9]);
+    Catalog_open(argv[2], &fields[1]);
+//    Catalog_open(argv[1], &fields[2]);
+//    Catalog_open(argv[1], &fields[3]);
+//    Catalog_open(argv[1], &fields[4]);
+//    Catalog_open(argv[2], &fields[5]);
+//    Catalog_open(argv[2], &fields[6]);
+//    Catalog_open(argv[2], &fields[7]);
+//    Catalog_open(argv[2], &fields[8]);
+//    Catalog_open(argv[2], &fields[9]);
 //
 //    Catalog_open(argv[1], &fields[10]);
 //    Catalog_open(argv[1], &fields[11]);
@@ -79,23 +78,12 @@ int main(int argc, char** argv) {
     /* load fields */
 //    for (i = 0, j = 1; i < nfields; i++, j++)
 //        Catalog_open(argv[j], &fields[i], nsides);
+
     c = clock() - c;
     printf("Took %f seconds for opening catalogs\n", (double)c / CLOCKS_PER_SEC);
 
-    /* create an effective hash like cell array ... */
     c = clock();
-    HealpixCell **cells = Crossmatch_initCells(nsides);
-    c = clock() - c;
-    printf("Took %f seconds to allocate cell array\n", (double)c / CLOCKS_PER_SEC);
-
-    c = clock();
-    cellindex = Crossmatch_fillCells(fields, nfields, cells, nsides, &ncells);
-    c = clock() - c;
-    printf("Took %f seconds to fill cells with fields values\n", (double)c / CLOCKS_PER_SEC);
-
-    /* ... that will speed up cross matching */
-    c = clock();
-    Crossmatch_crossCells(cells, cellindex, ncells, radius_arcsec, ALGO_NEIGHBORS);
+    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS);
     c = clock() - c;
     printf("Took %f seconds to cross match cell objects\n", (double)c / CLOCKS_PER_SEC);
 
@@ -103,7 +91,6 @@ int main(int argc, char** argv) {
     c = clock();
     for (i = 0; i < nfields; i++)
         Catalog_freeField(&fields[i]);
-    Crossmatch_freeCells(cells, cellindex, ncells);
     c = clock() - c;
     printf("Took %f seconds cleaning up\n", (double)c / CLOCKS_PER_SEC);
 

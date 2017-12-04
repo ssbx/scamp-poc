@@ -20,21 +20,40 @@
 
 #include "global.h"
 #include "crossmatch.h"
+#include "chealpixsphere.h"
 #include "logger.h"
 #include "mem.h"
 #include "chealpix.h"
-static void insert_object_in_cell(Object*, HealpixCell**, long, long);
+
+static void insert_object_in_cell(Object*, HealPixel**, long, long);
 static void crossmatch(Object* current, Object* test, double radius);
-static void crossmatch_querydisc_algo(HealpixCell **cells, long *cellindex,
+static void crossmatch_querydisc_algo(HealPixel **cells, long *cellindex,
                         long ncells, double radius_arcsec);
-static void crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
+static void crossmatch_neighbors_algo(HealPixel **cells, long *cellindex,
                         long ncells, double radius_arcsec);
+static void cross_cells(HealPixel **zones, long *zoneindex, long nzoneindex,
+                        double radius_arcsec, CrossmatchAlgo algo);
+static void free_cells(HealPixel **zones, long *cellindex, long ncells);
+static HealPixel** init_cells(long nsides);
+static long* fill_cells(Field *fields, int nfields,
+                    HealPixel **cells, long nsides, long *nzone);
+
 #define NNEIGHBORS 8
 
+extern void
+Crossmatch_crossFields(Field *fields, int nfields,
+                        long nsides, double radius_arcsec, CrossmatchAlgo algo) {
+    long ncells;
+    long *cellindex;
+    HealPixel **cells = init_cells(nsides);
+    cellindex = fill_cells(fields, nfields, cells, nsides, &ncells);
+    cross_cells(cells, cellindex, ncells, radius_arcsec, algo);
+    free_cells(cells, cellindex, ncells);
+}
 
 
-void
-Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
+static void
+cross_cells(HealPixel **cells, long *cellindex,
                         long ncells, double radius_arcsec, CrossmatchAlgo algo) {
     switch (algo) {
     case ALGO_NEIGHBORS:
@@ -47,7 +66,7 @@ Crossmatch_crossCells(HealpixCell **cells, long *cellindex,
 }
 
 static void
-crossmatch_querydisc_algo(HealpixCell **cells, long *cellindex,
+crossmatch_querydisc_algo(HealPixel **cells, long *cellindex,
                         long ncells, double radius_arcsec) {
     /*
      * TODO see query_disc (fortran) as an alternative method.
@@ -58,7 +77,7 @@ crossmatch_querydisc_algo(HealpixCell **cells, long *cellindex,
 }
 
 static void
-crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
+crossmatch_neighbors_algo(HealPixel **cells, long *cellindex,
                         long ncells, double radius_arcsec) {
     long i;
     long nbmatches = 0;
@@ -73,7 +92,7 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
         /* arcsec to radiant */
         double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
 
-        HealpixCell *current_cell = cells[cellindex[i]];
+        HealPixel *current_cell = cells[cellindex[i]];
         long nmatches = 0;
         long j, k, l;
         long *neighbor_cells = current_cell->neighbors;
@@ -100,7 +119,7 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
              * Then iterate against neighbors cells
              */
             long neighbor_indexes;
-            HealpixCell *test_cell;
+            HealPixel *test_cell;
             for (k=0; k<NNEIGHBORS; k++) {
                 neighbor_indexes = neighbor_cells[k];
 
@@ -196,16 +215,16 @@ crossmatch(Object *current_obj, Object *test_obj, double radius) {
 }
 
 
-HealpixCell **
-Crossmatch_initCells(long nsides) {
-    HealpixCell **cells = NULL;
+static HealPixel **
+init_cells(long nsides) {
+    HealPixel **cells = NULL;
     long npix = nside2npix(nsides);
 
     Logger_log(LOGGER_NORMAL,
             "Will allocate room for %li cells. It will take %i MB\n",
-            npix, sizeof(HealpixCell*) * npix / 1000000);
+            npix, sizeof(HealPixel*) * npix / 1000000);
 
-    cells = (HealpixCell**) CALLOC(npix, sizeof(HealpixCell*));
+    cells = (HealPixel**) CALLOC(npix, sizeof(HealPixel*));
 
     return cells;
 }
@@ -219,15 +238,15 @@ static int cmp_objects_on_ra(const void *a, const void *b) {
 }
 
 #define PIX_INDEX_BASE_SISE 1000
-long*
-Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
+static long*
+fill_cells(Field *fields, int nfields, HealPixel **cells,
                     long nsides, long *ncells) {
     long i;
     int j, k;
     Field *field;
     Set *set;
     Object *obj;
-    HealpixCell *cell;
+    HealPixel *cell;
     long *pixindex;
     long pixindex_size;
 
@@ -256,7 +275,7 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
 
     Logger_log(LOGGER_TRACE,
             "Total size for cells is %li MB\n",
-            (nside2npix(nsides) * sizeof(HealpixCell*) +
+            (nside2npix(nsides) * sizeof(HealPixel*) +
                     total_nobjects * sizeof(Object)) / 1000000);
 
     pixindex = ALLOC(sizeof(long) * PIX_INDEX_BASE_SISE);
@@ -294,8 +313,8 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
     return pixindex;
 }
 
-void
-Crossmatch_freeCells(HealpixCell **cells, long *cellindex, long ncells) {
+static void
+free_cells(HealPixel **cells, long *cellindex, long ncells) {
     long i;
     for (i=0; i<ncells; i++) {
         FREE(cells[cellindex[i]]->objects);
@@ -308,12 +327,12 @@ Crossmatch_freeCells(HealpixCell **cells, long *cellindex, long ncells) {
  */
 #define CELL_BASE_SIZE 100
 static void
-insert_object_in_cell(Object *obj, HealpixCell **cells,
+insert_object_in_cell(Object *obj, HealPixel **cells,
                         long index, long nsides) {
-    HealpixCell *cell;
+    HealPixel *cell;
 
     if (cells[index] == NULL) {
-        cells[index] = ALLOC(sizeof(HealpixCell));
+        cells[index] = ALLOC(sizeof(HealPixel));
         cells[index]->objects = NULL;
         neighbours_nest(nsides, index, cells[index]->neighbors);
     }
@@ -338,169 +357,4 @@ insert_object_in_cell(Object *obj, HealpixCell **cells,
     cell->nobjects++;
 
 }
-
-//double
-//Object_areClose(Object_T a, Object_T b, double factor) {
-//    double distance, limit;
-//
-//    /* See https://fr.wikipedia.org/wiki/Formule_de_haversine */
-//    distance = 2 * asin(sqrt(
-//        pow(sin( (b.dec - a.dec) / 2) , 2) +
-//        cos(a.dec) * cos(b.dec) *
-//        pow(sin((b.ra - a.ra) / 2) , 2)
-//    ));
-//
-//    limit = factor * sqrt(a.sd * a.sd + b.sd * b.sd);
-//
-//    if (distance < limit)
-//        return true;
-//    else
-//        return false;
-//
-//}
-
-
-//void Crossmatch_crossfields(Field *fields, int nfields, ObjectZone **zones) {
-//
-//    int i, j, k;
-//    Object obj;
-//    ObjectZone *objzone;
-//
-//    /* TODO TODO TODO TODO
-//     * Iterate over healpix zones, better than objects */
-//
-//    /*
-//     * We are matching all objects from any fields including the
-//     * one we are matching on.
-//     * TODO filter matches to remove matches from the original
-//     * field, and matches coming from the same field for an object
-//     * (keep the best).
-//     * TODO we could match healpix rings instead.
-//     */
-//    for (i=0; i<nfields; i++) {
-//    	for (j=0; j<fields[i].nsets; j++) {
-//    		for (k=0; k<fields[i].sets[j].nobjects; k++) {
-//    			obj = fields[i].sets[j].objects[k];
-//
-//    			/*
-//    			 * TODO XXX BUG it is not enough to have matches on border
-//    			 * of zones. We must also take adjacent zones.
-//    			 */
-//    			objzone = zones[obj.pix_nest]; /* zones objects are sorted by right ascension */
-//
-//    			Logger_log(LOGGER_TRACE,
-//    					"Have found %i matches for %i\n",objzone->nobjects,obj.id);
-//    		}
-//    	}
-//    }
-//}
-
-//static unsigned long long
-//findPositionLT(ObjectCat_T *l, double raMax) {
-//	/* TODO optimize with a quick search algorithm */
-//	unsigned long long r;
-//
-//	for (r = l->length - 1; r >= 0; r--) {
-//		if (l->objects[r].ra < raMax)
-//			break;
-//	}
-//	return r;
-//}
-//
-//static unsigned long long
-//findPositionGT(ObjectCat_T *l, double raMin) {
-//	/* TODO optimize with a quick search algorithm */
-//	unsigned long long r;
-//
-//	for (r=0; r<l->length; r++) {
-//		if (l->objects[r].ra > raMin)
-//			break;
-//	}
-//	return r;
-//}
-//
-//static void
-//filterObjectsByRa(
-//		unsigned long long *indexStart,
-//		unsigned long long *indexEnd,
-//		ObjectCat_T *ref,
-//		double ra,
-//		double sdMax) {
-//
-//	/* ObjectList is sorted by ra find the indexes in which ra fits */
-//	*indexStart = findPositionGT(ref, ra - sdMax);
-//	*indexEnd   = findPositionLT(ref, ra + sdMax);
-//
-//}
-//
-///*
-// * Take two ObjectCat_T and count the number of match between them.
-// */
-//void
-//Crossmatch_run(
-//        ObjectCat_T *cat_A,
-//        ObjectCat_T *cat_B,
-//		double     factor) {
-//
-//	Object refObject;
-//	Object testObject;
-//
-//	double sdMaxA, sdMaxB, sdMax;
-//
-//	int count, matches;
-//	unsigned long long i, j, jStart, jEnd;
-//
-//	sdMaxA = cat_A->maxSd;
-//	sdMaxB = cat_B->maxSd;
-//	/* WARNING what if dec is max or min? */
-//	sdMax = factor * sqrt(sdMaxA * sdMaxA + sdMaxB * sdMaxB);
-//
-//	count = matches = 0;
-//
-//	for (i=0; i < cat_B->length; i++) {
-//
-//		testObject = cat_B->objects[i];
-//
-//		/* Filter obvious non matches on right ascension */
-//		filterObjectsByRa(&jStart, &jEnd, cat_A, testObject.ra, sdMax);
-//		if (jEnd > jStart) /* No matching objects */
-//			continue;
-//
-//		for (j = jStart; j <= jEnd; j++) {
-//			refObject = reference->objects[j];
-//
-//			/*
-//			 * Eliminate obvious non matches on declination.
-//			 * TODO Maybe use a sorted by declination list and cross match merge
-//			 * with ra candidates list (maybe sort by pointers both ra and dec
-//			 * in the Objectlist_commit function).
-//			 */
-//			if (
-//					(testObject.dec + sdMax) < refObject.dec ||
-//					(testObject.dec - sdMax) > refObject.dec
-//			) continue;
-//
-//			/*
-//			 * Here, refObject is a very good candidate for matching. It is
-//			 * contained in a scare of (sdMax*sdMax) size centered on
-//			 * testObject.
-//			 */
-//			printf("increase count %i\n", omp_get_thread_num());
-//			count++;
-//			if (Object_areClose(refObject, testObject, factor)) {
-//				/* We got a MATCH!!! */
-//
-//				printf("increase matches %i\n", omp_get_thread_num());
-//				matches++;
-//			}
-//		}
-//	}
-//
-//	printf("Number of matches: %i\n",matches);
-//	printf("Number of iterations: %i\n",count);
-//
-//	return;
-//}
-//
-//
 

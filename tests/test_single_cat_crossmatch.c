@@ -19,7 +19,6 @@ int main(int argc, char **argv) {
 
     int i, j;
     long nsides = pow(2, 13);
-    long *cellindex, ncells;
     double radius_arcsec = 2.0;
 
     Field fields[2];
@@ -27,11 +26,7 @@ int main(int argc, char **argv) {
     Catalog_open(argv[1], &fields[0]);
     Catalog_open(argv[1], &fields[1]);
 
-    HealpixCell **cells = Crossmatch_initCells(nsides);
-    cellindex = Crossmatch_fillCells(fields, 2, cells, nsides, &ncells);
-
-    Crossmatch_crossCells(cells, cellindex, ncells, radius_arcsec,
-            ALGO_NEIGHBORS);
+    Crossmatch_crossFields(fields, 2, nsides, radius_arcsec, ALGO_NEIGHBORS);
 
     int status = 0;
     Field f1 = fields[0];
@@ -63,7 +58,7 @@ int main(int argc, char **argv) {
             // objects matches must share the same nest id
             if (obj.pix_nest != obj_bm->pix_nest) {
                 fprintf(stderr, "\n Object should share the pix id %i %i pix:"
-                        " %li match pix: ", i, j, obj.pix_nest,
+                        " %li match pix: %li", i, j, obj.pix_nest,
                         obj_bm->pix_nest);
                 status = 1;
                 continue;
@@ -89,7 +84,6 @@ int main(int argc, char **argv) {
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);
-    Crossmatch_freeCells(cells, cellindex, ncells);
 
     return status;
 }

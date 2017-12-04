@@ -288,12 +288,6 @@ Catalog_open(char *filename, Field *field) {
 
         }
 
-
-        /*
-         * Add it in the field structure
-         */
-
-
         FREE(col_number);
         FREE(x_image);
         FREE(y_image);
