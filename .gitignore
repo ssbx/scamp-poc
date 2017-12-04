@@ -29,6 +29,7 @@
 *.o
 /src/scamppoc
 /tests/testChealpixNeighboursNest
+/tests/testSingleCatCrossmatch
 /src/.deps/
 /tests/.deps/
 /src/catalog/.deps/

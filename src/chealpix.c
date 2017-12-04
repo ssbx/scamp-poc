@@ -1011,30 +1011,6 @@ angdist(double *vector_A, double *vector_B) {
     return atan2(vprod, sprod);
 }
 
-double
-pixdistance_nest(long nside) {
-    printf("what\n ");
-    int i;
-    double v1[3], v2[3];
-    long neighbours[8];
-    long refpixel;
-    /* use a random pixel somewhere */
-    refpixel = nside2npix(nside) / 2;
-    printf("long is %i long, int64 is %i long\n", sizeof(long), sizeof(int64_t));
-    printf("nsides is %li\n", nside2npix(nside));
-    printf("refpixel %li\n", refpixel);
-    neighbours_nest(nside, refpixel, neighbours);
-    for (i=0; i<8; i++) {
-        if (neighbours[i] < 0)
-            continue;
-        pix2vec_nest(nside, refpixel, v1);
-        pix2vec_nest(nside, neighbours[i], v2);
-        break;
-    }
-    printf("v1 %0.50f %0.50f %0.50f\n", v1[0], v1[1], v1[2]);
-    return angdist(v1, v2);
-
-}
 #ifdef ENABLE_FITSIO
 
 #include "fitsio.h"

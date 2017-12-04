@@ -129,6 +129,7 @@ crossmatch_neighbors_algo(HealpixCell **cells, long *cellindex,
 
                 }
             }
+
             if (current_obj->bestMatch != NULL) {
                 nmatches++;
                 nbmatches++;
@@ -172,8 +173,8 @@ crossmatch(Object *current_obj, Object *test_obj, double radius) {
     /*
      * pass if dec is not in a good range
      */
-    if (abs(current_obj->dec - test_obj->dec) > radius)
-        return;
+//    if (abs(current_obj->dec - test_obj->dec) > radius)
+//        return;
 
     /*
      * Cross match then!
@@ -291,7 +292,6 @@ Crossmatch_fillCells(Field *fields, int nfields, HealpixCell **cells,
 void
 Crossmatch_freeCells(HealpixCell **cells, long *cellindex, long ncells) {
     long i;
-    HealpixCell *cell;
     for (i=0; i<ncells; i++) {
         FREE(cells[cellindex[i]]->objects);
     }

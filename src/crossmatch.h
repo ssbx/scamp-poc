@@ -19,10 +19,6 @@ typedef enum {
     ALGO_QUERYDISC
 } CrossmatchAlgo;
 
-typedef struct Matches {
-
-} Matches;
-
 /**
  * HealpixCell store pointers to every objects of a field, belonging to a
  * common healpix pixel.
