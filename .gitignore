@@ -30,6 +30,7 @@
 /src/scamppoc
 /tests/testChealpixNeighboursNest
 /tests/testSingleCatCrossmatch
+/tests/testChealpixsphereAvltree
 /src/.deps/
 /tests/.deps/
 /src/catalog/.deps/
@@ -37,3 +38,4 @@
 /src/catalog/fits/libfits.a
 .dirstamp
 /.deps
+

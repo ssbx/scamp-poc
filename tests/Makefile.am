@@ -1,4 +1,8 @@
-bin_PROGRAMS = testChealpixNeighboursNest testSingleCatCrossmatch
+bin_PROGRAMS = \
+	testChealpixNeighboursNest \
+	testSingleCatCrossmatch \
+	testChealpixsphereAvltree
+	
 testChealpixNeighboursNest_SOURCES= \
 		test_chealpix_neighbours_nest.c \
 		../src/chealpix.c \
@@ -10,6 +14,19 @@ testSingleCatCrossmatch_SOURCES= \
 		../src/catalog.h \
 		../src/crossmatch.c \
 		../src/crossmatch.h \
+		../src/chealpix.c \
+		../src/chealpix.h \
+		../src/chealpixsphere.c \
+		../src/chealpixsphere.h \
+		../src/logger.c \
+		../src/logger.h \
+		../src/mem.c \
+		../src/mem.h
+
+testChealpixsphereAvltree_SOURCES= \
+		test_chealpixsphere_avltree.c \
+ 		../src/catalog.c \
+		../src/catalog.h \
 		../src/chealpix.c \
 		../src/chealpix.h \
 		../src/chealpixsphere.c \

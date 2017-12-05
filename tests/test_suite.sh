@@ -27,5 +27,16 @@ else
 	echo "===> Test for testSingleCatCrossmatch SUCCESS "
 fi
 
+echo "==> Running testChealpixsphereAvltree"
+${DIR}/testChealpixsphereAvltree
+if [ $? -gt 0 ]
+then 
+	echo "===> Test for testChealpixsphereAvltree FAILED"
+	STATUS=1
+else
+	echo "===> Test for testChealpixsphereAvltree SUCCESS "
+fi
+
 echo "=> testing end"
 exit $STATUS
+

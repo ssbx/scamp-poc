@@ -17,12 +17,15 @@
 
 #include "catalog.h"
 
+struct HealPixel;
+
 /**
  * HealpixCell store pointers to every objects of a field, belonging to a
  * common healpix pixel.
  */
 typedef struct HealPixel {
-    long    id;
+
+    long    id; /* healpix id, used by the AVL algorythm */
 
     Object  **objects;  /* our pointers */
     int     nobjects;   /* number of pointer */
@@ -30,13 +33,15 @@ typedef struct HealPixel {
 
     long neighbors[8];
 
+    /* AVL related variables, including the "id" element */
+    struct HealPixel *avlChilds[2];
+    int        avlHeight;
+
 } HealPixel;
 
 typedef struct ChealpixSphere {
 
     HealPixel   *pixels;
-    long        npixels;
-    long        size;
 
 } ChealpixSphere;
 

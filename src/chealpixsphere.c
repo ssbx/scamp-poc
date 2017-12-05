@@ -6,10 +6,12 @@
  */
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "chealpixsphere.h"
 #include "chealpix.h"
 #include "mem.h"
+#include "assert.h"
 
 
 static void insert_object_into_pixel(ChealpixSphere*, Object*, long);
@@ -23,9 +25,7 @@ ChealpixSphere_generate(
 
     if (sphere == NULL) {
         sphere = ALLOC(sizeof(ChealpixSphere));
-        sphere->pixels = ALLOC(sizeof(HealPixel) * 1000);
-        sphere->size = 1000;
-        sphere->npixels = 0;
+        sphere->pixels = NULL;
     }
 
     Field   field;
@@ -51,6 +51,118 @@ ChealpixSphere_generate(
     }
 }
 
+
+
+/******************************************************************************
+ * AVL related functions
+ */
+static HealPixel*
+avl_search(HealPixel *leaf, long key) {
+    if (leaf == NULL)
+        return NULL;
+    else if (leaf->id == key) {
+        return leaf;
+    } else {
+        return avl_search(leaf->avlChilds[key > leaf->id], key);
+    }
+}
+
+static int
+avl_getHeight(HealPixel *leaf) {
+    if (leaf == NULL) {
+        return 0;
+    } else {
+        return leaf->avlHeight;
+    }
+}
+
+#define Max(x,y) ((x)>(y) ? (x) : (y))
+static void
+avl_fixHeight(HealPixel *leaf) {
+    assert(leaf != NULL);
+    leaf->avlHeight = 1 + Max(avl_getHeight(leaf->avlChilds[0]), avl_getHeight(leaf->avlChilds[1]));
+}
+
+static void
+avl_rotate(HealPixel *leaf, int d) {
+    HealPixel *oldRoot, *newRoot, *oldMiddle;
+    oldRoot = leaf;
+    newRoot = oldRoot->avlChilds[d];
+    oldMiddle = newRoot->avlChilds[!d];
+
+    oldRoot->avlChilds[d] = oldMiddle;
+    newRoot->avlChilds[!d] = oldRoot;
+    avl_fixHeight(newRoot->avlChilds[!d]);
+    avl_fixHeight(newRoot);
+}
+
+static void
+avl_rebalance(HealPixel *leaf) {
+    printf("avl rebalance\n");
+    int i;
+    if (leaf == NULL)
+        return;
+
+    for (i=0; i<2; i++) {
+        if (avl_getHeight(leaf->avlChilds[i]) > avl_getHeight(leaf->avlChilds[!i]) + 1) {
+            if (
+                    avl_getHeight(leaf->avlChilds[i]->avlChilds[i]) <
+                    avl_getHeight(leaf->avlChilds[i]->avlChilds[!i])) {
+                avl_rotate(leaf, i);
+            } else {
+                avl_rotate(leaf->avlChilds[i], !i);
+                avl_rotate(leaf, i);
+            }
+            return;
+        }
+    }
+
+    avl_fixHeight(leaf);
+
+}
+
+static HealPixel*
+avl_insert(HealPixel *root, HealPixel element) {
+
+    if (root->id < 0) { // empty
+        root = ALLOC(sizeof(HealPixel));
+        printf("while root is %p\n", root);
+        assert(root);
+        *root = element;
+        root->avlChilds[0] = NULL;
+        root->avlChilds[1] = NULL;
+        root->avlHeight = 1;
+        return root;
+    } else if (element.id == root->id) {
+        return root;;
+    } else {
+        HealPixel *in = avl_insert(root->avlChilds[element.id > root->id], element);
+        avl_rebalance(root);
+        return in;
+    }
+}
+
+int
+avl_test_1() {
+    HealPixel root;
+    root.id = -1;
+
+    HealPixel newElement;
+    newElement.id = 1;
+
+    printf("root before %p\n", root.id);
+    avl_insert(&root, newElement);
+    printf("root after %p\n"), root.id;
+
+    return 1;
+}
+
+/**
+ * AVL related functions end
+ ******************************************************************************/
+
+
+
 static void
 insert_object_into_pixel(
         ChealpixSphere  *sphere,
@@ -58,35 +170,21 @@ insert_object_into_pixel(
         long             nsides)
 {
     HealPixel *pixel = get_pixel(sphere, object->pix_nest);
+    //printf("hello pixel %li\n", pixel->id);
 
 }
 
 static HealPixel*
 get_pixel(ChealpixSphere *sphere, long pixelid) {
-    int i;
+    HealPixel *pix = avl_search(sphere->pixels, pixelid);
+    if (pix != NULL)
+        return pix;
+    HealPixel newPix;
+    newPix.avlHeight = 0;
+    newPix.id = pixelid;
+    newPix.avlChilds[0] = NULL;
+    newPix.avlChilds[1] = NULL;
 
-    for (i=0; i<sphere->npixels; i++) {
-        if (sphere->pixels[i].id == pixelid) {
-            return &sphere->pixels[i];
-        }
-    }
-
-    /*
-     *  not found, create it:
-     */
-
-    /* need realloc */
-    if (sphere->npixels == sphere->size) {
-        sphere->pixels = REALLOC(sphere->pixels, sizeof(HealPixel) * sphere->size * 2);
-        sphere->size *= 2;
-    }
-
-    HealPixel pix;
-    pix.nobjects = 0;
-    pix.objects = ALLOC(sizeof(Object*) * 1000);
-    pix.size = 1000;
-    sphere->pixels[sphere->npixels] = pix;
-    sphere->npixels ++;
-    return &sphere->pixels[sphere->npixels - 1];
+    return avl_insert(sphere->pixels, newPix);
 
 }
