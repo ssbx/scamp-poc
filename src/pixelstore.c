@@ -1,6 +1,11 @@
 /*
  * Healpix pixels storage mechanism.
  *
+ * This file is divided in four parts:
+ * - 1 AVL tree implementations,
+ * - 2 static functions
+ * - 3 public interface
+ *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
  * Written by Sebastien Serre
@@ -22,142 +27,10 @@
 #include "logger.h"
 
 
-static void insert_object_into_avltree_store(PixelStore*, Sample*, long);
-static void insert_object_into_bigarray_store(Sample*,PixelStore*,long,long);
-#define PIXELIDS_BASE_SIZE 1000
-/*
- * Static utilities
- */
-
-
-static PixelStore*
-new_store() {
-
-    PixelStore *store = ALLOC(sizeof(PixelStore));
-
-    store->pixels = NULL;
-    store->npixels = 0;
-    store->pixelids = ALLOC(sizeof(long) * PIXELIDS_BASE_SIZE);
-    store->pixelids_size = PIXELIDS_BASE_SIZE;
-
-    return store;
-}
-
-static PixelStore*
-new_store_bigarray(Field *fields, int nfields, long nsides) {
-    PixelStore *store = new_store();
-    store->scheme = STORE_SCHEME_BIGARRAY;
-
-    /* Allocate room for all possible pixels */
-    long npix = nside2npix(nsides);
-
-    Logger_log(LOGGER_NORMAL,
-            "Will allocate room for %li cells. It will take %i MB\n",
-            npix, sizeof(HealPixel*) * npix / 1000000);
-
-    store->pixels = (HealPixel**) CALLOC(npix, sizeof(HealPixel*));
-
-    /* fill pixels with objects values */
-    long i;
-    int j, k;
-    Field *field;
-    Set *set;
-    Sample *obj;
-
-    long total_nobjects;
-    total_nobjects = 0;
-
-    for (i=0; i<nfields; i++) {
-        field = &fields[i];
-
-        for (j=0; j<field->nsets; j++) {
-            set = &field->sets[j];
-
-            total_nobjects += set->nobjects;
-            for (k=0; k<set->nobjects; k++) {
-
-                obj = &set->objects[k];
-                obj->bestMatch = NULL;
-
-                ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
-                ang2vec(obj->dec, obj->ra, obj->vector);
-                insert_object_into_bigarray_store(obj, store, obj->pix_nest, nsides);
-
-            }
-        }
-    }
-
-    Logger_log(LOGGER_TRACE,
-            "Total size for cells is %li MB\n",
-            (nside2npix(nsides) * sizeof(HealPixel*) +
-                    total_nobjects * sizeof(Sample)) / 1000000);
-
-    return store;
-
-}
-
-
-static void
-free_store_bigarray(PixelStore *store) {
-    long i;
-    long *pixids = store->pixelids;
-    long npix = store->npixels;
-    HealPixel **pixels = (HealPixel**) store->pixels;
-
-    for (i=0; i<npix; i++) {
-        FREE(pixels[pixids[i]]->objects);
-    }
-    FREE(pixels);
-}
-
-static PixelStore*
-new_store_avltree(Field *fields, int nfields, long nsides) {
-
-    PixelStore *store = new_store();
-    store->scheme = STORE_SCHEME_AVLTREE;
-
-    Field field;
-    Set set;
-    Sample *object;
-
-    int i, j, k;
-    for (i = 0; i < nfields; i++) {
-        field = fields[i];
-
-        for (j = 0; j < field.nsets; j++) {
-            set = field.sets[j];
-
-            for (k = 0; k < set.nobjects; k++) {
-
-                object = &set.objects[k];
-                object->bestMatch = NULL;
-                ang2pix_nest(nsides,object->dec, object->ra,&object->pix_nest);
-                ang2vec(object->dec, object->ra, object->vector);
-                insert_object_into_avltree_store(store, object, nsides);
-
-            }
-        }
-    }
-
-    return store;
-}
-
-
-PixelStore*
-PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme) {
-    switch(scheme) {
-    case STORE_SCHEME_BIGARRAY:
-        return new_store_bigarray(fields, nfields, nsides);
-    case STORE_SCHEME_AVLTREE:
-        return new_store_avltree(fields, nfields, nsides);
-    default:
-        return NULL;
-    }
-}
 
 
 /*****************************************************************************
- * AVL Tree implementation
+ * 1 AVL Tree implementation
  *
  * From the SQLite source code ext/misc/amatch.c and ext/misc/closure.c with
  * the following notice:
@@ -287,7 +160,6 @@ pixel_avl *pixelAvlSearch(pixel_avl *p, const long zId) {
     return p;
 }
 
-
 /* Insert a new node pNew.  Return NULL on success.  If the key is not
  ** unique, then do not perform the insert but instead leave pNew unchanged
  ** and return a pointer to an existing node with the same key.
@@ -389,38 +261,10 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
  ******************************************************************************/
 
 
-HealPixel*
-PixelStore_get(PixelStore* store, long key) {
-    pixel_avl *match_avl;
-    HealPixel **match_big;
 
-    switch(store->scheme) {
-    case STORE_SCHEME_AVLTREE:
-        match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
-        if (!match_avl)
-            return (HealPixel*) NULL;
-        return &match_avl->pixel;
-    case STORE_SCHEME_BIGARRAY:
-        match_big = (HealPixel**) store->pixels;
-        return match_big[key];
-    default:
-        return NULL;
-    }
-}
-
-void
-PixelStore_free(PixelStore* store) {
-    switch(store->scheme) {
-    case STORE_SCHEME_AVLTREE:
-        pixelAvlFree((pixel_avl*) store->pixels);
-        FREE(store);
-        return;
-    case STORE_SCHEME_BIGARRAY:
-        free_store_bigarray(store);
-        FREE(store);
-        return;
-    }
-}
+/******************************************************************************
+ * 2 PRIVATE FUNCTIONS
+ */
 #define OBJ_BASE_SIZE 50
 static void
 insert_object_into_bigarray_store(Sample *obj, PixelStore *store,
@@ -498,3 +342,172 @@ insert_object_into_avltree_store(PixelStore *store, Sample *obj, long nsides) {
     pix->nobjects++;
 
 }
+
+#define PIXELIDS_BASE_SIZE 1000
+static PixelStore*
+new_store() {
+
+    PixelStore *store = ALLOC(sizeof(PixelStore));
+
+    store->pixels = NULL;
+    store->npixels = 0;
+    store->pixelids = ALLOC(sizeof(long) * PIXELIDS_BASE_SIZE);
+    store->pixelids_size = PIXELIDS_BASE_SIZE;
+
+    return store;
+}
+
+static PixelStore*
+new_store_bigarray(Field *fields, int nfields, long nsides) {
+    PixelStore *store = new_store();
+    store->scheme = STORE_SCHEME_BIGARRAY;
+
+    /* Allocate room for all possible pixels */
+    long npix = nside2npix(nsides);
+
+    Logger_log(LOGGER_NORMAL,
+            "Will allocate room for %li cells. It will take %i MB\n",
+            npix, sizeof(HealPixel*) * npix / 1000000);
+
+    store->pixels = (HealPixel**) CALLOC(npix, sizeof(HealPixel*));
+
+    /* fill pixels with objects values */
+    long i;
+    int j, k;
+    Field *field;
+    Set *set;
+    Sample *obj;
+
+    long total_nobjects;
+    total_nobjects = 0;
+
+    for (i=0; i<nfields; i++) {
+        field = &fields[i];
+
+        for (j=0; j<field->nsets; j++) {
+            set = &field->sets[j];
+
+            total_nobjects += set->nobjects;
+            for (k=0; k<set->nobjects; k++) {
+
+                obj = &set->objects[k];
+                obj->bestMatch = NULL;
+
+                ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
+                ang2vec(obj->dec, obj->ra, obj->vector);
+                insert_object_into_bigarray_store(obj, store, obj->pix_nest, nsides);
+
+            }
+        }
+    }
+
+    Logger_log(LOGGER_TRACE,
+            "Total size for cells is %li MB\n",
+            (nside2npix(nsides) * sizeof(HealPixel*) +
+                    total_nobjects * sizeof(Sample)) / 1000000);
+
+    return store;
+
+}
+
+static PixelStore*
+new_store_avltree(Field *fields, int nfields, long nsides) {
+
+    PixelStore *store = new_store();
+    store->scheme = STORE_SCHEME_AVLTREE;
+
+    Field field;
+    Set set;
+    Sample *object;
+
+    int i, j, k;
+    for (i = 0; i < nfields; i++) {
+        field = fields[i];
+
+        for (j = 0; j < field.nsets; j++) {
+            set = field.sets[j];
+
+            for (k = 0; k < set.nobjects; k++) {
+
+                object = &set.objects[k];
+                object->bestMatch = NULL;
+                ang2pix_nest(nsides,object->dec, object->ra,&object->pix_nest);
+                ang2vec(object->dec, object->ra, object->vector);
+                insert_object_into_avltree_store(store, object, nsides);
+
+            }
+        }
+    }
+
+    return store;
+}
+
+static void
+free_store_bigarray(PixelStore *store) {
+    long i;
+    long *pixids = store->pixelids;
+    long npix = store->npixels;
+    HealPixel **pixels = (HealPixel**) store->pixels;
+
+    for (i=0; i<npix; i++) {
+        FREE(pixels[pixids[i]]->objects);
+    }
+    FREE(pixels);
+}
+/**
+ * PRIVATE FUNCTIONS END
+ ******************************************************************************/
+
+
+
+/******************************************************************************
+ * PUBLIC FUNCTIONS
+ */
+PixelStore*
+PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme) {
+    switch(scheme) {
+    case STORE_SCHEME_BIGARRAY:
+        return new_store_bigarray(fields, nfields, nsides);
+    case STORE_SCHEME_AVLTREE:
+        return new_store_avltree(fields, nfields, nsides);
+    default:
+        return NULL;
+    }
+}
+
+HealPixel*
+PixelStore_get(PixelStore* store, long key) {
+    pixel_avl *match_avl;
+    HealPixel **match_big;
+
+    switch(store->scheme) {
+    case STORE_SCHEME_AVLTREE:
+        match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
+        if (!match_avl)
+            return (HealPixel*) NULL;
+        return &match_avl->pixel;
+    case STORE_SCHEME_BIGARRAY:
+        match_big = (HealPixel**) store->pixels;
+        return match_big[key];
+    default:
+        return NULL;
+    }
+}
+
+void
+PixelStore_free(PixelStore* store) {
+    switch(store->scheme) {
+    case STORE_SCHEME_AVLTREE:
+        pixelAvlFree((pixel_avl*) store->pixels);
+        FREE(store);
+        return;
+    case STORE_SCHEME_BIGARRAY:
+        free_store_bigarray(store);
+        FREE(store);
+        return;
+    }
+}
+/**
+ * PUBLIC FUNCTIONS END
+ ******************************************************************************/
+

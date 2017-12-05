@@ -32,7 +32,7 @@
 int main(int argc, char** argv) {
     int i, nfields;
     clock_t c;
-    long nsides = pow(2,14); /* a power 15 would be greet (5 arc sec wide) */
+    long nsides = pow(2,15); /* a power 15 would be greet (5 arc sec wide) */
     double radius_arcsec = 2.0; /* in arcsec */
 
     if (argc < 3)
@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     Field fields[2];
     c = clock();
     Catalog_open(argv[1], &fields[0]);
-    Catalog_open(argv[2], &fields[1]);
+    Catalog_open(argv[1], &fields[1]);
 //    Catalog_open(argv[1], &fields[2]);
 //    Catalog_open(argv[1], &fields[3]);
 //    Catalog_open(argv[1], &fields[4]);
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     printf("Took %f seconds for opening catalogs\n", (double)c / CLOCKS_PER_SEC);
 
     c = clock();
-    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS, STORE_SCHEME_BIGARRAY);
+    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
     c = clock() - c;
     printf("Took %f seconds to cross match cell objects\n", (double)c / CLOCKS_PER_SEC);
 
