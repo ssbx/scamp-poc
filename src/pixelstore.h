@@ -12,8 +12,8 @@
  */
 
 
-#ifndef SRC_CHEALPIXSPHERE_H_
-#define SRC_CHEALPIXSPHERE_H_
+#ifndef SRC_PIXELSTORE_H_
+#define SRC_PIXELSTORE_H_
 
 #include "catalog.h"
 
@@ -47,4 +47,4 @@ ChealpixSphere_generate(
         ChealpixSphere *sphere, Field *fields,
         int nfields, long nsides);
 
-#endif /* SRC_CHEALPIXSPHERE_H_ */
+#endif /* SRC_PIXELSTORE_H_ */

@@ -5,10 +5,11 @@
  *      Author: serre
  */
 
+#include "pixelstore.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "chealpixsphere.h"
 #include "chealpix.h"
 #include "mem.h"
 #include "assert.h"

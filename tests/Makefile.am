@@ -16,8 +16,8 @@ testSingleCatCrossmatch_SOURCES= \
 		../src/crossmatch.h \
 		../src/chealpix.c \
 		../src/chealpix.h \
-		../src/chealpixsphere.c \
-		../src/chealpixsphere.h \
+		../src/pixelstore.c \
+		../src/pixelstore.h \
 		../src/logger.c \
 		../src/logger.h \
 		../src/mem.c \
@@ -29,8 +29,8 @@ testChealpixsphereAvltree_SOURCES= \
 		../src/catalog.h \
 		../src/chealpix.c \
 		../src/chealpix.h \
-		../src/chealpixsphere.c \
-		../src/chealpixsphere.h \
+		../src/pixelstore.c \
+		../src/pixelstore.h \
 		../src/logger.c \
 		../src/logger.h \
 		../src/mem.c \

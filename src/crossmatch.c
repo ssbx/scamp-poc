@@ -20,10 +20,10 @@
 
 #include "global.h"
 #include "crossmatch.h"
-#include "chealpixsphere.h"
 #include "logger.h"
 #include "mem.h"
 #include "chealpix.h"
+#include "pixelstore.h"
 
 static void insert_object_in_cell(Object*, HealPixel**, long, long);
 static void crossmatch(Object* current, Object* test, double radius);

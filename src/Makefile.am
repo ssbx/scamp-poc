@@ -7,8 +7,8 @@ scamppoc_SOURCES= \
 		crossmatch.h \
 		chealpix.c \
 		chealpix.h \
-		chealpixsphere.c \
-		chealpixsphere.h \
+		pixelstore.c \
+		pixelstore.h \
 		logger.c \
 		logger.h \
 		mem.c \
