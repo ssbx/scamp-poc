@@ -18,8 +18,14 @@
 #include "catalog.h"
 
 typedef enum {
-    STORE_SCHEME_AVLTREE, /* fast 0(log n) and can growth to big nsides */
-    STORE_SCHEME_BIGARRAY /* extra fast 0(1), but require a LOT of memory */
+
+    /* Fast 0(log n) and can growth to big nsides */
+    STORE_SCHEME_AVLTREE,
+
+    /* Extra fast 0(1), but limited by the memory required with a minimum
+     * of npix * sizeof(void*) bytes */
+    STORE_SCHEME_BIGARRAY
+
 } StoreScheme;
 
 /**
@@ -38,12 +44,18 @@ typedef struct HealPixel {
 
 typedef struct PixelStore {
     void        *pixels; /* our opaque data */
-    StoreScheme  scheme; /* determinate what is in our opaque data */
+    StoreScheme scheme; /* determinate what is in our opaque data */
+
+    /* These are used to iterate over pixels */
+    long        npixels;
+    long        *pixelids;
+    int         pixelids_size; /* PRIVATE, for re allocation if required */
+
 } PixelStore;
 
 
 extern PixelStore*
-PixelStore_new(Field *fields, int nfields, long nsides);
+PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme);
 
 extern HealPixel*
 PixelStore_get(PixelStore *store, long key);

@@ -26,17 +26,13 @@
 #include "pixelstore.h"
 
 static void insert_object_in_cell(Object*, HealPixel**, long, long);
-static void crossmatch(Object* current, Object* test, double radius);
-static void crossmatch_querydisc_algo(HealPixel **cells, long *cellindex,
-                        long ncells, double radius_arcsec);
-static void crossmatch_neighbors_algo(HealPixel **cells, long *cellindex,
-                        long ncells, double radius_arcsec);
-static void cross_cells(HealPixel **zones, long *zoneindex, long nzoneindex,
-                        double radius_arcsec, CrossmatchAlgo algo);
-static void free_cells(HealPixel **zones, long *cellindex, long ncells);
-static HealPixel** init_cells(long nsides);
-static long* fill_cells(Field *fields, int nfields,
-                    HealPixel **cells, long nsides, long *nzone);
+static void crossmatch(Object*, Object*, double);
+static void crossmatch_querydisc_algo(HealPixel**,long*,long,double);
+static void crossmatch_neighbors_algo(HealPixel**,long*,long,double);
+static void cross_cells(HealPixel**,long*,long,double,CrossmatchAlgo);
+static void free_cells(HealPixel**,long*,long);
+static HealPixel** init_cells(long);
+static long* fill_cells(Field*,int,HealPixel**,long,long*);
 
 #define NNEIGHBORS 8
 
@@ -47,7 +43,7 @@ Crossmatch_crossFields(Field *fields, int nfields,
     long *cellindex;
 
     PixelStore *pixstore;
-    pixstore = PixelStore_new(fields, nfields, nsides);
+    pixstore = PixelStore_new(fields, nfields, nsides, STORE_SCHEME_AVLTREE);
 
 
     HealPixel **cells = init_cells(nsides);

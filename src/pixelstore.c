@@ -1,5 +1,5 @@
 /*
- * Healpix pixels storage mechanism..
+ * Healpix pixels storage mechanism.
  *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
@@ -10,8 +10,6 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  */
-
-
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -24,12 +22,34 @@
 
 
 static void insert_object_into_avltree_store(PixelStore*, Object*, long);
+#define PIXELIDS_BASE_SIZE 1000
 
-PixelStore*
-PixelStore_new(Field *fields, int nfields, long nsides) {
+static PixelStore*
+new_store() {
 
     PixelStore *store = ALLOC(sizeof(PixelStore));
+
     store->pixels = NULL;
+    store->npixels = 0;
+    store->pixelids = ALLOC(sizeof(long) * PIXELIDS_BASE_SIZE);
+    store->pixelids_size = PIXELIDS_BASE_SIZE;
+
+    return store;
+}
+
+static PixelStore*
+new_store_bigarray(Field *fields, int nfields, long nsides) {
+    PixelStore *store = new_store();
+    store->scheme = STORE_SCHEME_BIGARRAY;
+    return store;
+
+}
+
+
+static PixelStore*
+new_store_avltree(Field *fields, int nfields, long nsides) {
+
+    PixelStore *store = new_store();
     store->scheme = STORE_SCHEME_AVLTREE;
 
     Field field;
@@ -44,6 +64,7 @@ PixelStore_new(Field *fields, int nfields, long nsides) {
             set = field.sets[j];
 
             for (k = 0; k < set.nobjects; k++) {
+
                 object = &set.objects[k];
                 object->bestMatch = NULL;
                 ang2pix_nest(nsides,object->dec, object->ra,&object->pix_nest);
@@ -58,11 +79,31 @@ PixelStore_new(Field *fields, int nfields, long nsides) {
 }
 
 
+PixelStore*
+PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme) {
+    switch(scheme) {
+    case STORE_SCHEME_BIGARRAY:
+        return new_store_bigarray(fields, nfields, nsides);
+    case STORE_SCHEME_AVLTREE:
+        return new_store_avltree(fields, nfields, nsides);
+    default:
+        return NULL;
+    }
+}
+
+
 /*****************************************************************************
  * AVL Tree implementation
  *
- * From the SQLite source code ext/misc/amatch.c and ext/misc/closure.c
+ * From the SQLite source code ext/misc/amatch.c and ext/misc/closure.c with
+ * the following notice:
  *
+ * The author disclaims copyright to this source code.  In place of
+ * a legal notice, here is a blessing:
+ *
+ *    May you do good and not evil.
+ *    May you find forgiveness for yourself and forgive others.
+ *    May you share freely, never taking more than you give.
  */
 typedef struct pixel_avl pixel_avl;
 struct pixel_avl {
@@ -317,6 +358,14 @@ insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
 
         /* insert new pixel */
         pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
+
+        /* update npixels and array of pixelids store */
+        if (store->pixelids_size == store->npixels) {
+            store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
+            store->pixelids_size *= 2;
+        }
+        store->pixelids[store->npixels] = obj->pix_nest;
+        store->npixels++;
 
     }
 
