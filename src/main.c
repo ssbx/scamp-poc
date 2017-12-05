@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
     printf("Took %f seconds for opening catalogs\n", (double)c / CLOCKS_PER_SEC);
 
     c = clock();
-    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS);
+    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS, STORE_SCHEME_BIGARRAY);
     c = clock() - c;
     printf("Took %f seconds to cross match cell objects\n", (double)c / CLOCKS_PER_SEC);
 

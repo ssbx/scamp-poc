@@ -19,10 +19,16 @@
 #include "mem.h"
 #include "assert.h"
 #include "string.h"
+#include "logger.h"
 
 
 static void insert_object_into_avltree_store(PixelStore*, Object*, long);
+static void insert_object_into_bigarray_store(Object*,PixelStore*,long,long);
 #define PIXELIDS_BASE_SIZE 1000
+/*
+ * Static utilities
+ */
+
 
 static PixelStore*
 new_store() {
@@ -41,10 +47,68 @@ static PixelStore*
 new_store_bigarray(Field *fields, int nfields, long nsides) {
     PixelStore *store = new_store();
     store->scheme = STORE_SCHEME_BIGARRAY;
+
+    /* Allocate room for all possible pixels */
+    long npix = nside2npix(nsides);
+
+    Logger_log(LOGGER_NORMAL,
+            "Will allocate room for %li cells. It will take %i MB\n",
+            npix, sizeof(HealPixel*) * npix / 1000000);
+
+    store->pixels = (HealPixel**) CALLOC(npix, sizeof(HealPixel*));
+
+    /* fill pixels with objects values */
+    long i;
+    int j, k;
+    Field *field;
+    Set *set;
+    Object *obj;
+
+    long total_nobjects;
+    total_nobjects = 0;
+
+    for (i=0; i<nfields; i++) {
+        field = &fields[i];
+
+        for (j=0; j<field->nsets; j++) {
+            set = &field->sets[j];
+
+            total_nobjects += set->nobjects;
+            for (k=0; k<set->nobjects; k++) {
+
+                obj = &set->objects[k];
+                obj->bestMatch = NULL;
+
+                ang2pix_nest(nsides, obj->dec, obj->ra, &obj->pix_nest);
+                ang2vec(obj->dec, obj->ra, obj->vector);
+                insert_object_into_bigarray_store(obj, store, obj->pix_nest, nsides);
+
+            }
+        }
+    }
+
+    Logger_log(LOGGER_TRACE,
+            "Total size for cells is %li MB\n",
+            (nside2npix(nsides) * sizeof(HealPixel*) +
+                    total_nobjects * sizeof(Object)) / 1000000);
+
     return store;
 
 }
 
+
+static void
+free_store_bigarray(PixelStore *store) {
+    long i;
+    long *pixids = store->pixelids;
+    long npix = store->npixels;
+    HealPixel **pixels = (HealPixel**) store->pixels;
+
+    for (i=0; i<npix; i++) {
+        FREE(pixels[pixids[i]]->objects);
+    }
+    FREE(pixels);
+}
 
 static PixelStore*
 new_store_avltree(Field *fields, int nfields, long nsides) {
@@ -327,18 +391,71 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
 
 HealPixel*
 PixelStore_get(PixelStore* store, long key) {
-    pixel_avl *match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
-    if (!match_avl)
-        return (HealPixel*) NULL;
-    return &match_avl->pixel;
+    pixel_avl *match_avl;
+    HealPixel **match_big;
+
+    switch(store->scheme) {
+    case STORE_SCHEME_AVLTREE:
+        match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
+        if (!match_avl)
+            return (HealPixel*) NULL;
+        return &match_avl->pixel;
+    case STORE_SCHEME_BIGARRAY:
+        match_big = (HealPixel**) store->pixels;
+        return match_big[key];
+    default:
+        return NULL;
+    }
 }
 
 void
 PixelStore_free(PixelStore* store) {
-    pixelAvlFree((pixel_avl*) store->pixels);
+    switch(store->scheme) {
+    case STORE_SCHEME_AVLTREE:
+        pixelAvlFree((pixel_avl*) store->pixels);
+        FREE(store);
+        return;
+    case STORE_SCHEME_BIGARRAY:
+        free_store_bigarray(store);
+        FREE(store);
+        return;
+    }
+}
+#define OBJ_BASE_SIZE 50
+static void
+insert_object_into_bigarray_store(Object *obj, PixelStore *store,
+                        long index, long nsides) {
+    HealPixel **pixels = store->pixels;
+    HealPixel *pix;
+
+    if (pixels[index] == NULL) {
+        pixels[index] = ALLOC(sizeof(HealPixel));
+        pixels[index]->objects = ALLOC(sizeof(Object*) * OBJ_BASE_SIZE);
+        pixels[index]->size = OBJ_BASE_SIZE;
+        pixels[index]->nobjects = 0;
+        pixels[index]->id = obj->pix_nest;
+        neighbours_nest(nsides, index, pixels[index]->neighbors);
+        if (store->npixels == store->pixelids_size) {
+            store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
+            store->pixelids_size++;
+        }
+        store->pixelids[store->npixels] = obj->pix_nest;
+        store->npixels++;
+    }
+
+    pix = pixels[index];
+
+    if (pix->size == pix->nobjects) { /* need realloc */
+        pix->objects = REALLOC(pix->objects, sizeof(Object*) * pix->size * 2);
+        pix->size *= 2;
+    }
+
+    /* append object */
+    pix->objects[pix->nobjects] = obj;
+    pix->nobjects++;
+
 }
 
-#define OBJ_BASE_SIZE 50
 static void
 insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
 

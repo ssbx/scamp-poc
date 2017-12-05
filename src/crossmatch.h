@@ -13,6 +13,7 @@
 #define __CROSSMATCH_H__
 
 #include "catalog.h"
+#include "pixelstore.h"
 
 typedef enum {
     ALGO_NEIGHBORS,
@@ -22,7 +23,7 @@ typedef enum {
 
 extern void
 Crossmatch_crossFields(Field *fields, int nfields, long nsides,
-        double radius_arcsec, CrossmatchAlgo algo);
+        double radius_arcsec, CrossmatchAlgo algo, StoreScheme scheme);
 
 
 

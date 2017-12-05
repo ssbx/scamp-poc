@@ -26,7 +26,12 @@ int main(int argc, char **argv) {
     Catalog_open(argv[1], &fields[0]);
     Catalog_open(argv[1], &fields[1]);
 
-    Crossmatch_crossFields(fields, 2, nsides, radius_arcsec, ALGO_NEIGHBORS);
+    if (argc > 2)
+        Crossmatch_crossFields(fields, 2, nsides, radius_arcsec,
+            ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
+    else
+        Crossmatch_crossFields(fields, 2, nsides, radius_arcsec,
+            ALGO_NEIGHBORS, STORE_SCHEME_BIGARRAY);
 
     int status = 0;
     Field f1 = fields[0];
