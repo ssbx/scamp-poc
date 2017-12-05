@@ -18,7 +18,7 @@ else
 fi
 
 echo "==> Running testSingleCatCrossmatch"
-${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat > /dev/null 2>&1
+${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat > /dev/null
 if [ $? -gt 0 ]
 then 
 	echo "===> Test for testSingleCatCrossmatch FAILED"
@@ -28,7 +28,7 @@ else
 fi
 
 echo "==> Running testChealpixsphereAvltree"
-${DIR}/testChealpixsphereAvltree
+${DIR}/testChealpixsphereAvltree > /dev/null
 if [ $? -gt 0 ]
 then 
 	echo "===> Test for testChealpixsphereAvltree FAILED"

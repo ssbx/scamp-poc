@@ -19,23 +19,20 @@
 
 struct HealPixel;
 
+
 /**
  * HealpixCell store pointers to every objects of a field, belonging to a
  * common healpix pixel.
  */
 typedef struct HealPixel {
 
-    long    id; /* healpix id, used by the AVL algorythm */
+    long    id; /* healpix id, used by the AVL algorithm */
 
     Object  **objects;  /* our pointers */
     int     nobjects;   /* number of pointer */
     int     size;       /* for reallocation if required */
 
     long neighbors[8];
-
-    /* AVL related variables, including the "id" element */
-    struct HealPixel *avlChilds[2];
-    int        avlHeight;
 
 } HealPixel;
 
