@@ -17,16 +17,16 @@
 
 #include <wcslib/wcshdr.h>
 
-struct Object;
+struct Sample;
 struct Set;
 struct Field;
 
 
 /**
- * Object structure represent a set entry. ra and dec are both represented
+ * Sample structure represent a set entry. ra and dec are both represented
  * in degree (for wcslib), radiant and vectors (for healpix).
  */
-typedef struct Object {
+typedef struct Sample {
 
     /* same as "number" in sextractor catalog */
     long    id;
@@ -46,11 +46,11 @@ typedef struct Object {
     /* position on healpix nested scheme */
     long pix_nest;
 
-    /* Object belonging to this set */
+    /* Sample belonging to this set */
     struct Set *set;
 
     /* Best matching object from another field */
-    struct Object *bestMatch;
+    struct Sample *bestMatch;
 
     /* Best distance is the distance to bestMatch in radiant. It is initialized
      * in the Crossmatch_crossSeel function to the value of max radius and used
@@ -59,14 +59,14 @@ typedef struct Object {
      */
     double bestMatchDistance;
 
-} Object;
+} Sample;
 
 /**
  * Set's objects share a common image source (a CCD).
  */
 typedef struct Set {
 
-    Object *objects;
+    Sample *objects;
     int     nobjects;
 
     /*

@@ -35,7 +35,7 @@ typedef enum {
 typedef struct HealPixel {
 
     long id;            /* healpix id */
-    Object **objects;   /* our objects pointers */
+    Sample **objects;   /* our objects pointers */
     int nobjects;       /* number of objects belonging to this pixel */
     int size;           /* for reallocation if required */
     long neighbors[8];  /* Neighbors indexes */

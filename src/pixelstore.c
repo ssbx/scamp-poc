@@ -22,8 +22,8 @@
 #include "logger.h"
 
 
-static void insert_object_into_avltree_store(PixelStore*, Object*, long);
-static void insert_object_into_bigarray_store(Object*,PixelStore*,long,long);
+static void insert_object_into_avltree_store(PixelStore*, Sample*, long);
+static void insert_object_into_bigarray_store(Sample*,PixelStore*,long,long);
 #define PIXELIDS_BASE_SIZE 1000
 /*
  * Static utilities
@@ -62,7 +62,7 @@ new_store_bigarray(Field *fields, int nfields, long nsides) {
     int j, k;
     Field *field;
     Set *set;
-    Object *obj;
+    Sample *obj;
 
     long total_nobjects;
     total_nobjects = 0;
@@ -90,7 +90,7 @@ new_store_bigarray(Field *fields, int nfields, long nsides) {
     Logger_log(LOGGER_TRACE,
             "Total size for cells is %li MB\n",
             (nside2npix(nsides) * sizeof(HealPixel*) +
-                    total_nobjects * sizeof(Object)) / 1000000);
+                    total_nobjects * sizeof(Sample)) / 1000000);
 
     return store;
 
@@ -118,7 +118,7 @@ new_store_avltree(Field *fields, int nfields, long nsides) {
 
     Field field;
     Set set;
-    Object *object;
+    Sample *object;
 
     int i, j, k;
     for (i = 0; i < nfields; i++) {
@@ -423,14 +423,14 @@ PixelStore_free(PixelStore* store) {
 }
 #define OBJ_BASE_SIZE 50
 static void
-insert_object_into_bigarray_store(Object *obj, PixelStore *store,
+insert_object_into_bigarray_store(Sample *obj, PixelStore *store,
                         long index, long nsides) {
     HealPixel **pixels = store->pixels;
     HealPixel *pix;
 
     if (pixels[index] == NULL) {
         pixels[index] = ALLOC(sizeof(HealPixel));
-        pixels[index]->objects = ALLOC(sizeof(Object*) * OBJ_BASE_SIZE);
+        pixels[index]->objects = ALLOC(sizeof(Sample*) * OBJ_BASE_SIZE);
         pixels[index]->size = OBJ_BASE_SIZE;
         pixels[index]->nobjects = 0;
         pixels[index]->id = obj->pix_nest;
@@ -446,7 +446,7 @@ insert_object_into_bigarray_store(Object *obj, PixelStore *store,
     pix = pixels[index];
 
     if (pix->size == pix->nobjects) { /* need realloc */
-        pix->objects = REALLOC(pix->objects, sizeof(Object*) * pix->size * 2);
+        pix->objects = REALLOC(pix->objects, sizeof(Sample*) * pix->size * 2);
         pix->size *= 2;
     }
 
@@ -457,7 +457,7 @@ insert_object_into_bigarray_store(Object *obj, PixelStore *store,
 }
 
 static void
-insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
+insert_object_into_avltree_store(PixelStore *store, Sample *obj, long nsides) {
 
     /* search for the pixel */
     pixel_avl *avlpix =
@@ -468,7 +468,7 @@ insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
         /* allocate and initialize */
         avlpix = CALLOC(1, sizeof(pixel_avl));
         avlpix->pixel.id = obj->pix_nest;
-        avlpix->pixel.objects = ALLOC(sizeof(Object**) * OBJ_BASE_SIZE);
+        avlpix->pixel.objects = ALLOC(sizeof(Sample**) * OBJ_BASE_SIZE);
         avlpix->pixel.nobjects = 0;
         avlpix->pixel.size = OBJ_BASE_SIZE;
         neighbours_nest(nsides, obj->pix_nest, avlpix->pixel.neighbors);
@@ -490,7 +490,7 @@ insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
     HealPixel *pix = &avlpix->pixel;
     if (pix->nobjects == pix->size) {
         /* need realloc */
-        pix->objects = REALLOC(pix->objects, sizeof(Object**) * pix->size * 2);
+        pix->objects = REALLOC(pix->objects, sizeof(Sample**) * pix->size * 2);
         pix->size *= 2;
     }
 

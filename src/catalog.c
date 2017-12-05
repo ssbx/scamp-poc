@@ -268,13 +268,13 @@ Catalog_open(char *filename, Field *field) {
         /*
          * Create a set of objects (a CCD)
          */
-        field->sets[l].objects = ALLOC(sizeof(Object) * nrows);
+        field->sets[l].objects = ALLOC(sizeof(Sample) * nrows);
         field->sets[l].nobjects = nrows;
         field->sets[l].wcs = wcs;
         field->sets[l].nwcs = nwcs;
         field->sets[l].field = field;
 
-        Object obj;
+        Sample obj;
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
             obj.id      = col_number[j];
@@ -320,7 +320,7 @@ Catalog_freeField(Field *field) {
 void
 Catalog_dump(Field *field) {
     int i, j;
-    Object obj;
+    Sample obj;
     for (i=0; i<field->nsets; i++) {
         for (j=0; j<field->sets[i].nobjects; j++) {
             obj = field->sets[i].objects[j];

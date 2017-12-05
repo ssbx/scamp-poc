@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     int status = 0;
     Field f1 = fields[0];
     Set s;
-    Object obj, *obj_bm;
+    Sample obj, *obj_bm;
 
     for (i = 0; i < f1.nsets; i++) {
         s = f1.sets[i];

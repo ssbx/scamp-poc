@@ -25,7 +25,7 @@
 #include "chealpix.h"
 #include "pixelstore.h"
 
-static void crossmatch(Object*, Object*, double);
+static void crossmatch(Sample*, Sample*, double);
 static void crossmatch_querydisc_algo(PixelStore*,double);
 static void crossmatch_neighbors_algo(PixelStore*,double);
 static void cross_cells(PixelStore*,double,CrossmatchAlgo);
@@ -94,8 +94,8 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
         long j, k, l;
         long *neighbor_cells = current_cell->neighbors;
 
-        Object *current_obj;
-        Object *test_obj;
+        Sample *current_obj;
+        Sample *test_obj;
 
 
         for (j=0; j<current_cell->nobjects; j++) {
@@ -161,7 +161,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
 }
 
 static void
-crossmatch(Object *current_obj, Object *test_obj, double radius) {
+crossmatch(Sample *current_obj, Sample *test_obj, double radius) {
 
     /*
      * pass if object is of the same field
