@@ -90,8 +90,18 @@ int main(int argc, char **argv)  {
     long i;
     pixel_avl *pix, *store = NULL;
 
-    for (i=0; i< 10000; i+=1) {
-        pix = CALLOC(sizeof(pixel_avl), 1);
+    for (i=0; i< 10000; i++) {
+        pix = CALLOC(1, sizeof(pixel_avl));
+        pix->pixel.id = i;
+        pixelAvlInsert(&store, pix);
+        pixelAvlIntegrity(store);
+        pixelAvlIntegrity2(store);
+    }
+
+    pixelAvlFree(store);
+    store = NULL;
+    for (i=10000; i > 0; i--) {
+        pix = CALLOC(1, sizeof(pixel_avl));
         pix->pixel.id = i;
         pixelAvlInsert(&store, pix);
         pixelAvlIntegrity(store);
@@ -103,7 +113,5 @@ int main(int argc, char **argv)  {
         if (pix)
             assert(i == pix->pixel.id);
     }
-    pixelAvlFree(store);
-
     return 0;
 }

@@ -1,5 +1,5 @@
 /*
- * Efficient catalogs cross matching functions.
+ * Healpix pixels storage mechanism.
  *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
@@ -17,34 +17,38 @@
 
 #include "catalog.h"
 
-struct HealPixel;
-
+typedef enum {
+    STORE_SCHEME_AVLTREE, /* fast 0(log n) and can growth to big nsides */
+    STORE_SCHEME_BIGARRAY /* extra fast 0(1), but require a LOT of memory */
+} StoreScheme;
 
 /**
- * HealpixCell store pointers to every objects of a field, belonging to a
+ * HealpixCell store pointers to every objects of all fields, belonging to a
  * common healpix pixel.
  */
 typedef struct HealPixel {
 
-    long    id; /* healpix id, used by the AVL algorithm */
-
-    Object  **objects;  /* our pointers */
-    int     nobjects;   /* number of pointer */
-    int     size;       /* for reallocation if required */
-
-    long neighbors[8];
+    long id;            /* healpix id */
+    Object **objects;   /* our objects pointers */
+    int nobjects;       /* number of objects belonging to this pixel */
+    int size;           /* for reallocation if required */
+    long neighbors[8];  /* Neighbors indexes */
 
 } HealPixel;
 
-typedef struct ChealpixSphere {
+typedef struct PixelStore {
+    void        *pixels; /* our opaque data */
+    StoreScheme  scheme; /* determinate what is in our opaque data */
+} PixelStore;
 
-    HealPixel   *pixels;
 
-} ChealpixSphere;
+extern PixelStore*
+PixelStore_new(Field *fields, int nfields, long nsides);
+
+extern HealPixel*
+PixelStore_get(PixelStore *store, long key);
 
 extern void
-ChealpixSphere_generate(
-        ChealpixSphere *sphere, Field *fields,
-        int nfields, long nsides);
+PixelStore_free(PixelStore *store);
 
 #endif /* SRC_PIXELSTORE_H_ */

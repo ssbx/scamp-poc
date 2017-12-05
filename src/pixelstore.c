@@ -1,28 +1,36 @@
 /*
- * chealpixsphere.c
+ * Healpix pixels storage mechanism..
  *
- *  Created on: 4 déc. 2017
- *      Author: serre
+ * Copyright (C) 2017 University of Bordeaux. All right reserved.
+ * Written by Emmanuel Bertin
+ * Written by Sebastien Serre
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  */
 
-#include "pixelstore.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "pixelstore.h"
 #include "chealpix.h"
 #include "mem.h"
 #include "assert.h"
 #include "string.h"
 
 
-void ChealpixSphere_generate(ChealpixSphere *sphere, Field *fields, int nfields,
-        long nsides) {
+static void insert_object_into_avltree_store(PixelStore*, Object*, long);
 
-    if (sphere == NULL) {
-        sphere = ALLOC(sizeof(ChealpixSphere));
-        sphere->pixels = NULL;
-    }
+PixelStore*
+PixelStore_new(Field *fields, int nfields, long nsides) {
+
+    PixelStore *store = ALLOC(sizeof(PixelStore));
+    store->pixels = NULL;
+    store->scheme = STORE_SCHEME_AVLTREE;
 
     Field field;
     Set set;
@@ -38,14 +46,15 @@ void ChealpixSphere_generate(ChealpixSphere *sphere, Field *fields, int nfields,
             for (k = 0; k < set.nobjects; k++) {
                 object = &set.objects[k];
                 object->bestMatch = NULL;
-                ang2pix_nest(nsides, object->dec, object->ra,
-                        &object->pix_nest);
+                ang2pix_nest(nsides,object->dec, object->ra,&object->pix_nest);
                 ang2vec(object->dec, object->ra, object->vector);
-//                insert_object_into_pixel(sphere, object, nsides);
+                insert_object_into_avltree_store(store, object, nsides);
 
             }
         }
     }
+
+    return store;
 }
 
 
@@ -275,3 +284,51 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
  ******************************************************************************/
 
 
+HealPixel*
+PixelStore_get(PixelStore* store, long key) {
+    pixel_avl *match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
+    if (!match_avl)
+        return (HealPixel*) NULL;
+    return &match_avl->pixel;
+}
+
+void
+PixelStore_free(PixelStore* store) {
+    pixelAvlFree((pixel_avl*) store->pixels);
+}
+
+#define OBJ_BASE_SIZE 50
+static void
+insert_object_into_avltree_store(PixelStore *store, Object *obj, long nsides) {
+
+    /* search for the pixel */
+    pixel_avl *avlpix =
+            pixelAvlSearch((pixel_avl*) store->pixels, obj->pix_nest);
+
+    if (!avlpix) { // no such pixel
+
+        /* allocate and initialize */
+        avlpix = CALLOC(1, sizeof(pixel_avl));
+        avlpix->pixel.id = obj->pix_nest;
+        avlpix->pixel.objects = ALLOC(sizeof(Object**) * OBJ_BASE_SIZE);
+        avlpix->pixel.nobjects = 0;
+        avlpix->pixel.size = OBJ_BASE_SIZE;
+        neighbours_nest(nsides, obj->pix_nest, avlpix->pixel.neighbors);
+
+        /* insert new pixel */
+        pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
+
+    }
+
+    /* Insert object in HealPixel */
+    HealPixel *pix = &avlpix->pixel;
+    if (pix->nobjects == pix->size) {
+        /* need realloc */
+        pix->objects = REALLOC(pix->objects, sizeof(Object**) * pix->size * 2);
+        pix->size *= 2;
+    }
+
+    pix->objects[pix->nobjects] = obj;
+    pix->nobjects++;
+
+}

@@ -46,8 +46,8 @@ Crossmatch_crossFields(Field *fields, int nfields,
     long ncells;
     long *cellindex;
 
-//    ChealpixSphere *sphere = NULL;
-//    ChealpixSphere_generate(sphere, fields, nfields, nsides);
+    PixelStore *pixstore;
+    pixstore = PixelStore_new(fields, nfields, nsides);
 
 
     HealPixel **cells = init_cells(nsides);
