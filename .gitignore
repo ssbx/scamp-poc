@@ -26,11 +26,14 @@
 /src/catalog/.dirstamp
 
 # Build objects and targets
+*.gcda
+*.gcno
 *.o
 /src/scamppoc
 /tests/testChealpixNeighboursNest
 /tests/testSingleCatCrossmatch
 /tests/testChealpixsphereAvltree
+/tests/perfCrossmatchSingle
 /src/.deps/
 /tests/.deps/
 /src/catalog/.deps/
