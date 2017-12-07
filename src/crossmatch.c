@@ -90,7 +90,11 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
      *
      * XXX TODO: pixels are crossed twice (one as current_pix, and another
      * as neighbor_pix) with each others,
-     * XXX TODO: how should I link matching samples from different fields?
+     * XXX TODO: how should I link matching samples from different fields? (
+     * answer, use the MatchBundle structure. Only one sample from the same
+     * file must exist in one MatchBundle. Maybe add all, and reduce after,
+     * or find a way to reduce. Do not modify Sample structure while iterating,
+     * but reduce at the end to avoid false sharing.
      * XXX TODO: this code is thread safe but not parallelisable, because of the
      * false sharing induced by the "crossmatch" function modifying some
      * Sample values. TODO, create a temporary result for each threads, then
