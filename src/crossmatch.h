@@ -21,7 +21,7 @@ typedef enum {
 } CrossmatchAlgo;
 
 extern void
-Crossmatch_crossFields(Field *fields, int nfields, long nsides,
+Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
         double radius_arcsec, CrossmatchAlgo algo, StoreScheme scheme);
 
 

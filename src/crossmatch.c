@@ -35,7 +35,7 @@ extern void
 Crossmatch_crossFields(
         Field           *fields,
         int             nfields,
-        long            nsides,
+        int64_t         nsides,
         double          radius_arcsec,
         CrossmatchAlgo  algo,
         StoreScheme     scheme)
@@ -77,7 +77,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
     long nbmatches = 0;
 
     long npixels = store->npixels;
-    long *pixelindex = store->pixelids;
+    int64_t *pixelindex = store->pixelids;
 
     /* arcsec to radiant */
     double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
@@ -106,7 +106,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
         HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
         long nmatches = 0;
         long j, k, l;
-        long *neighbors_pixels = current_pix->neighbors;
+        int64_t *neighbors_pixels = current_pix->neighbors;
 
         Sample *current_spl;
         Sample *test_spl;
@@ -129,7 +129,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
             /*
              * Then iterate against neighbors pixels
              */
-            long neighbor_indexes;
+            int64_t neighbor_indexes;
             HealPixel *test_pixel;
             for (k=0; k<NNEIGHBORS; k++) {
                 neighbor_indexes = neighbors_pixels[k];

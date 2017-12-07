@@ -265,7 +265,7 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
 #define SPL_BASE_SIZE 50
 static void
 insert_sample_into_bigarray_store(Sample *spl, PixelStore *store,
-                        long index, long nsides) {
+                        int64_t index, int64_t nsides) {
     HealPixel **pixels = store->pixels;
     HealPixel *pix;
 
@@ -275,7 +275,7 @@ insert_sample_into_bigarray_store(Sample *spl, PixelStore *store,
         pixels[index]->size = SPL_BASE_SIZE;
         pixels[index]->nsamples = 0;
         pixels[index]->id = spl->pix_nest;
-        neighbours_nest(nsides, index, pixels[index]->neighbors);
+        neighbours_nest64(nsides, index, pixels[index]->neighbors);
         if (store->npixels == store->pixelids_size) {
             store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
             store->pixelids_size++;
@@ -298,7 +298,7 @@ insert_sample_into_bigarray_store(Sample *spl, PixelStore *store,
 }
 
 static void
-insert_sample_into_avltree_store(PixelStore *store, Sample *spl, long nsides) {
+insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides) {
 
     /* search for the pixel */
     pixel_avl *avlpix =
@@ -312,7 +312,7 @@ insert_sample_into_avltree_store(PixelStore *store, Sample *spl, long nsides) {
         avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
         avlpix->pixel.nsamples = 0;
         avlpix->pixel.size = SPL_BASE_SIZE;
-        neighbours_nest(nsides, spl->pix_nest, avlpix->pixel.neighbors);
+        neighbours_nest64(nsides, spl->pix_nest, avlpix->pixel.neighbors);
 
         /* insert new pixel */
         pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
@@ -348,19 +348,19 @@ new_store() {
 
     store->pixels = NULL;
     store->npixels = 0;
-    store->pixelids = ALLOC(sizeof(long) * PIXELIDS_BASE_SIZE);
+    store->pixelids = ALLOC(sizeof(int64_t) * PIXELIDS_BASE_SIZE);
     store->pixelids_size = PIXELIDS_BASE_SIZE;
 
     return store;
 }
 
 static PixelStore*
-new_store_bigarray(Field *fields, int nfields, long nsides) {
+new_store_bigarray(Field *fields, int nfields, int64_t nsides) {
     PixelStore *store = new_store();
     store->scheme = STORE_SCHEME_BIGARRAY;
 
     /* Allocate room for all possible pixels */
-    long npix = nside2npix(nsides);
+    int64_t npix = nside2npix64(nsides);
 
     Logger_log(LOGGER_NORMAL,
             "Will allocate room for %li pixels. It will take %i MB\n",
@@ -390,7 +390,7 @@ new_store_bigarray(Field *fields, int nfields, long nsides) {
                 spl = &set->samples[k];
                 spl->bestMatch = NULL;
 
-                ang2pix_nest(nsides, spl->dec, spl->ra, &spl->pix_nest);
+                ang2pix_nest64(nsides, spl->dec, spl->ra, &spl->pix_nest);
                 ang2vec(spl->dec, spl->ra, spl->vector);
                 insert_sample_into_bigarray_store(spl, store, spl->pix_nest, nsides);
 
@@ -408,7 +408,7 @@ new_store_bigarray(Field *fields, int nfields, long nsides) {
 }
 
 static PixelStore*
-new_store_avltree(Field *fields, int nfields, long nsides) {
+new_store_avltree(Field *fields, int nfields, int64_t nsides) {
 
     PixelStore *store = new_store();
     store->scheme = STORE_SCHEME_AVLTREE;
@@ -428,7 +428,7 @@ new_store_avltree(Field *fields, int nfields, long nsides) {
 
                 spl = &set.samples[k];
                 spl->bestMatch = NULL;
-                ang2pix_nest(nsides,spl->dec, spl->ra,&spl->pix_nest);
+                ang2pix_nest64(nsides,spl->dec, spl->ra,&spl->pix_nest);
                 ang2vec(spl->dec, spl->ra, spl->vector);
                 insert_sample_into_avltree_store(store, spl, nsides);
 
@@ -442,7 +442,7 @@ new_store_avltree(Field *fields, int nfields, long nsides) {
 static void
 free_store_bigarray(PixelStore *store) {
     long i;
-    long *pixids = store->pixelids;
+    int64_t *pixids = store->pixelids;
     long npix = store->npixels;
     HealPixel **pixels = (HealPixel**) store->pixels;
 
@@ -461,7 +461,7 @@ free_store_bigarray(PixelStore *store) {
  * PUBLIC FUNCTIONS
  */
 PixelStore*
-PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme) {
+PixelStore_new(Field *fields, int nfields, int64_t nsides, StoreScheme scheme) {
     switch(scheme) {
     case STORE_SCHEME_BIGARRAY:
         return new_store_bigarray(fields, nfields, nsides);
@@ -473,7 +473,7 @@ PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme) {
 }
 
 HealPixel*
-PixelStore_get(PixelStore* store, long key) {
+PixelStore_get(PixelStore* store, int64_t key) {
     pixel_avl *match_avl;
     HealPixel **match_big;
 

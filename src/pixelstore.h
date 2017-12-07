@@ -38,7 +38,7 @@ typedef struct HealPixel {
     Sample **samples;   /* our samples pointers */
     int nsamples;       /* number of samples belonging to this pixel */
     int size;           /* for reallocation if required */
-    long neighbors[8];  /* Neighbors indexes */
+    int64_t neighbors[8];  /* Neighbors indexes */
 
 } HealPixel;
 
@@ -48,17 +48,17 @@ typedef struct PixelStore {
 
     /* These are used to iterate over pixels */
     long        npixels;
-    long        *pixelids;
+    int64_t     *pixelids;
     int         pixelids_size; /* PRIVATE, for re allocation if required */
 
 } PixelStore;
 
 
 extern PixelStore*
-PixelStore_new(Field *fields, int nfields, long nsides, StoreScheme scheme);
+PixelStore_new(Field *fields, int nfields, int64_t nsides, StoreScheme scheme);
 
 extern HealPixel*
-PixelStore_get(PixelStore *store, long key);
+PixelStore_get(PixelStore *store, int64_t key);
 
 extern void
 PixelStore_free(PixelStore *store);

@@ -15,6 +15,7 @@
 #define SC_PI_DIV_180 0.01745329251994329576923690768488612713442
 
 #include <wcslib/wcshdr.h>
+#include <stdint.h>
 
 typedef struct Sample Sample;
 typedef struct Set Set;
@@ -43,7 +44,7 @@ struct Sample {
     double vector[3];
 
     /* position on healpix nested scheme */
-    long pix_nest;
+    int64_t pix_nest;
 
     /* Sample belonging to this set */
     Set *set;

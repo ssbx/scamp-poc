@@ -920,20 +920,20 @@ void ring2nest64(int64_t nside, int64_t ipring, int64_t *ipnest) {
     ring2xyf64(nside, ipring, &ix, &iy, &face_num);
     *ipnest = xyf2nest64(nside, ix, iy, face_num);
 }
-void neighbours_nest(long nside, long pix, long *neighbours) {
+void neighbours_nest64(int64_t nside, int64_t pix, int64_t *neighbours) {
     int i, x, y, nbnum, ix, iy, face_num;
-    long nsm1;
-    nest2xyf(nside, pix, &ix, &iy, &face_num);
-    long order = nside2order(nside);
+    int64_t nsm1;
+    nest2xyf64(nside, pix, &ix, &iy, &face_num);
+    int order = nside2order(nside);
     nsm1 = nside -1;
     if ((ix>0) && (ix<nsm1) && (iy>0) && (iy<nsm1)) {
-        long fpix = (long) face_num << (2 * order);
-        long px0 = spread_bits(ix);
-        long py0 = spread_bits(iy) << 1;
-        long pxp = spread_bits(ix + 1);
-        long pyp = spread_bits(iy + 1) << 1;
-        long pxm = spread_bits(ix - 1);
-        long pym = spread_bits(iy - 1) << 1;
+        int64_t fpix = (long) face_num << (2 * order);
+        int64_t px0 = spread_bits(ix);
+        int64_t py0 = spread_bits(iy) << 1;
+        int64_t pxp = spread_bits(ix + 1);
+        int64_t pyp = spread_bits(iy + 1) << 1;
+        int64_t pxm = spread_bits(ix - 1);
+        int64_t pym = spread_bits(iy - 1) << 1;
 
         neighbours[0] = fpix + pxm + py0;
         neighbours[1] = fpix + pxm + pyp;
@@ -979,7 +979,7 @@ void neighbours_nest(long nside, long pix, long *neighbours) {
                     swap_int(&x, &y);
                 }
 
-                neighbours[i] = xyf2nest(nside, x,y,f);
+                neighbours[i] = xyf2nest64(nside, x,y,f);
 
             } else {
                 neighbours[i] = -1;
