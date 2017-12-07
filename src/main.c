@@ -15,18 +15,18 @@
 #include <time.h>
 #include <math.h>
 
-#include "global.h"
 #include "logger.h"
 #include "catalog.h"
 #include "crossmatch.h"
 
 #include "chealpix.h"
+#include "scamp.h"
 
 /**
  * TODO:
  * 1 - get nsides depending of the max error from all files. (see
  * dist2holes_nest fortran)
- * 2 - crossmatch with as little as possible objects (see in_ring?),
+ * 2 - crossmatch with as little as possible samples (see in_ring?),
  *
  */
 int main(int argc, char** argv) {
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
     c = clock();
     Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
     c = clock() - c;
-    printf("Took %f seconds to cross match cell objects\n", (double)c / CLOCKS_PER_SEC);
+    printf("Took %f seconds to cross match pixel samples\n", (double)c / CLOCKS_PER_SEC);
 
     /* cleanup */
     c = clock();

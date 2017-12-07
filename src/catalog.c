@@ -1,5 +1,5 @@
 /*
- * Read and load data from files to object structures.
+ * Read and load data from files to samples structures.
  *
  * Copyright (C) 2017 University of Bordeaux. All right reserved.
  * Written by Emmanuel Bertin
@@ -16,7 +16,6 @@
 #include <fitsio.h>
 #include <chealpix.h>
 
-#include "global.h"
 #include "catalog.h"
 #include "mem.h"
 #include "logger.h"
@@ -113,7 +112,7 @@ Catalog_open(char *filename, Field *field) {
         fits_movabs_hdu(fptr, i+1, &hdutype, &status);
 
         /*
-         * Dump table and apply WCS transformation on objects.
+         * Dump table and apply WCS transformation on samples.
          */
         fits_get_num_cols(fptr, &ncolumns, &status);
         if (ncolumns != 21)
@@ -263,28 +262,28 @@ Catalog_open(char *filename, Field *field) {
             }
         }
 
-        Logger_log(LOGGER_TRACE, "File %s read. Create object set\n", filename);
+        Logger_log(LOGGER_TRACE, "File %s read. Create samples set\n", filename);
 
         /*
-         * Create a set of objects (a CCD)
+         * Create a set of samples (a CCD)
          */
-        field->sets[l].objects = ALLOC(sizeof(Sample) * nrows);
-        field->sets[l].nobjects = nrows;
+        field->sets[l].samples = ALLOC(sizeof(Sample) * nrows);
+        field->sets[l].nsamples = nrows;
         field->sets[l].wcs = wcs;
         field->sets[l].nwcs = nwcs;
         field->sets[l].field = field;
 
-        Sample obj;
+        Sample sample;
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
-            obj.id      = col_number[j];
-            obj.raDeg   = world[k];
-            obj.decDeg  = world[k+1];
-            obj.ra      = world[k]   * SC_PI_DIV_180;
-            obj.dec     = world[k+1] * SC_PI_DIV_180;
-            obj.set     = &field->sets[l];
+            sample.id      = col_number[j];
+            sample.raDeg   = world[k];
+            sample.decDeg  = world[k+1];
+            sample.ra      = world[k]   * SC_PI_DIV_180;
+            sample.dec     = world[k+1] * SC_PI_DIV_180;
+            sample.set     = &field->sets[l];
 
-            field->sets[l].objects[j] = obj;
+            field->sets[l].samples[j] = sample;
 
         }
 
@@ -310,7 +309,7 @@ void
 Catalog_freeField(Field *field) {
     int i;
     for (i=0; i<field->nsets; i++) {
-        FREE(field->sets[i].objects);
+        FREE(field->sets[i].samples);
         wcsvfree(&field->sets[i].nwcs, &field->sets[i].wcs);
     }
     FREE(field->sets);
@@ -320,11 +319,11 @@ Catalog_freeField(Field *field) {
 void
 Catalog_dump(Field *field) {
     int i, j;
-    Sample obj;
+    Sample sample;
     for (i=0; i<field->nsets; i++) {
-        for (j=0; j<field->sets[i].nobjects; j++) {
-            obj = field->sets[i].objects[j];
-            printf("ra: %f dec: %f num: %li\n", obj.ra, obj.dec, obj.id);
+        for (j=0; j<field->sets[i].nsamples; j++) {
+            sample = field->sets[i].samples[j];
+            printf("ra: %f dec: %f num: %li\n", sample.ra, sample.dec, sample.id);
         }
     }
 }

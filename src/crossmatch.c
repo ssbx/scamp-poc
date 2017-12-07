@@ -11,24 +11,23 @@
  * (at your option) any later version.
  */
 
-
-
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
 
-#include "global.h"
 #include "crossmatch.h"
 #include "logger.h"
 #include "mem.h"
 #include "chealpix.h"
 #include "pixelstore.h"
 
-static void crossmatch(Sample*, Sample*, double);
+static void crossmatch(Sample*,Sample*,double);
 static void crossmatch_querydisc_algo(PixelStore*,double);
 static void crossmatch_neighbors_algo(PixelStore*,double);
-static void cross_cells(PixelStore*,double,CrossmatchAlgo);
+static void cross_pixels(PixelStore*,double,CrossmatchAlgo);
+
+static long ntestmatches;
 
 #define NNEIGHBORS 8
 
@@ -44,13 +43,14 @@ Crossmatch_crossFields(
 
     PixelStore *pixstore;
     pixstore = PixelStore_new(fields, nfields, nsides, scheme);
-    cross_cells(pixstore, radius_arcsec, algo);
+    cross_pixels(pixstore, radius_arcsec, algo);
     PixelStore_free(pixstore);
+
 }
 
 
 static void
-cross_cells(PixelStore *pixstore, double radius_arcsec, CrossmatchAlgo algo) {
+cross_pixels(PixelStore *pixstore, double radius_arcsec, CrossmatchAlgo algo) {
     switch (algo) {
     case ALGO_NEIGHBORS:
         crossmatch_neighbors_algo(pixstore,radius_arcsec);
@@ -76,122 +76,132 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
     long i;
     long nbmatches = 0;
 
-    long ncells = store->npixels;
-    long *cellindex = store->pixelids;
+    long npixels = store->npixels;
+    long *pixelindex = store->pixelids;
+
+    /* arcsec to radiant */
+    double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
 
     /*
-     * Iterate over HealpixCell structure which old pointers to objects
+     * Iterate over HealPixel structure which old pointers to sample
      * belonging to him.
      *
      * Define functions inside loop, for future omp usage.
+     *
+     * XXX TODO: pixels are crossed twice (one as current_pix, and another
+     * as neighbor_pix) with each others,
+     * XXX TODO: how should I link matching samples from different fields?
+     * XXX TODO: this code is thread safe but not parallelisable, because of the
+     * false sharing induced by the "crossmatch" function modifying some
+     * Sample values. TODO, create a temporary result for each threads, then
+     * reduce the results in a single thread.
      */
-    for (i=0; i<ncells; i++) {
-        /* arcsec to radiant */
-        double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
+    for (i=0; i<npixels; i++) {
 
-        HealPixel *current_cell = PixelStore_get(store,cellindex[i]);
+
+        HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
         long nmatches = 0;
         long j, k, l;
-        long *neighbor_cells = current_cell->neighbors;
+        long *neighbors_pixels = current_pix->neighbors;
 
-        Sample *current_obj;
-        Sample *test_obj;
+        Sample *current_spl;
+        Sample *test_spl;
 
 
-        for (j=0; j<current_cell->nobjects; j++) {
-            current_obj = current_cell->objects[j];
-            current_obj->bestMatchDistance = radius;
+        for (j=0; j<current_pix->nsamples; j++) {
+            current_spl = current_pix->samples[j];
+            current_spl->bestMatchDistance = radius;
 
             /*
-             * First cross match with objects of the cell between them
+             * First cross match with samples of the pixel between them
              */
-            for(k=0; k<current_cell->nobjects; k++) {
-                test_obj = current_cell->objects[k];
+            for(k=0; k<current_pix->nsamples; k++) {
+                test_spl = current_pix->samples[k];
 
-                crossmatch(current_obj, test_obj, radius);
+                crossmatch(current_spl, test_spl, radius);
 
             }
 
             /*
-             * Then iterate against neighbors cells
+             * Then iterate against neighbors pixels
              */
             long neighbor_indexes;
-            HealPixel *test_cell;
+            HealPixel *test_pixel;
             for (k=0; k<NNEIGHBORS; k++) {
-                neighbor_indexes = neighbor_cells[k];
+                neighbor_indexes = neighbors_pixels[k];
 
                 /*
                  * Continue if there is no such neighbor pixel can have
-                 * 7 on 8 neighbors. Non existing cells are set to -1
+                 * 7 on 8 neighbors. Non existing pixels are set to -1
                  */
                 if (neighbor_indexes < 0)
                     continue;
 
-                test_cell = PixelStore_get(store, neighbor_indexes);
+                test_pixel = PixelStore_get(store, neighbor_indexes);
                 /*
-                 * Does the cell exists? It may be a neighbor of current cell,
+                 * Does the pixel exists? It may be a neighbor of current pixel,
                  * but not be initialized because it does not contains
-                 * any objects.
+                 * any samples.
                  */
-                if (test_cell == NULL)
+                if (test_pixel == NULL)
                     continue;
 
                 /*
-                 * Then iterate over objects.
+                 * Then iterate over samples.
                  */
-                for (l=0; l<test_cell->nobjects; l++) {
-                    test_obj = test_cell->objects[l];
-                    crossmatch(current_obj, test_obj, radius);
+                for (l=0; l<test_pixel->nsamples; l++) {
+                    test_spl = test_pixel->samples[l];
+                    crossmatch(current_spl, test_spl, radius);
 
                 }
             }
 
-            if (current_obj->bestMatch != NULL) {
+            if (current_spl->bestMatch != NULL) {
                 nmatches++;
                 nbmatches++;
             }
         }
 
         Logger_log(LOGGER_DEBUG,
-                "Crossmatch end. Got %li matches for cell %li!\n", nmatches,i);
+                "Crossmatch end. Got %li matches for pixel %li!\n", nmatches,i);
     }
     Logger_log(LOGGER_NORMAL,
-            "Crossmatch end. Got %li matches for all cells!\n", nbmatches);
+            "Crossmatch end. Got %li matches for all pixels!\n", nbmatches);
 
 }
 
 static void
-crossmatch(Sample *current_obj, Sample *test_obj, double radius) {
+crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
 
+    ntestmatches++;
     /*
-     * pass if object is of the same field
+     * pass if sample is of the same field
      */
-    if (current_obj->set->field == test_obj->set->field)
+    if (current_spl->set->field == test_spl->set->field)
         return;
 
     /*
      * pass if dec is not in a good range
      */
-    if (abs(current_obj->dec - test_obj->dec) > radius)
+    if (abs(current_spl->dec - test_spl->dec) > radius)
         return;
 
     /*
      * Cross match then!
      *
-     * Get distance between objects (rad)
+     * Get distance between samples (rad)
      */
-    double distance_rad = angdist(current_obj->vector, test_obj->vector);
+    double distance_rad = angdist(current_spl->vector, test_spl->vector);
 
     /*
      * If distance is less than previous (or radius) update
-     * best_distance and set test_obj to currentObj.bestMatch
+     * best_distance and set test_spl to current_spl.bestMatch
      */
-    if (distance_rad < current_obj->bestMatchDistance) {
-        current_obj->bestMatch = test_obj;
-        current_obj->bestMatchDistance = distance_rad;
+    if (distance_rad < current_spl->bestMatchDistance) {
+        current_spl->bestMatch = test_spl;              /* XXX false shared ! */
+        current_spl->bestMatchDistance = distance_rad;  /* XXX false shared ! */
     }
 
 }
-
 
 

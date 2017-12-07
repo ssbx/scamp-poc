@@ -15,7 +15,7 @@
 #ifndef SRC_PIXELSTORE_H_
 #define SRC_PIXELSTORE_H_
 
-#include "catalog.h"
+#include "scamp.h"
 
 typedef enum {
 
@@ -29,14 +29,14 @@ typedef enum {
 } StoreScheme;
 
 /**
- * HealpixCell store pointers to every objects of all fields, belonging to a
+ * HealPixel store pointers to every samples of all fields, belonging to a
  * common healpix pixel.
  */
 typedef struct HealPixel {
 
     long id;            /* healpix id */
-    Sample **objects;   /* our objects pointers */
-    int nobjects;       /* number of objects belonging to this pixel */
+    Sample **samples;   /* our samples pointers */
+    int nsamples;       /* number of samples belonging to this pixel */
     int size;           /* for reallocation if required */
     long neighbors[8];  /* Neighbors indexes */
 

@@ -12,14 +12,13 @@
 #ifndef __CROSSMATCH_H__
 #define __CROSSMATCH_H__
 
-#include "catalog.h"
+#include "scamp.h"
 #include "pixelstore.h"
 
 typedef enum {
     ALGO_NEIGHBORS,
     ALGO_QUERYDISC
 } CrossmatchAlgo;
-
 
 extern void
 Crossmatch_crossFields(Field *fields, int nfields, long nsides,
