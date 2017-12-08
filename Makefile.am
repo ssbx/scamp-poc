@@ -1,5 +1,7 @@
 run: all
-	./src/scamppoc ./tests/data/fitscat/data1.fits.cat ./tests/data/fitscat/data2.fits.cat
+	./tests/testCrossmatchLimit
+	
+#./src/scamppoc ./tests/data/fitscat/data1.fits.cat ./tests/data/fitscat/data2.fits.cat
 
 tests: all
 	./tests/test_suite.sh

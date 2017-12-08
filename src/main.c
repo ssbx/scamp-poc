@@ -32,20 +32,22 @@
 int main(int argc, char** argv) {
     int i, nfields;
     clock_t c;
-    int64_t nsides = pow(2,16); /* a power 15 would be greet (5 arc sec wide) */
+    int64_t nsides = pow(2,15); /* a power 15 would be greet (5 arc sec wide) */
     double radius_arcsec = 2.0; /* in arcsec */
+
 
     if (argc < 3)
         Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
 
     Logger_setLevel(LOGGER_NORMAL);
+    printf("--- %0.50f\n",Crossmatch_getAveragePixelSize(nsides));
 
-    return 0;
+
     nfields = 2;
     Field fields[2];
     c = clock();
     Catalog_open(argv[1], &fields[0]);
-    Catalog_open(argv[1], &fields[1]);
+    Catalog_open(argv[2], &fields[1]);
 //    Catalog_open(argv[1], &fields[2]);
 //    Catalog_open(argv[1], &fields[3]);
 //    Catalog_open(argv[1], &fields[4]);
@@ -55,6 +57,7 @@ int main(int argc, char** argv) {
 //    Catalog_open(argv[2], &fields[8]);
 //    Catalog_open(argv[2], &fields[9]);
 //
+
 //    Catalog_open(argv[1], &fields[10]);
 //    Catalog_open(argv[1], &fields[11]);
 //    Catalog_open(argv[1], &fields[12]);

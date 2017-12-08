@@ -23,6 +23,7 @@
 static char* read_field_card(fitsfile*,int*,char*);
 static char charnull[2] = {' ', '\0'};
 
+
 void
 Catalog_open(char *filename, Field *field) {
     fitsfile *fptr;
@@ -359,3 +360,35 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
 
     return field_card;
 }
+
+
+void
+test_Catalog_open_ascii(char *filename, Field *field) {
+    FILE *fp = fopen(filename, "r");
+    int set_size = 10;
+
+    /* This is a single set file */
+    field->nsets = 1;
+    field->sets = ALLOC(sizeof(Set));
+
+    Set set;
+    set.nsamples = 0;
+    set.samples = ALLOC(sizeof(Sample) * set_size);
+    set.field = field;
+
+    Sample spl;
+    spl.set = &field->sets[0];
+    while (fscanf(fp, "%li %lf %lf\n", &spl.id, &spl.ra, &spl.dec) > 0) {
+        if (set.nsamples == set_size) {
+            set.samples = REALLOC(set.samples, sizeof(Sample) * set_size * 2);
+            set_size *= 2;
+        }
+        set.samples[set.nsamples] = spl;
+        set.nsamples++;
+    }
+
+    field->sets[0] = set;
+
+    fclose(fp);
+}
+

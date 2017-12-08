@@ -50,7 +50,20 @@ Crossmatch_crossFields(
 
 extern double
 Crossmatch_getAveragePixelSize(int64_t nsides) {
-    return npix2nside64(nsides);
+
+    int i;
+    double v1[3], v2[3];
+    int64_t neighbors[8], neighbor = -1;
+    neighbours_nest64(nsides, 0, neighbors);
+    for (i=0; i<8; i++) {
+        if (neighbors[i] > -1)
+            neighbor = neighbors[i];
+        break;
+    }
+    pix2vec_nest64(nsides, 0, v1);
+    pix2vec_nest64(nsides, neighbor, v2);
+    return angdist(v1, v2) * 180 / SC_PI * 3600 * 60;
+
 }
 
 static void

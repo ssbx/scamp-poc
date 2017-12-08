@@ -2,6 +2,7 @@ bin_PROGRAMS = \
 	testChealpixNeighboursNest \
 	testSingleCatCrossmatch \
 	testChealpixsphereAvltree \
+	testCrossmatchLimit \
 	perfCrossmatchSingle
 	
 testChealpixNeighboursNest_SOURCES= \
@@ -51,4 +52,18 @@ perfCrossmatchSingle_SOURCES= \
 		../src/logger.h \
 		../src/mem.c \
 		../src/mem.h
-perfCrossmatchSingle_CFLAGS = --coverage
+
+testCrossmatchLimit_SOURCES= \
+		test_crossmatch_limit.c \
+ 		../src/catalog.c \
+		../src/catalog.h \
+		../src/crossmatch.c \
+		../src/crossmatch.h \
+		../src/chealpix.c \
+		../src/chealpix.h \
+		../src/pixelstore.c \
+		../src/pixelstore.h \
+		../src/logger.c \
+		../src/logger.h \
+		../src/mem.c \
+		../src/mem.h
