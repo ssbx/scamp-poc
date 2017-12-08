@@ -12,7 +12,7 @@
 #define SC_TWOPI 6.283185307179586476925286766559005768394
 #define SC_HALFPI 1.570796326794896619231321691639751442099
 #define SC_INV_HALFPI 0.6366197723675813430755350534900574
-#define SC_PI_DIV_180 0.01745329251994329576923690768488612713442
+#define TO_RAD 0.01745329251994329576923690768488612713442
 
 #include <wcslib/wcshdr.h>
 #include <stdint.h>
@@ -32,12 +32,12 @@ struct Sample {
     long id;
 
     /* Default unit is radiant, used by healpix */
-    double ra;     /* right ascension (rad) (x) world coordinates */
-    double dec;    /* declination     (rad) (y) world coordinates */
+    double lon; /* right ascension (rad) (x) world coordinates */
+    double col; /* collatitude     (rad) (y) world coordinates */
 
     /* Degrees used by WCS */
-    double raDeg;   /* ra in degree */
-    double decDeg;  /* dec in degree */
+    double ra;   /* ra in degree */
+    double dec;  /* declination in degree */
 
     /* Representation as vector used to determinate the angle distance
      * with another vector in the cross-match algorithm (see angdist) */

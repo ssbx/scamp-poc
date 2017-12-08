@@ -70,14 +70,14 @@ else
     printf "%-70s %10s\n" "===> Test for testCrossmatchNumber" "SUCCESS"
 fi
 
-echo "==> Running testCrossmatchLimt"
-${DIR}/testCrossmatchNumber > /dev/null
+echo "==> Running testCrossmatchLimit"
+${DIR}/testCrossmatchLimit > /dev/null
 if [ $? -gt 0 ]
 then 
-    printf "%-70s %10s\n" "===> Test for testCrossmatchLimt" "FAILED"
+    printf "%-70s %10s\n" "===> Test for testCrossmatchLimit" "FAILED"
     STATUS=1
 else
-    printf "%-70s %10s\n" "===> Test for testCrossmatchLimt" "SUCCESS"
+    printf "%-70s %10s\n" "===> Test for testCrossmatchLimit" "SUCCESS"
 fi
 
 

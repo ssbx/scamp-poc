@@ -100,7 +100,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
     int64_t *pixelindex = store->pixelids;
 
     /* arcsec to radiant */
-    double radius = radius_arcsec / 3600 * SC_PI_DIV_180;
+    double radius = radius_arcsec / 3600 * TO_RAD;
 
     /*
      * Iterate over HealPixel structure which old pointers to sample
@@ -208,7 +208,7 @@ crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
     /*
      * pass if dec is not in a good range
      */
-    if (abs(current_spl->dec - test_spl->dec) > radius)
+    if (abs(current_spl->col - test_spl->col) > radius)
         return;
 
     /*

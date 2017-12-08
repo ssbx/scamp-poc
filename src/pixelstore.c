@@ -391,8 +391,8 @@ new_store_bigarray(Field *fields, int nfields, int64_t nsides) {
                 spl = &set->samples[k];
                 spl->bestMatch = NULL;
 
-                ang2pix_nest64(nsides, spl->dec, spl->ra, &spl->pix_nest);
-                ang2vec(spl->dec, spl->ra, spl->vector);
+                ang2pix_nest64(nsides, spl->col, spl->lon, &spl->pix_nest);
+                ang2vec(spl->col, spl->lon, spl->vector);
                 insert_sample_into_bigarray_store(spl, store, spl->pix_nest, nsides);
 
             }
@@ -429,8 +429,8 @@ new_store_avltree(Field *fields, int nfields, int64_t nsides) {
 
                 spl = &set.samples[k];
                 spl->bestMatch = NULL;
-                ang2pix_nest64(nsides,spl->dec, spl->ra,&spl->pix_nest);
-                ang2vec(spl->dec, spl->ra, spl->vector);
+                ang2pix_nest64(nsides,spl->col, spl->lon,&spl->pix_nest);
+                ang2vec(spl->col, spl->lon, spl->vector);
                 insert_sample_into_avltree_store(store, spl, nsides);
 
             }

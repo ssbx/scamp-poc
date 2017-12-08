@@ -278,11 +278,11 @@ Catalog_open(char *filename, Field *field) {
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
             sample.id      = col_number[j];
-            sample.raDeg   = world[k];
-            sample.decDeg  = world[k+1];
-            sample.ra      = world[k] * SC_PI_DIV_180;
+            sample.ra   = world[k];
+            sample.dec  = world[k+1];
+            sample.lon      = world[k] * TO_RAD;
             /* degree latitude to radian colatitude */
-            sample.dec     = SC_HALFPI - world[k+1] * SC_PI_DIV_180;
+            sample.col     = SC_HALFPI - world[k+1] * TO_RAD;
             sample.set     = &field->sets[l];
 
             field->sets[l].samples[j] = sample;
@@ -325,7 +325,7 @@ Catalog_dump(Field *field) {
     for (i=0; i<field->nsets; i++) {
         for (j=0; j<field->sets[i].nsamples; j++) {
             sample = field->sets[i].samples[j];
-            printf("ra: %f dec: %f num: %li\n", sample.ra, sample.dec, sample.id);
+            printf("ra: %f dec: %f num: %li\n", sample.lon, sample.col, sample.id);
         }
     }
 }
@@ -379,7 +379,7 @@ test_Catalog_open_ascii(char *filename, Field *field) {
 
     Sample spl;
     spl.set = &field->sets[0];
-    while (fscanf(fp, "%li %lf %lf\n", &spl.id, &spl.ra, &spl.dec) > 0) {
+    while (fscanf(fp, "%li %lf %lf\n", &spl.id, &spl.lon, &spl.col) > 0) {
         if (set.nsamples == set_size) {
             set.samples = REALLOC(set.samples, sizeof(Sample) * set_size * 2);
             set_size *= 2;
