@@ -35,6 +35,7 @@
 /tests/testChealpixsphereAvltree
 /tests/perfCrossmatchSingle
 /tests/testAngdist
+/tests/testCrossmatchLimit
 /tests/testCrossmatchNumber
 /src/.deps/
 /tests/.deps/

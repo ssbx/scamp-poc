@@ -280,8 +280,9 @@ Catalog_open(char *filename, Field *field) {
             sample.id      = col_number[j];
             sample.raDeg   = world[k];
             sample.decDeg  = world[k+1];
-            sample.ra      = world[k]   * SC_PI_DIV_180;
-            sample.dec     = world[k+1] * SC_PI_DIV_180;
+            sample.ra      = world[k] * SC_PI_DIV_180;
+            /* degree latitude to radian colatitude */
+            sample.dec     = SC_HALFPI - world[k+1] * SC_PI_DIV_180;
             sample.set     = &field->sets[l];
 
             field->sets[l].samples[j] = sample;

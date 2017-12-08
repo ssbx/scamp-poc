@@ -22,6 +22,9 @@ void debug_vec(double *v) {
     printf("2 is %lf\n", v[2]);
 }
 
+void norm(double *v) {
+
+}
 static long eps = 0.0001;
 int
 main(int argc, char **argv) {
@@ -36,8 +39,6 @@ main(int argc, char **argv) {
     if ((abs(0 - dist)) > eps) {
         return 1;
     }
-
-
 
     ang2vec(SC_PI / 2, 0.0, v1);
     ang2vec(-SC_PI / 2, 0.0, v2);
@@ -57,8 +58,8 @@ main(int argc, char **argv) {
         return 1;
     }
 
-    ang2vec(0.0, 2 * SC_PI, v1);
-    ang2vec(0.0, 0.0, v2);
+    ang2vec(SC_PI / 2, SC_PI, v1);
+    ang2vec(SC_PI / 2, 0.0, v2);
     dist = angdist(v1, v2);
     // should be near PI
     printf("dist 4 is %0.50lf\n", dist);
