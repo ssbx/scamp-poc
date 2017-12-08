@@ -32,7 +32,7 @@
 int main(int argc, char** argv) {
     int i, nfields;
     clock_t c;
-    long nsides = pow(2,15); /* a power 15 would be greet (5 arc sec wide) */
+    int64_t nsides = pow(2,16); /* a power 15 would be greet (5 arc sec wide) */
     double radius_arcsec = 2.0; /* in arcsec */
 
     if (argc < 3)
@@ -40,6 +40,7 @@ int main(int argc, char** argv) {
 
     Logger_setLevel(LOGGER_NORMAL);
 
+    return 0;
     nfields = 2;
     Field fields[2];
     c = clock();

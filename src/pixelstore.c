@@ -200,12 +200,13 @@ pixel_avl *pixelAvlInsert(pixel_avl **ppHead, pixel_avl *pNew) {
 }
 
 void pixelAvlFree(pixel_avl *pix) {
-    if (!pix)
+    if (pix == NULL)
         return;
 
     pixelAvlFree(pix->pAfter);
     pixelAvlFree(pix->pBefore);
 
+    FREE(pix->pixel.samples);
     FREE(pix);
 }
 
@@ -280,7 +281,7 @@ insert_sample_into_bigarray_store(Sample *spl, PixelStore *store,
             store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
             store->pixelids_size++;
         }
-        store->pixelids[store->npixels] = spl->pix_nest;
+        store->pixelids[store->npixels] = index;
         store->npixels++;
     }
 
@@ -448,6 +449,7 @@ free_store_bigarray(PixelStore *store) {
 
     for (i=0; i<npix; i++) {
         FREE(pixels[pixids[i]]->samples);
+        FREE(pixels[pixids[i]]);
     }
     FREE(pixels);
 }
@@ -496,10 +498,12 @@ PixelStore_free(PixelStore* store) {
     switch(store->scheme) {
     case STORE_SCHEME_AVLTREE:
         pixelAvlFree((pixel_avl*) store->pixels);
+        FREE(store->pixelids);
         FREE(store);
         return;
     case STORE_SCHEME_BIGARRAY:
         free_store_bigarray(store);
+        FREE(store->pixelids);
         FREE(store);
         return;
     }

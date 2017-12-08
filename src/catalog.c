@@ -21,6 +21,7 @@
 #include "logger.h"
 
 static char* read_field_card(fitsfile*,int*,char*);
+static char charnull[2] = {' ', '\0'};
 
 void
 Catalog_open(char *filename, Field *field) {
@@ -28,7 +29,7 @@ Catalog_open(char *filename, Field *field) {
     int i, j, k, l;
     int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs;
     long nrows;
-    char *field_card, *charnull;
+    char *field_card;
     struct wcsprm *wcs;
 
     // short shortnull;
@@ -40,7 +41,6 @@ Catalog_open(char *filename, Field *field) {
     status      = 0;
     longnull    = 0;
     floatnull   = 0.0;
-    charnull    = ALLOC(sizeof(char) * 2); strcpy(charnull, " ");
 
 
     if (fits_open_file(&fptr, filename, READONLY, &status)) {

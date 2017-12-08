@@ -41,4 +41,6 @@
 /src/catalog/fits/libfits.a
 .dirstamp
 /.deps
-
+/oprofile_data
+/perf.data
+/perf.data.old

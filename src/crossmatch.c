@@ -48,6 +48,10 @@ Crossmatch_crossFields(
 
 }
 
+extern double
+Crossmatch_getAveragePixelSize(int64_t nsides) {
+    return npix2nside64(nsides);
+}
 
 static void
 cross_pixels(PixelStore *pixstore, double radius_arcsec, CrossmatchAlgo algo) {

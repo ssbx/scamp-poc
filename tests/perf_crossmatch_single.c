@@ -20,13 +20,9 @@ static char testfile[] = "tests/data/fitscat/data1.fits.cat";
 
 int
 main(int argc, char **argv) {
-    int64_t nsides = pow(2,31);
+    int64_t nsides = pow(2,15);
     double radius_arcsec = 2.0;
     int n = 10;
-    printf("sizeof int is %li\n", sizeof(int));
-    printf("sizeof int64 is %li\n", sizeof(int64_t));
-    printf("sizeof long is %li\n", sizeof(long));
-
 
     Field *fields = ALLOC(sizeof(Field) * n);
 
@@ -43,5 +39,6 @@ main(int argc, char **argv) {
         Catalog_freeField(&fields[i]);
     }
 
+    FREE(fields);
     return 0;
 }
