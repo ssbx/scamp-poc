@@ -18,6 +18,15 @@ else
 	printf "%-70s %10s\n" "===> Test for testChealpixNeighboursNest" "SUCCESS"
 fi
 
+echo "==> Running testAngdist"
+${DIR}/testAngdist > /dev/null
+if [ $? -gt 0 ]
+then 
+    printf "%-70s %10s\n" "===> Test for testAngdist" "FAILED"
+    STATUS=1
+else
+    printf "%-70s %10s\n" "===> Test for testAngdist" "SUCCESS"
+fi
 
 echo "==> Running testChealpixsphereAvltree"
 ${DIR}/testChealpixsphereAvltree > /dev/null
@@ -50,6 +59,27 @@ then
 else
 	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch Bigarray/Neighbors version" "SUCCESS"
 fi
+
+echo "==> Running testCrossmatchNumber"
+${DIR}/testCrossmatchNumber > /dev/null
+if [ $? -gt 0 ]
+then 
+    printf "%-70s %10s\n" "===> Test for testCrossmatchNumber" "FAILED"
+    STATUS=1
+else
+    printf "%-70s %10s\n" "===> Test for testCrossmatchNumber" "SUCCESS"
+fi
+
+echo "==> Running testCrossmatchLimt"
+${DIR}/testCrossmatchNumber > /dev/null
+if [ $? -gt 0 ]
+then 
+    printf "%-70s %10s\n" "===> Test for testCrossmatchLimt" "FAILED"
+    STATUS=1
+else
+    printf "%-70s %10s\n" "===> Test for testCrossmatchLimt" "SUCCESS"
+fi
+
 
 echo "=> Test suite end"
 

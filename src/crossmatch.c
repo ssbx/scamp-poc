@@ -23,15 +23,15 @@
 #include "pixelstore.h"
 
 static void crossmatch(Sample*,Sample*,double);
-static void crossmatch_querydisc_algo(PixelStore*,double);
-static void crossmatch_neighbors_algo(PixelStore*,double);
-static void cross_pixels(PixelStore*,double,CrossmatchAlgo);
+static long crossmatch_querydisc_algo(PixelStore*,double);
+static long crossmatch_neighbors_algo(PixelStore*,double);
+static long cross_pixels(PixelStore*,double,CrossmatchAlgo);
 
 static long ntestmatches;
 
 #define NNEIGHBORS 8
 
-extern void
+extern long
 Crossmatch_crossFields(
         Field           *fields,
         int             nfields,
@@ -40,11 +40,14 @@ Crossmatch_crossFields(
         CrossmatchAlgo  algo,
         StoreScheme     scheme)
 {
+    long nmatches;
 
     PixelStore *pixstore;
     pixstore = PixelStore_new(fields, nfields, nsides, scheme);
-    cross_pixels(pixstore, radius_arcsec, algo);
+    nmatches = cross_pixels(pixstore, radius_arcsec, algo);
     PixelStore_free(pixstore);
+
+    return nmatches;
 
 }
 
@@ -66,29 +69,29 @@ Crossmatch_getAveragePixelSize(int64_t nsides) {
 
 }
 
-static void
+static long
 cross_pixels(PixelStore *pixstore, double radius_arcsec, CrossmatchAlgo algo) {
     switch (algo) {
     case ALGO_NEIGHBORS:
-        crossmatch_neighbors_algo(pixstore,radius_arcsec);
-        break;
+        return crossmatch_neighbors_algo(pixstore,radius_arcsec);
     case ALGO_QUERYDISC:
-        crossmatch_querydisc_algo(pixstore,radius_arcsec);
-        break;
+        return crossmatch_querydisc_algo(pixstore,radius_arcsec);
     }
+    return 0;
 }
 
-static void
+static long
 crossmatch_querydisc_algo(PixelStore *pixstore, double radius_arcsec) {
     /*
      * TODO see query_disc (fortran) as an alternative method.
      * - 1 implement it (and tests)
      * - 2 try!
      */
+    return 0;
 
 }
 
-static void
+static long
 crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
     long i;
     long nbmatches = 0;
@@ -189,6 +192,7 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
     Logger_log(LOGGER_NORMAL,
             "Crossmatch end. Got %li matches for all pixels!\n", nbmatches);
 
+    return nbmatches;
 }
 
 static void

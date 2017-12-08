@@ -34,6 +34,8 @@
 /tests/testSingleCatCrossmatch
 /tests/testChealpixsphereAvltree
 /tests/perfCrossmatchSingle
+/tests/testAngdist
+/tests/testCrossmatchNumber
 /src/.deps/
 /tests/.deps/
 /src/catalog/.deps/

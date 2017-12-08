@@ -1003,11 +1003,11 @@ dot_product(double *vector_A, double *vector_B) {
     return result;
 }
 double
-angdist(double *vector_A, double *vector_B) {
-    double sprod, vprod, vector_C[3];
-    sprod = dot_product(vector_A, vector_B);
-    vect_prod(vector_A, vector_B, vector_C);
-    vprod = sqrt(dot_product(vector_C, vector_C));
+angdist(double *v1, double *v2) {
+    double sprod, vprod, v3[3];
+    sprod = dot_product(v1, v2);
+    vect_prod(v1, v2, v3);
+    vprod = sqrt(dot_product(v3, v3));
     return atan2(vprod, sprod);
 }
 

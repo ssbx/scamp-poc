@@ -20,7 +20,7 @@ typedef enum {
     ALGO_QUERYDISC
 } CrossmatchAlgo;
 
-extern void
+extern long
 Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
         double radius_arcsec, CrossmatchAlgo algo, StoreScheme scheme);
 
