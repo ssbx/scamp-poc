@@ -22,7 +22,7 @@ typedef enum {
 
 extern long
 Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
-        double radius_arcsec, CrossmatchAlgo algo, StoreScheme scheme);
+        double radius_arcsec);
 
 extern double
 Crossmatch_getAveragePixelSize(int64_t nsides);

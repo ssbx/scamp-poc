@@ -34,7 +34,6 @@ int main(int argc, char** argv) {
     /* default values */
     int nsides_power = 15, c;
     double radius_arcsec = 2.0; /* in arcsec */
-    StoreScheme store_scheme = STORE_SCHEME_AVLTREE;
 
     while ((c=getopt(argc,argv,"n:r:b")) != -1) {
         switch(c) {
@@ -43,9 +42,6 @@ int main(int argc, char** argv) {
             break;
         case 'r':
             radius_arcsec = atof(optarg);
-            break;
-        case 'b':
-            store_scheme = STORE_SCHEME_BIGARRAY;
             break;
         default:
             abort();
@@ -64,11 +60,10 @@ int main(int argc, char** argv) {
     double cpu_time_used;
     int64_t nsides = pow(2, nsides_power);
     start = clock();
-    Crossmatch_crossFields(fields, nfields, nsides,
-            radius_arcsec, ALGO_NEIGHBORS, store_scheme);
+    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Crossmatch done in %lf seconds\n", cpu_time_used);
+    printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);
 
     for (i=0; i<nfields; i++)
         Catalog_freeField(&fields[i]);

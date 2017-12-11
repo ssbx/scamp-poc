@@ -210,6 +210,23 @@ void pixelAvlFree(pixel_avl *pix) {
     FREE(pix);
 }
 
+void pixelAvlLink(pixel_avl *root, pixel_avl *leaf) {
+    if (leaf->pAfter)
+        pixelAvlLink(root, leaf->pAfter);
+    if (leaf->pBefore)
+        pixelAvlLink(root, leaf->pBefore);
+
+    int i;
+    for (i=0; i<8; i++) {
+        pixel_avl *f = pixelAvlSearch(root, leaf->pixel.neighbors[i]);
+        leaf->pixel.pneighbors[i] = &f->pixel;
+    }
+}
+
+void fix_pixel_neighbors(pixel_avl *root) {
+    pixelAvlLink(root, root);
+}
+
 #if 0 /* NOT USED */
 /* Remove node pOld from the tree.  pOld must be an element of the tree or
 ** the AVL tree will become corrupt.
@@ -264,40 +281,6 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
  * 2 PRIVATE FUNCTIONS
  */
 #define SPL_BASE_SIZE 50
-static void
-insert_sample_into_bigarray_store(Sample *spl, PixelStore *store,
-                        int64_t index, int64_t nsides) {
-    HealPixel **pixels = store->pixels;
-    HealPixel *pix;
-
-    if (pixels[index] == NULL) {
-        pixels[index] = ALLOC(sizeof(HealPixel));
-        pixels[index]->samples = ALLOC(sizeof(Sample*) * SPL_BASE_SIZE);
-        pixels[index]->size = SPL_BASE_SIZE;
-        pixels[index]->nsamples = 0;
-        pixels[index]->id = spl->pix_nest;
-        neighbours_nest64(nsides, index, pixels[index]->neighbors);
-        if (store->npixels == store->pixelids_size) {
-            store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
-            store->pixelids_size++;
-        }
-        store->pixelids[store->npixels] = index;
-        store->npixels++;
-    }
-
-    pix = pixels[index];
-
-    if (pix->size == pix->nsamples) { /* need realloc */
-        pix->samples = REALLOC(pix->samples, sizeof(Sample*) * pix->size * 2);
-        pix->size *= 2;
-    }
-
-    /* append sample */
-    pix->samples[pix->nsamples] = spl;
-    pix->nsamples++;
-
-}
-
 static void
 insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides) {
 
@@ -355,64 +338,21 @@ new_store() {
     return store;
 }
 
-static PixelStore*
-new_store_bigarray(Field *fields, int nfields, int64_t nsides) {
-    PixelStore *store = new_store();
-    store->scheme = STORE_SCHEME_BIGARRAY;
 
-    /* Allocate room for all possible pixels */
-    int64_t npix = nside2npix64(nsides);
+/**
+ * PRIVATE FUNCTIONS END
+ ******************************************************************************/
 
-    Logger_log(LOGGER_NORMAL,
-            "Will allocate room for %li pixels. It will take %i MB\n",
-            npix, sizeof(HealPixel*) * npix / 1000000);
 
-    store->pixels = (HealPixel**) CALLOC(npix, sizeof(HealPixel*));
 
-    /* fill pixels with samples values */
-    long i;
-    int j, k;
-    Field *field;
-    Set *set;
-    Sample *spl;
+/******************************************************************************
+ * PUBLIC FUNCTIONS
+ */
 
-    long total_nsamples;
-    total_nsamples = 0;
-
-    for (i=0; i<nfields; i++) {
-        field = &fields[i];
-
-        for (j=0; j<field->nsets; j++) {
-            set = &field->sets[j];
-
-            total_nsamples += set->nsamples;
-            for (k=0; k<set->nsamples; k++) {
-
-                spl = &set->samples[k];
-                spl->bestMatch = NULL;
-
-                ang2pix_nest64(nsides, spl->col, spl->lon, &spl->pix_nest);
-                ang2vec(spl->col, spl->lon, spl->vector);
-                insert_sample_into_bigarray_store(spl, store, spl->pix_nest, nsides);
-
-            }
-        }
-    }
-
-    Logger_log(LOGGER_TRACE,
-            "Total size for pixels is %li MB\n",
-            (nside2npix(nsides) * sizeof(HealPixel*) +
-                    total_nsamples * sizeof(Sample)) / 1000000);
-
-    return store;
-
-}
-
-static PixelStore*
-new_store_avltree(Field *fields, int nfields, int64_t nsides) {
+PixelStore*
+PixelStore_new(Field *fields, int nfields, int64_t nsides) {
 
     PixelStore *store = new_store();
-    store->scheme = STORE_SCHEME_AVLTREE;
 
     Field field;
     Set set;
@@ -437,41 +377,8 @@ new_store_avltree(Field *fields, int nfields, int64_t nsides) {
         }
     }
 
+    fix_pixel_neighbors(store->pixels);
     return store;
-}
-
-static void
-free_store_bigarray(PixelStore *store) {
-    long i;
-    int64_t *pixids = store->pixelids;
-    long npix = store->npixels;
-    HealPixel **pixels = (HealPixel**) store->pixels;
-
-    for (i=0; i<npix; i++) {
-        FREE(pixels[pixids[i]]->samples);
-        FREE(pixels[pixids[i]]);
-    }
-    FREE(pixels);
-}
-/**
- * PRIVATE FUNCTIONS END
- ******************************************************************************/
-
-
-
-/******************************************************************************
- * PUBLIC FUNCTIONS
- */
-PixelStore*
-PixelStore_new(Field *fields, int nfields, int64_t nsides, StoreScheme scheme) {
-    switch(scheme) {
-    case STORE_SCHEME_BIGARRAY:
-        return new_store_bigarray(fields, nfields, nsides);
-    case STORE_SCHEME_AVLTREE:
-        return new_store_avltree(fields, nfields, nsides);
-    default:
-        return NULL;
-    }
 }
 
 HealPixel*
@@ -479,34 +386,19 @@ PixelStore_get(PixelStore* store, int64_t key) {
     pixel_avl *match_avl;
     HealPixel **match_big;
 
-    switch(store->scheme) {
-    case STORE_SCHEME_AVLTREE:
-        match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
-        if (!match_avl)
-            return (HealPixel*) NULL;
-        return &match_avl->pixel;
-    case STORE_SCHEME_BIGARRAY:
-        match_big = (HealPixel**) store->pixels;
-        return match_big[key];
-    default:
-        return NULL;
-    }
+    match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
+    if (!match_avl)
+        return (HealPixel*) NULL;
+    return &match_avl->pixel;
+
 }
 
 void
 PixelStore_free(PixelStore* store) {
-    switch(store->scheme) {
-    case STORE_SCHEME_AVLTREE:
-        pixelAvlFree((pixel_avl*) store->pixels);
-        FREE(store->pixelids);
-        FREE(store);
-        return;
-    case STORE_SCHEME_BIGARRAY:
-        free_store_bigarray(store);
-        FREE(store->pixelids);
-        FREE(store);
-        return;
-    }
+    pixelAvlFree((pixel_avl*) store->pixels);
+    FREE(store->pixelids);
+    FREE(store);
+
 }
 /**
  * PUBLIC FUNCTIONS END

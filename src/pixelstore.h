@@ -17,34 +17,24 @@
 
 #include "scamp.h"
 
-typedef enum {
-
-    /* Fast 0(log n) and can growth to big nsides */
-    STORE_SCHEME_AVLTREE,
-
-    /* Extra fast 0(1), but limited by the memory required with a minimum
-     * of npix * sizeof(void*) bytes */
-    STORE_SCHEME_BIGARRAY
-
-} StoreScheme;
-
+typedef struct HealPixel HealPixel;
 /**
  * HealPixel store pointers to every samples of all fields, belonging to a
  * common healpix pixel.
  */
-typedef struct HealPixel {
+struct HealPixel {
 
     long id;            /* healpix id */
     Sample **samples;   /* our samples pointers */
     int nsamples;       /* number of samples belonging to this pixel */
     int size;           /* for reallocation if required */
     int64_t neighbors[8];  /* Neighbors indexes */
+    HealPixel *pneighbors[8];
 
-} HealPixel;
+};
 
 typedef struct PixelStore {
     void        *pixels; /* our opaque data */
-    StoreScheme scheme; /* determinate what is in our opaque data */
 
     /* These are used to iterate over pixels */
     long        npixels;
@@ -55,7 +45,7 @@ typedef struct PixelStore {
 
 
 extern PixelStore*
-PixelStore_new(Field *fields, int nfields, int64_t nsides, StoreScheme scheme);
+PixelStore_new(Field *fields, int nfields, int64_t nsides);
 
 extern HealPixel*
 PixelStore_get(PixelStore *store, int64_t key);

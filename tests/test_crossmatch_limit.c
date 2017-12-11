@@ -32,8 +32,7 @@ int main(int argc, char **argv) {
     long nsides = pow(2, 10);
     double radius_arcsec = 2.0;
     long matches;
-    matches = Crossmatch_crossFields(fields, 2, nsides, radius_arcsec,
-            ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
+    matches = Crossmatch_crossFields(fields, 2, nsides, radius_arcsec);
 
     assert(matches == 2);
 

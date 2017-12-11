@@ -43,8 +43,10 @@ struct Sample {
      * with another vector in the cross-match algorithm (see angdist) */
     double vector[3];
 
-    /* position on healpix nested scheme */
+    /* position on healpix ring scheme */
     int64_t pix_nest;
+    void *healpix_nest;
+    void *healpix_neighbors[8];
 
     /* Sample belonging to this set */
     Set *set;

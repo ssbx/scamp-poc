@@ -23,9 +23,7 @@
 #include "pixelstore.h"
 
 static void crossmatch(Sample*,Sample*,double);
-static long crossmatch_querydisc_algo(PixelStore*,double);
-static long crossmatch_neighbors_algo(PixelStore*,double);
-static long cross_pixels(PixelStore*,double,CrossmatchAlgo);
+static long cross_pixels(PixelStore*,double);
 
 static long ntestmatches;
 
@@ -36,15 +34,13 @@ Crossmatch_crossFields(
         Field           *fields,
         int             nfields,
         int64_t         nsides,
-        double          radius_arcsec,
-        CrossmatchAlgo  algo,
-        StoreScheme     scheme)
+        double          radius_arcsec)
 {
     long nmatches;
 
     PixelStore *pixstore;
-    pixstore = PixelStore_new(fields, nfields, nsides, scheme);
-    nmatches = cross_pixels(pixstore, radius_arcsec, algo);
+    pixstore = PixelStore_new(fields, nfields, nsides);
+    nmatches = cross_pixels(pixstore, radius_arcsec);
     PixelStore_free(pixstore);
 
     return nmatches;
@@ -63,36 +59,14 @@ Crossmatch_getAveragePixelSize(int64_t nsides) {
             neighbor = neighbors[i];
         break;
     }
-    pix2vec_nest64(nsides, 0, v1);
-    pix2vec_nest64(nsides, neighbor, v2);
+    pix2vec_ring64(nsides, 0, v1);
+    pix2vec_ring64(nsides, neighbor, v2);
     return angdist(v1, v2) * 180 / SC_PI * 3600 * 60;
 
 }
 
 static long
-cross_pixels(PixelStore *pixstore, double radius_arcsec, CrossmatchAlgo algo) {
-    switch (algo) {
-    case ALGO_NEIGHBORS:
-        return crossmatch_neighbors_algo(pixstore,radius_arcsec);
-    case ALGO_QUERYDISC:
-        return crossmatch_querydisc_algo(pixstore,radius_arcsec);
-    }
-    return 0;
-}
-
-static long
-crossmatch_querydisc_algo(PixelStore *pixstore, double radius_arcsec) {
-    /*
-     * TODO see query_disc (fortran) as an alternative method.
-     * - 1 implement it (and tests)
-     * - 2 try!
-     */
-    return 0;
-
-}
-
-static long
-crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
+cross_pixels(PixelStore *store, double radius_arcsec) {
     long i;
     long nbmatches = 0;
 
@@ -122,11 +96,9 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
      */
     for (i=0; i<npixels; i++) {
 
-
         HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
         long nmatches = 0;
         long j, k, l;
-        int64_t *neighbors_pixels = current_pix->neighbors;
 
         Sample *current_spl;
         Sample *test_spl;
@@ -149,19 +121,10 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
             /*
              * Then iterate against neighbors pixels
              */
-            int64_t neighbor_indexes;
             HealPixel *test_pixel;
             for (k=0; k<NNEIGHBORS; k++) {
-                neighbor_indexes = neighbors_pixels[k];
+                test_pixel = current_pix->pneighbors[k];
 
-                /*
-                 * Continue if there is no such neighbor pixel can have
-                 * 7 on 8 neighbors. Non existing pixels are set to -1
-                 */
-                if (neighbor_indexes < 0)
-                    continue;
-
-                test_pixel = PixelStore_get(store, neighbor_indexes);
                 /*
                  * Does the pixel exists? It may be a neighbor of current pixel,
                  * but not be initialized because it does not contains
@@ -187,13 +150,15 @@ crossmatch_neighbors_algo(PixelStore *store, double radius_arcsec) {
         }
 
         Logger_log(LOGGER_DEBUG,
-                "Crossmatch end. Got %li matches for pixel %li!\n", nmatches,i);
+                "Crossmatch end: %li matches for pixel %li!\n", nmatches,i);
     }
     Logger_log(LOGGER_NORMAL,
-            "Crossmatch end. Got %li matches for all pixels!\n", nbmatches);
-
+            "Crossmatch end: %li matches for all pixels!\n", nbmatches);
+    Logger_log(LOGGER_NORMAL,
+            "Crossmatch end: %li real cross match tests!\n", ntestmatches);
     return nbmatches;
 }
+
 
 static void
 crossmatch(Sample *current_spl, Sample *test_spl, double radius) {

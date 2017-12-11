@@ -32,8 +32,7 @@ main(int argc, char **argv) {
         Catalog_open(testfile, &fields[i]);
     }
 
-    Crossmatch_crossFields(fields, n, nsides, radius_arcsec,
-            ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
+    Crossmatch_crossFields(fields, n, nsides, radius_arcsec);
 
     for (i=0; i<n; i++) {
         Catalog_freeField(&fields[i]);
