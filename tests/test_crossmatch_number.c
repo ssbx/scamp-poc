@@ -31,8 +31,10 @@ int main(int argc, char **argv) {
     long nsides = pow(2, 10);
     double radius_arcsec = 2.0;
     nmatches = Crossmatch_crossFields(fields, 2, nsides, radius_arcsec);
-    if (nmatches != 5)
+    if (nmatches != 5) {
+        fprintf(stderr, "have %li matches when 5 is expected\n", nmatches);
         return 1;
+    }
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);

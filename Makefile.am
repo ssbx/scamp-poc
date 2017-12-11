@@ -1,5 +1,5 @@
 run: all
-	./src/scamppoc -n 15 -r 2 ./tests/data/fitscat/data1.fits.cat ./tests/data/fitscat/data2.fits.cat
+	./tests/testCrossmatchNumber
 
 tests: all
 	./tests/test_suite.sh

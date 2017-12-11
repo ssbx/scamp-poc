@@ -51,10 +51,10 @@ Crossmatch_crossFields(
  * Test if two pixels have already tested cross matching samples. If not,
  * set it to true.
  */
-int
+bool
 test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
-    if (a->tneighbors[an]) // already matched
-        return 1;
+    if (a->tneighbors[an] == true) // already matched
+        return true;
 
     a->tneighbors[an] = true;
     int i;
@@ -63,7 +63,7 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
             b->tneighbors[i] = true;
         break;
     }
-    return 0;
+    return false;
 }
 
 static long
@@ -76,6 +76,8 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
 
     /* arcsec to radiant */
     double radius = radius_arcsec / 3600 * TO_RAD;
+
+    PixelStore_setMaxRadius(store, radius);
 
     /*
      * Iterate over HealPixel structure which old pointers to sample
@@ -98,29 +100,35 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
     for (i=0; i<npixels; i++) {
 
         HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
-        long nmatches = 0;
         long j, k, l;
 
         Sample *current_spl;
         Sample *test_spl;
 
 
-        for (j=0; j<current_pix->nsamples; j++) {
+        for (j=1; j<current_pix->nsamples; j++) {
             current_spl = current_pix->samples[j];
             current_spl->bestMatchDistance = radius;
 
             /*
              * First cross match with samples of the pixel between them
              */
-            for(k=0; k<current_pix->nsamples; k++) {
+            for(k=0; k<j; k++) {
                 test_spl = current_pix->samples[k];
 
-                if (current_spl->set->field == test_spl->set->field)
+                if (current_spl->set->field == test_spl->set->field) {
                     continue;
+                }
 
                 crossmatch(current_spl, test_spl, radius);
 
             }
+
+            if (current_spl->bestMatch != NULL) {
+                nbmatches++;
+            }
+
+            continue;
 
             /*
              * Then iterate against neighbors pixels
@@ -137,8 +145,9 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
                 if (test_pixel == NULL)
                     continue;
 
-                if (test_allready_crossed(current_pix, test_pixel, k))
+                if (test_allready_crossed(current_pix, test_pixel, k) == true) {
                         continue;
+                }
 
                 /*
                  * Then iterate over samples.
@@ -151,13 +160,9 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
             }
 
             if (current_spl->bestMatch != NULL) {
-                nmatches++;
                 nbmatches++;
             }
         }
-
-        Logger_log(LOGGER_DEBUG,
-                "Crossmatch end: %li matches for pixel %li!\n", nmatches,i);
     }
     Logger_log(LOGGER_NORMAL,
             "Crossmatch end: %li matches for all pixels!\n", nbmatches);
@@ -167,6 +172,10 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
 
 }
 
+int
+get_iterate_count() {
+    return ntestmatches;
+}
 
 static void
 crossmatch(Sample *current_spl, Sample *test_spl, double radius) {

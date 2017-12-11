@@ -15,11 +15,6 @@
 #include "scamp.h"
 #include "pixelstore.h"
 
-typedef enum {
-    ALGO_NEIGHBORS,
-    ALGO_QUERYDISC
-} CrossmatchAlgo;
-
 extern long
 Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
         double radius_arcsec);

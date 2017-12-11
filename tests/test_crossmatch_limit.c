@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     long matches;
     matches = Crossmatch_crossFields(fields, 2, nsides, radius_arcsec);
 
-    assert(matches == 2);
+    assert(matches == 1);
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);

@@ -398,6 +398,25 @@ PixelStore_get(PixelStore* store, int64_t key) {
 }
 
 void
+pixelAvlSetMaxRadius(pixel_avl *leaf, double radius) {
+    if (leaf->pAfter != NULL)
+        pixelAvlSetMaxRadius(leaf->pAfter, radius);
+    if (leaf->pBefore != NULL)
+        pixelAvlSetMaxRadius(leaf->pBefore, radius);
+
+    HealPixel *p = &leaf->pixel;
+    int i;
+    for (i=0; i<p->nsamples; i++)
+        p->samples[i]->bestMatchDistance = radius;
+
+}
+void
+PixelStore_setMaxRadius(PixelStore *store, double radius) {
+    pixel_avl *root = store->pixels;
+    pixelAvlSetMaxRadius(root, radius);
+
+}
+void
 PixelStore_free(PixelStore* store) {
     pixelAvlFree((pixel_avl*) store->pixels);
     FREE(store->pixelids);

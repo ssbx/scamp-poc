@@ -43,21 +43,10 @@ echo "==> Running testSingleCatCrossmatchAvltree"
 ${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat avl > /dev/null
 if [ $? -gt 0 ]
 then 
-	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch Avltree/Neighbors version" "FAILED"
+	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch" "FAILED"
 	STATUS=1
 else
-	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch Avltree/Neighbors version" "SUCCESS"
-fi
-
-
-echo "==> Running testSingleCatCrossmatchBigarray"
-${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat > /dev/null
-if [ $? -gt 0 ]
-then 
-	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch Bigarray/Neighbors version" "FAILED"
-	STATUS=1
-else
-	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch Bigarray/Neighbors version" "SUCCESS"
+	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch" "SUCCESS"
 fi
 
 echo "==> Running testCrossmatchNumber"

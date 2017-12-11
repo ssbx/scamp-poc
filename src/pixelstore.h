@@ -55,4 +55,6 @@ PixelStore_get(PixelStore *store, int64_t key);
 extern void
 PixelStore_free(PixelStore *store);
 
+extern void
+PixelStore_setMaxRadius(PixelStore *store, double radius);
 #endif /* SRC_PIXELSTORE_H_ */
