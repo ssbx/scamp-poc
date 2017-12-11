@@ -124,12 +124,6 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
 
             }
 
-            if (current_spl->bestMatch != NULL) {
-                nbmatches++;
-            }
-
-            continue;
-
             /*
              * Then iterate against neighbors pixels
              */
@@ -145,9 +139,8 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
                 if (test_pixel == NULL)
                     continue;
 
-                if (test_allready_crossed(current_pix, test_pixel, k) == true) {
+                if (test_allready_crossed(current_pix, test_pixel, k) == true)
                         continue;
-                }
 
                 /*
                  * Then iterate over samples.

@@ -39,7 +39,7 @@ else
 fi
 
 
-echo "==> Running testSingleCatCrossmatchAvltree"
+echo "==> Running testSingleCatCrossmatch"
 ${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat avl > /dev/null
 if [ $? -gt 0 ]
 then 
