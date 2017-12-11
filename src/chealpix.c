@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
+
 #include "chealpix.h"
 
 static const double twothird = 2.0 / 3.0;
@@ -37,6 +39,7 @@ static const double pi = 3.141592653589793238462643383279502884197;
 static const double twopi = 6.283185307179586476925286766559005768394;
 static const double halfpi = 1.570796326794896619231321691639751442099;
 static const double inv_halfpi = 0.6366197723675813430755350534900574;
+
 
 static void util_fail_(const char *file, int line, const char *func,
         const char *msg) {
@@ -1009,6 +1012,270 @@ angdist(double *v1, double *v2) {
     vect_prod(v1, v2, v3);
     vprod = sqrt(dot_product(v3, v3));
     return atan2(vprod, sprod);
+}
+
+
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+
+double
+fudge_query_radius(int64_t nside, double radius, int quadratic) {
+    double factor = sqrt(0.55555555555555555555 + 1.29691115062192347448165712908 * (1.0 - 0.5 / nside));
+    double fudge = factor * pi / (4.0 * nside);
+    double radius_out =  radius;
+    if (quadratic == 1) {
+        radius_out = sqrt(pow(radius_out, 2) + pow(fudge, 2));
+    }else {
+        radius_out = radius + fudge;
+    }
+    return radius_out < pi ? radius_out : pi;
+}
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+double
+ring_num(int64_t nside, double z, int shift) {
+    int my_shift = 0.0;
+    if (shift != 0)
+        my_shift = shift * 0.5;
+
+    /* see fortran implementation for details */
+    double iring = round(nside * (2.0 - 1.5 * z) + my_shift);
+    if (z > twothird) {
+        iring = round(nside * sqrt(3.0 * (1.0 - z)) + my_shift);
+        if (iring == 0)
+            iring = 1;
+    }
+    if (z < -twothird) {
+        iring = round(nside * sqrt(3.0 * (1.0 -z)) + my_shift);
+        if (iring == 0)
+            iring = 1;
+        iring = 4 * nside - iring;
+    }
+    return iring;
+}
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+void
+discphirange_at_z(double *vector, double radius, double *z, int nz,
+        double *dphi, double *phi0) {
+    double cosang = cos(radius);
+
+    double norm = 0.0;
+    int i;
+    for (i=0; i<3; i++) {
+        norm += pow(vector[i], 2);
+    }
+    norm = sqrt(norm);
+
+    double x0 = vector[0] / norm;
+    double y0 = vector[1] / norm;
+    double z0 = vector[2] / norm;
+    *phi0 = 0.0;
+    if ((x0 != 0.0) | (y0 != 0.0))
+        *phi0 = atan2(y0, x0);
+    double a, b, c, tmp, cosdphi;
+    a = x0 * x0 + y0 * y0;
+    for (i=0; i<nz; i++) {
+        dphi[i] = -1000.0;
+        b = cosang - z[i] * z0;
+        if (a == 0.0) {
+            if (b <= 0.0)
+                dphi[i] = pi;
+        } else {
+            tmp = 1.0 - z[i] * z[i];
+            c = (tmp > 1.0e-12) ? tmp : 1.0e-12;
+            cosdphi = b / sqrt(a * c);
+            if (cosdphi < -1.0)
+                dphi[i] = pi;
+            if (abs(cosdphi) <= 1.0)
+                dphi[i] = acos(cosdphi);
+        }
+
+    }
+
+}
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+double
+ring2z64(int64_t nside, int64_t ir) {
+    double fn = (double) nside;
+    double tmp, z;
+    if (ir < nside) {
+        tmp = (double) ir;
+        z = 1.0 - (tmp * tmp) / (3.0 * fn * fn);
+    } else if (ir < (3*nside)) {
+        z = (double) (2 * nside - ir) * 2.0 / (3.0 * fn);
+    } else {
+        tmp = (double) 4 * nside - ir;
+        z = -1.0 + (tmp * tmp) / (3.0 * fn * fn);
+    }
+    return z;
+}
+
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+void
+pixels_per_ring64(int64_t nside, int64_t ring, int64_t *npr,
+        int64_t *kshift, int64_t *npnorth) {
+    *npr = ((nside < ring) ? ((nside < 4*nside-ring) ? nside : 4*nside-ring) : ((ring < 4*nside-ring) ? ring : 4*nside-ring)) * 4;
+    *kshift = (ring + 1) % 2;
+    if (nside == 1)
+        *kshift = 1 - *kshift;
+    if (*npr < 4*nside)
+        *kshift = 1;
+
+    if (ring <= nside)
+        *npnorth = ring * (ring + 1);
+    else if (ring <= 3*nside) {
+        int64_t ncap = nside *(nside+1) * 2;
+        int64_t ir = ring - nside;
+        *npnorth = ncap + 4 * nside * ir;
+    } else {
+        int64_t npix = nside2npix64(nside);
+        int64_t ir = 4 * nside - ring - 1;
+        *npnorth = npix - ir * (ir + 1) * 2;
+    }
+}
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+void
+pixels_on_edge64(int64_t nside, int64_t irmin, int64_t irmax, double phi0,
+        double *dphi, int64_t **ringphi, int64_t *ngr) {
+    *ngr = 0;
+    double shift;
+    int64_t kshift, iphi_low, iphi_hi, npnorth;
+    int64_t i, ir, npr;
+    for (i=irmin; i<=irmax; i++) {
+        ir = i - irmin + 1;
+        pixels_per_ring64(nside, i, &npr, &kshift, &npnorth);
+        if (dphi[ir] >= pi) {
+            (*ngr)++;
+            ringphi[0][*ngr] = i;
+            ringphi[1][*ngr] = 0;
+            ringphi[2][*ngr] = npr - 1;
+
+        } else if (dphi[ir] >= 0.0) {
+            shift = kshift * 0.5;
+            iphi_low = ceil(npr * (phi0 - dphi[ir]) / twopi - shift);
+            iphi_hi = floor(npr * (phi0 + dphi[ir]) / twopi - shift);
+            if (iphi_hi >= iphi_low) {
+                (*ngr)++;
+                ringphi[0][*ngr] = i;
+                ringphi[1][*ngr] = iphi_low % npr;
+                ringphi[2][*ngr] = iphi_hi % npr;
+            }
+
+        }
+
+    }
+
+}
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+void
+discedge2fulldisc(int64_t nside, int64_t **ringphi, int64_t ngr,
+        double *list, int *nlist, int maxsize)
+{
+    int listsize = maxsize;
+    if (ngr == 0) {
+        list[0] = -1;
+        return;
+    }
+
+    int64_t i, j, ir, my_low, my_hi, np, ip, nr, kshift, npc;
+    for (i=0; i<ngr; i++) {
+        ir = ringphi[0][i];
+        pixels_per_ring64(nside, ir, &nr, &kshift, &npc);
+        my_low = ringphi[1][j];
+        if (my_low >= 0) {
+            my_hi = ringphi[2][i];
+            np = my_hi - my_low;
+            np = (np % nr) + 1;
+            np = (np < nr) ? np : nr;
+            assert(*nlist + np > listsize);
+            for (j=0; j<np; j++) {
+                ip = (my_low + j) % nr;
+                list[*nlist+j] = npc - nr + ip;
+            }
+            *nlist = *nlist + np;
+        }
+    }
+}
+
+/**
+ * WARNING all this code is not tested!!!!!!!!!!
+ */
+static const int64_t ns_max8 = 268435456;
+void
+query_disc_inclusive_ring(int64_t nside, double *vector,
+        double radius, double *listpix, int *nlist)
+{
+    double *ztab, *diphtab;
+    int64_t **ringphi = malloc(sizeof(int64_t) * 3 * 4 * nside - 1);
+    ztab =    malloc(sizeof(double) * 4 * nside - 1);
+    diphtab = malloc(sizeof(double) * 4 * nside - 1);
+    assert((radius > 0.0) & (radius < pi));
+
+    double radius_eff = fudge_query_radius(nside, radius, 0);
+    double norm_vect0 = sqrt(dot_product(vector,vector));
+    double z0 = vector[2] / norm_vect0;
+    double rlat0 = asin(z0);
+    double rlat1 = rlat0 + radius_eff;
+    double rlat2 = rlat0 - radius_eff;
+    double zmax, zmin;
+    if (rlat1 >= halfpi)
+        zmax = 1.0;
+    else
+        zmax = sin(rlat1);
+
+    int64_t irmin = ring_num(nside, zmax, 0);
+    irmin = (irmin - 1) > 1 ? irmin - 1 : 1;
+
+    if (rlat2 <= -halfpi)
+        zmin = -1.0;
+    else
+        zmin = sin(rlat2);
+
+    int64_t irmax = ring_num(nside, zmin, 0);
+    irmax = (irmax + 1 < 4 * nside - 1) ? irmax + 1 : 4 * nside - 1;
+
+    int nr = irmax - irmin  + 1;
+    int64_t i;
+    for (i=irmin; i<=irmax;i++) {
+        ztab[i - irmin] = ring2z64(nside, i);
+    }
+    double phi0;
+    int64_t ngr;
+    discphirange_at_z(vector, radius_eff, ztab, nr, diphtab, &phi0);
+    pixels_on_edge64(nside, irmin, irmax, phi0, diphtab, ringphi, &ngr);
+
+    int64_t nsboost = 16;
+    int64_t nsideh = (ns_max8 < nside * nsboost) ? ns_max8 : nside * nsboost;
+    double radiush = fudge_query_radius(nsideh, radius, 1);
+    irmin = ring_num(nsideh, zmax,  1);
+    irmax = ring_num(nsideh, zmin, -1);
+    int64_t nrh = irmax - irmin + 1;
+    double *zlist, *dphilist;
+    zlist = malloc(sizeof(double) * nrh);
+    dphilist = malloc(sizeof(double) * nrh);
+    for (i=irmin; i<=irmax; i++) {
+        zlist[i-irmin] = ring2z64(nsideh, i);
+    }
+    discphirange_at_z(vector, radiush, zlist, nrh, dphilist, &phi0);
+//    check_edge_pixels(nside, nsboost, irmin, irmax, phi0, dphilist, ringphi, ngr); // not implemented
+    free(zlist);
+    free(dphilist);
+
+    int maxsize = 100; // BUG
+    discedge2fulldisc(nside, ringphi, ngr, listpix, nlist, maxsize);
+
 }
 
 #ifdef ENABLE_FITSIO
