@@ -24,8 +24,4 @@ extern long
 Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
         double radius_arcsec);
 
-extern double
-Crossmatch_getAveragePixelSize(int64_t nsides);
-
-
 #endif /* __CROSSMATCH_H__ */

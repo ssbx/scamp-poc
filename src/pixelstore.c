@@ -284,11 +284,14 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
 static void
 insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides) {
 
+
     /* search for the pixel */
     pixel_avl *avlpix =
             pixelAvlSearch((pixel_avl*) store->pixels, spl->pix_nest);
 
     if (!avlpix) { // no such pixel
+
+        int i;
 
         /* allocate and initialize */
         avlpix = CALLOC(1, sizeof(pixel_avl));
@@ -296,6 +299,8 @@ insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides)
         avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
         avlpix->pixel.nsamples = 0;
         avlpix->pixel.size = SPL_BASE_SIZE;
+        for (i=0;i<8;i++)
+            avlpix->pixel.tneighbors[i] = false;
         neighbours_nest64(nsides, spl->pix_nest, avlpix->pixel.neighbors);
 
         /* insert new pixel */
@@ -384,7 +389,6 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
 HealPixel*
 PixelStore_get(PixelStore* store, int64_t key) {
     pixel_avl *match_avl;
-    HealPixel **match_big;
 
     match_avl = pixelAvlSearch((pixel_avl*) store->pixels, key);
     if (!match_avl)

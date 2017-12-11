@@ -47,22 +47,23 @@ Crossmatch_crossFields(
 
 }
 
-extern double
-Crossmatch_getAveragePixelSize(int64_t nsides) {
+/**
+ * Test if two pixels have already tested cross matching samples. If not,
+ * set it to true.
+ */
+int
+test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
+    if (a->tneighbors[an]) // already matched
+        return 1;
 
+    a->tneighbors[an] = true;
     int i;
-    double v1[3], v2[3];
-    int64_t neighbors[8], neighbor = -1;
-    neighbours_nest64(nsides, 0, neighbors);
     for (i=0; i<8; i++) {
-        if (neighbors[i] > -1)
-            neighbor = neighbors[i];
+        if (b->pneighbors[i] == a)
+            b->tneighbors[i] = true;
         break;
     }
-    pix2vec_ring64(nsides, 0, v1);
-    pix2vec_ring64(nsides, neighbor, v2);
-    return angdist(v1, v2) * 180 / SC_PI * 3600 * 60;
-
+    return 0;
 }
 
 static long
@@ -114,6 +115,9 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
             for(k=0; k<current_pix->nsamples; k++) {
                 test_spl = current_pix->samples[k];
 
+                if (current_spl->set->field == test_spl->set->field)
+                    continue;
+
                 crossmatch(current_spl, test_spl, radius);
 
             }
@@ -132,6 +136,9 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
                  */
                 if (test_pixel == NULL)
                     continue;
+
+                if (test_allready_crossed(current_pix, test_pixel, k))
+                        continue;
 
                 /*
                  * Then iterate over samples.
@@ -157,6 +164,7 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
     Logger_log(LOGGER_NORMAL,
             "Crossmatch end: %li real cross match tests!\n", ntestmatches);
     return nbmatches;
+
 }
 
 
@@ -164,11 +172,6 @@ static void
 crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
 
     ntestmatches++;
-    /*
-     * pass if sample is of the same field
-     */
-    if (current_spl->set->field == test_spl->set->field)
-        return;
 
     /*
      * pass if dec is not in a good range
@@ -190,6 +193,11 @@ crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
     if (distance_rad < current_spl->bestMatchDistance) {
         current_spl->bestMatch = test_spl;              /* XXX false shared ! */
         current_spl->bestMatchDistance = distance_rad;  /* XXX false shared ! */
+    }
+
+    if (distance_rad < test_spl->bestMatchDistance) {
+        test_spl->bestMatch = current_spl;
+        test_spl->bestMatchDistance = distance_rad;
     }
 
 }
