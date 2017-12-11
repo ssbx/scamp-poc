@@ -15,6 +15,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "mem.h"
 #include "logger.h"
 #include "catalog.h"
 #include "crossmatch.h"
@@ -24,80 +25,53 @@
 
 /**
  * TODO:
- * 1 - get nsides depending of the max error from all files. (see
- * dist2holes_nest fortran)
- * 2 - crossmatch with as little as possible samples (see in_ring?),
- *
+ * 1 - get nsides depending of the max error from all files with the neighbors
+ * algo. (see dist2holes_nest fortran)
+ * 2 - cross/match with as little as possible samples (see query_ring?).
  */
 int main(int argc, char** argv) {
-    int i, nfields;
-    clock_t c;
-    int64_t nsides = pow(2,15);
+
+    /* default values */
+    int nsides_power = 15, c;
     double radius_arcsec = 2.0; /* in arcsec */
+    StoreScheme store_scheme = STORE_SCHEME_AVLTREE;
 
+    while ((c=getopt(argc,argv,"n:r:b")) != -1) {
+        switch(c) {
+        case 'n':
+            nsides_power = atoi(optarg);
+            break;
+        case 'r':
+            radius_arcsec = atof(optarg);
+            break;
+        case 'b':
+            store_scheme = STORE_SCHEME_BIGARRAY;
+            break;
+        default:
+            abort();
+        }
+    }
 
-    if (argc < 3)
-        Logger_log(LOGGER_CRITICAL, "Require two file arguments\n");
+    int nfields   = argc - optind;
+    char **cat_files = &argv[optind];
 
-    Logger_setLevel(LOGGER_NORMAL);
-    printf("--- %0.50f\n",Crossmatch_getAveragePixelSize(nsides));
+    Field *fields = ALLOC(sizeof(Field) * nfields);
+    int i;
+    for (i=0; i<nfields; i++)
+        Catalog_open(cat_files[i], &fields[i]);
 
+    clock_t start, end;
+    double cpu_time_used;
+    int64_t nsides = pow(2, nsides_power);
+    start = clock();
+    Crossmatch_crossFields(fields, nfields, nsides,
+            radius_arcsec, ALGO_NEIGHBORS, store_scheme);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Crossmatch done in %lf seconds\n", cpu_time_used);
 
-    nfields = 2;
-    Field fields[2];
-    c = clock();
-    Catalog_open(argv[1], &fields[0]);
-    Catalog_open(argv[2], &fields[1]);
-//    Catalog_open(argv[1], &fields[2]);
-//    Catalog_open(argv[1], &fields[3]);
-//    Catalog_open(argv[1], &fields[4]);
-//    Catalog_open(argv[2], &fields[5]);
-//    Catalog_open(argv[2], &fields[6]);
-//    Catalog_open(argv[2], &fields[7]);
-//    Catalog_open(argv[2], &fields[8]);
-//    Catalog_open(argv[2], &fields[9]);
-//
-
-//    Catalog_open(argv[1], &fields[10]);
-//    Catalog_open(argv[1], &fields[11]);
-//    Catalog_open(argv[1], &fields[12]);
-//    Catalog_open(argv[1], &fields[13]);
-//    Catalog_open(argv[1], &fields[14]);
-//    Catalog_open(argv[2], &fields[15]);
-//    Catalog_open(argv[2], &fields[16]);
-//    Catalog_open(argv[2], &fields[17]);
-//    Catalog_open(argv[2], &fields[18]);
-//    Catalog_open(argv[2], &fields[19]);
-//
-//    Catalog_open(argv[1], &fields[20]);
-//    Catalog_open(argv[1], &fields[21]);
-//    Catalog_open(argv[1], &fields[22]);
-//    Catalog_open(argv[1], &fields[23]);
-//    Catalog_open(argv[1], &fields[24]);
-//    Catalog_open(argv[2], &fields[25]);
-//    Catalog_open(argv[2], &fields[26]);
-//    Catalog_open(argv[2], &fields[27]);
-//    Catalog_open(argv[2], &fields[28]);
-//    Catalog_open(argv[2], &fields[29]);
-    /* load fields */
-//    for (i = 0, j = 1; i < nfields; i++, j++)
-//        Catalog_open(argv[j], &fields[i], nsides);
-
-    c = clock() - c;
-    printf("Took %f seconds for opening catalogs\n", (double)c / CLOCKS_PER_SEC);
-
-    c = clock();
-    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, ALGO_NEIGHBORS, STORE_SCHEME_AVLTREE);
-    c = clock() - c;
-    printf("Took %f seconds to cross match pixel samples\n", (double)c / CLOCKS_PER_SEC);
-
-    /* cleanup */
-    c = clock();
-    for (i = 0; i < nfields; i++)
+    for (i=0; i<nfields; i++)
         Catalog_freeField(&fields[i]);
-    c = clock() - c;
-    printf("Took %f seconds cleaning up\n", (double)c / CLOCKS_PER_SEC);
-
 
     return (EXIT_SUCCESS);
 
