@@ -108,7 +108,6 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
 
         for (j=1; j<current_pix->nsamples; j++) {
             current_spl = current_pix->samples[j];
-            current_spl->bestMatchDistance = radius;
 
             /*
              * First cross match with samples of the pixel between them
@@ -185,6 +184,8 @@ crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
      * Cross match then!
      *
      * Get distance between samples (rad)
+     *
+     * XXX This is time consuming.
      */
     double distance_rad = angdist(current_spl->vector, test_spl->vector);
 
