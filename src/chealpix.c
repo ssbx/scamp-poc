@@ -1011,6 +1011,16 @@ angdist(double *v1, double *v2) {
     return atan2(vprod, sprod);
 }
 
+
+double
+euclidean_distance(double *va, double *vb) {
+    double x = va[0] - vb[0];
+    double y = va[1] - vb[1];
+    double z = va[2] - vb[2];
+
+    return sqrt(x*x + y*y + z*z);
+}
+
 #ifdef ENABLE_FITSIO
 
 #include "fitsio.h"

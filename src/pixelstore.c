@@ -413,7 +413,16 @@ pixelAvlSetMaxRadius(pixel_avl *leaf, double radius) {
 void
 PixelStore_setMaxRadius(PixelStore *store, double radius) {
     pixel_avl *root = store->pixels;
-    pixelAvlSetMaxRadius(root, radius);
+
+    /*
+     * get the euclidean distance for this radius
+     */
+    double va[3], vb[3], euclidean_dist;
+    ang2vec(0,0,va);
+    ang2vec(radius,0, vb);
+    euclidean_dist = euclidean_distance(va,vb);
+
+    pixelAvlSetMaxRadius(root, euclidean_dist);
 
 }
 void

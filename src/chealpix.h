@@ -158,6 +158,10 @@ void vect_prod(double*vector_A, double *vector_B, double*vector_C);
     Provided nside. Note that distances between pixels are variable. This does
     only provide an insight of how large are the pixels. TODO tests.
  */
+/*
+ * Euclidean distance between two vectors
+ */
+double euclidean_distance(double *va, double *vb);
 /* FITS operations */
 /* --------------- */
 

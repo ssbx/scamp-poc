@@ -39,8 +39,8 @@ struct Sample {
     double ra;   /* ra in degree */
     double dec;  /* declination in degree */
 
-    /* Representation as vector used to determinate the angle distance
-     * with another vector in the cross-match algorithm (see angdist) */
+    /* Representation as vector used to determinate the euclidean distance
+     * with another vector in the cross-match algorithm  */
     double vector[3];
 
     /* position on healpix ring scheme */
@@ -54,9 +54,9 @@ struct Sample {
     /* Best matching sample from another field */
     Sample *bestMatch;
 
-    /* Best distance is the distance to bestMatch in radiant. It is initialized
-     * in the Crossmatch_crossSeel function to the value of max radius and used
-     * in the cross matching algorithm. May contain a value (initial radius)
+    /* Best distance is the euclidean distance to bestMatch. It is initialized
+     * in the Crossmatch_crossPix function to the value of max radius and used
+     * in the cross matching algorithm. May contain a value (initial distance)
      * without a bestMatch sample
      */
     double bestMatchDistance;

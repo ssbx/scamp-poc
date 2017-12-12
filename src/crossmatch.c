@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <omp.h>
+#include <time.h>
 
 #include "crossmatch.h"
 #include "logger.h"
@@ -22,7 +23,7 @@
 #include "chealpix.h"
 #include "pixelstore.h"
 
-static void crossmatch(Sample*,Sample*,double);
+static void crossmatch(Sample*,Sample*);
 static long cross_pixels(PixelStore*,double);
 
 static long ntestmatches;
@@ -40,8 +41,18 @@ Crossmatch_crossFields(
 
     PixelStore *pixstore;
     pixstore = PixelStore_new(fields, nfields, nsides);
-    nmatches = cross_pixels(pixstore, radius_arcsec);
+    /* arcsec to radiant */
+    double radius = radius_arcsec / 3600 * TO_RAD;
+
+    PixelStore_setMaxRadius(pixstore, radius);
+    clock_t start, end;
+    start = clock();
+    nmatches = cross_pixels(pixstore, radius);
+    end = clock();
+    double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Crossmatch (only) done in %lf cpu_time seconds\n", cpu_time_used);
     PixelStore_free(pixstore);
+
 
     return nmatches;
 
@@ -67,17 +78,12 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
 }
 
 static long
-cross_pixels(PixelStore *store, double radius_arcsec) {
+cross_pixels(PixelStore *store, double radius) {
     long i;
     long nbmatches = 0;
 
     long npixels = store->npixels;
     int64_t *pixelindex = store->pixelids;
-
-    /* arcsec to radiant */
-    double radius = radius_arcsec / 3600 * TO_RAD;
-
-    PixelStore_setMaxRadius(store, radius);
 
     /*
      * Iterate over HealPixel structure which old pointers to sample
@@ -115,11 +121,13 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
             for(k=0; k<j; k++) {
                 test_spl = current_pix->samples[k];
 
-                if (current_spl->set->field == test_spl->set->field) {
+                if (current_spl->set->field == test_spl->set->field)
                     continue;
-                }
 
-                crossmatch(current_spl, test_spl, radius);
+                if (abs(current_spl->col - test_spl->col) > radius)
+                    continue;
+
+                crossmatch(current_spl, test_spl);
 
             }
 
@@ -139,14 +147,21 @@ cross_pixels(PixelStore *store, double radius_arcsec) {
                     continue;
 
                 if (test_allready_crossed(current_pix, test_pixel, k) == true)
-                        continue;
+                    continue;
 
                 /*
                  * Then iterate over samples.
                  */
                 for (l=0; l<test_pixel->nsamples; l++) {
                     test_spl = test_pixel->samples[l];
-                    crossmatch(current_spl, test_spl, radius);
+
+                    if (current_spl->set->field == test_spl->set->field)
+                        continue;
+
+                    if (abs(current_spl->col - test_spl->col) > radius)
+                        continue;
+
+                    crossmatch(current_spl, test_spl);
 
                 }
             }
@@ -170,37 +185,25 @@ get_iterate_count() {
 }
 
 static void
-crossmatch(Sample *current_spl, Sample *test_spl, double radius) {
-
+crossmatch(Sample *current_spl, Sample *test_spl) {
     ntestmatches++;
-
     /*
-     * pass if dec is not in a good range
+     * Get distance between samples
      */
-    if (abs(current_spl->col - test_spl->col) > radius)
-        return;
+    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
 
     /*
-     * Cross match then!
-     *
-     * Get distance between samples (rad)
-     *
-     * XXX This is time consuming.
-     */
-    double distance_rad = angdist(current_spl->vector, test_spl->vector);
-
-    /*
-     * If distance is less than previous (or radius) update
+     * If distance is less than previous (or initial) update
      * best_distance and set test_spl to current_spl.bestMatch
      */
-    if (distance_rad < current_spl->bestMatchDistance) {
-        current_spl->bestMatch = test_spl;              /* XXX false shared ! */
-        current_spl->bestMatchDistance = distance_rad;  /* XXX false shared ! */
+    if (distance < current_spl->bestMatchDistance) {
+        current_spl->bestMatch = test_spl;          /* XXX false shared ! */
+        current_spl->bestMatchDistance = distance;  /* XXX false shared ! */
     }
 
-    if (distance_rad < test_spl->bestMatchDistance) {
+    if (distance < test_spl->bestMatchDistance) {
         test_spl->bestMatch = current_spl;
-        test_spl->bestMatchDistance = distance_rad;
+        test_spl->bestMatchDistance = distance;
     }
 
 }
