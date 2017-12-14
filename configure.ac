@@ -24,6 +24,10 @@ dnl maths
 AC_CHECK_HEADER(math.h,,AC_MSG_ERROR(Not any math.h),)
 AC_CHECK_LIB(m, sqrt,,AC_MSG_ERROR(Could not find math lib))
 
+dnl pthread
+AC_CHECK_HEADER(pthread.h,,AC_MSG_ERROR(Not any pthread.h),)
+AC_CHECK_LIB(pthread, pthread_create,,AC_MSG_ERROR(Could not find pthread))
+
 dnl
 AC_CONFIG_FILES(Makefile src/Makefile tests/Makefile)
 AC_OUTPUT

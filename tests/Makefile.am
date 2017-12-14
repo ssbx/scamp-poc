@@ -5,8 +5,12 @@ bin_PROGRAMS = \
 	testChealpixsphereAvltree \
 	testCrossmatchLimit \
 	testCrossmatchNumber \
-	perfCrossmatchSingle
-	
+	perfCrossmatchSingle \
+	perfOmpTest
+
+perfOmpTest_SOURCES= \
+		perf_omp_test.c
+			
 testChealpixNeighboursNest_SOURCES= \
 		test_chealpix_neighbours_nest.c \
 		../src/chealpix.c \
@@ -59,7 +63,7 @@ perfCrossmatchSingle_SOURCES= \
 		../src/logger.h \
 		../src/mem.c \
 		../src/mem.h
-
+perfCrossmatchSingle_CFLAGS=-g
 testCrossmatchLimit_SOURCES= \
 		test_crossmatch_limit.c \
  		../src/catalog.c \

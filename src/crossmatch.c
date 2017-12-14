@@ -28,7 +28,18 @@ static long cross_pixels(PixelStore*,double);
 
 static long ntestmatches;
 
+
 #define NNEIGHBORS 8
+
+/**
+ * A match bundle contains every samples from any fields that match each others.
+ * This include friend-of-friends objects.
+ */
+typedef struct MatchTest {
+    Sample *a, *b;
+    double va[3], vb[3];
+    double distance;
+} MatchTest;
 
 extern long
 Crossmatch_crossFields(
@@ -77,6 +88,7 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
     return false;
 }
 
+#define BASE_MATCH_TEST_SIZE 1000
 static long
 cross_pixels(PixelStore *store, double radius) {
     long i;
@@ -106,6 +118,7 @@ cross_pixels(PixelStore *store, double radius) {
     for (i=0; i<npixels; i++) {
 
         HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
+
         long j, k, l;
 
         Sample *current_spl;
@@ -139,8 +152,7 @@ cross_pixels(PixelStore *store, double radius) {
                 test_pixel = current_pix->pneighbors[k];
 
                 /*
-                 * Does the pixel exists? It may be a neighbor of current pixel,
-                 * but not be initialized because it does not contains
+                 * Does the pixel contains any samples?
                  * any samples.
                  */
                 if (test_pixel == NULL)
@@ -171,6 +183,7 @@ cross_pixels(PixelStore *store, double radius) {
             }
         }
     }
+
     Logger_log(LOGGER_NORMAL,
             "Crossmatch end: %li matches for all pixels!\n", nbmatches);
     Logger_log(LOGGER_NORMAL,
@@ -186,11 +199,14 @@ get_iterate_count() {
 
 static void
 crossmatch(Sample *current_spl, Sample *test_spl) {
+
     ntestmatches++;
+
     /*
      * Get distance between samples
      */
-    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
+//    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
+    double distance = 0.2;
 
     /*
      * If distance is less than previous (or initial) update

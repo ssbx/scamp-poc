@@ -24,13 +24,13 @@ typedef struct HealPixel HealPixel;
  * common healpix pixel.
  */
 struct HealPixel {
+    Sample **samples;   /* our samples pointers */
+    HealPixel *pneighbors[8];
 
     long id;            /* healpix id */
-    Sample **samples;   /* our samples pointers */
     int nsamples;       /* number of samples belonging to this pixel */
     int size;           /* for reallocation if required */
-    int64_t neighbors[8];  /* Neighbors indexes */
-    HealPixel *pneighbors[8];
+
     bool tneighbors[8]; /* check if neighbors have allready been matched */
 
 };

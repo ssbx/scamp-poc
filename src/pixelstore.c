@@ -210,21 +210,23 @@ void pixelAvlFree(pixel_avl *pix) {
     FREE(pix);
 }
 
-void pixelAvlLink(pixel_avl *root, pixel_avl *leaf) {
+void pixelAvlLink(pixel_avl *root, pixel_avl *leaf, int64_t nsides) {
     if (leaf->pAfter)
-        pixelAvlLink(root, leaf->pAfter);
+        pixelAvlLink(root, leaf->pAfter, nsides);
     if (leaf->pBefore)
-        pixelAvlLink(root, leaf->pBefore);
+        pixelAvlLink(root, leaf->pBefore, nsides);
 
     int i;
+    int64_t neighbors[8];
+    neighbours_nest64(nsides, leaf->pixel.id, neighbors);
     for (i=0; i<8; i++) {
-        pixel_avl *f = pixelAvlSearch(root, leaf->pixel.neighbors[i]);
+        pixel_avl *f = pixelAvlSearch(root, neighbors[i]);
         leaf->pixel.pneighbors[i] = &f->pixel;
     }
 }
 
-void fix_pixel_neighbors(pixel_avl *root) {
-    pixelAvlLink(root, root);
+void fix_pixel_neighbors(pixel_avl *root, int64_t nsides) {
+    pixelAvlLink(root, root, nsides);
 }
 
 #if 0 /* NOT USED */
@@ -281,40 +283,43 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
  * 2 PRIVATE FUNCTIONS
  */
 #define SPL_BASE_SIZE 50
+pixel_avl*
+create_pixel_avl(PixelStore *store, int64_t pixnum) {
+    int i;
+    pixel_avl *avlpix;
+
+    /* allocate and initialize */
+    avlpix = CALLOC(1, sizeof(pixel_avl));
+    avlpix->pixel.id = pixnum;
+    avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
+    avlpix->pixel.nsamples = 0;
+    avlpix->pixel.size = SPL_BASE_SIZE;
+    for (i=0;i<8;i++)
+        avlpix->pixel.tneighbors[i] = false;
+
+
+    /* insert new pixel */
+    pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
+
+    /* update npixels and array of pixelids store */
+    if (store->pixelids_size == store->npixels) {
+        store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
+        store->pixelids_size *= 2;
+    }
+    store->pixelids[store->npixels] = pixnum;
+    store->npixels++;
+    return avlpix;
+}
+
 static void
 insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides) {
-
 
     /* search for the pixel */
     pixel_avl *avlpix =
             pixelAvlSearch((pixel_avl*) store->pixels, spl->pix_nest);
 
-    if (!avlpix) { // no such pixel
-
-        int i;
-
-        /* allocate and initialize */
-        avlpix = CALLOC(1, sizeof(pixel_avl));
-        avlpix->pixel.id = spl->pix_nest;
-        avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
-        avlpix->pixel.nsamples = 0;
-        avlpix->pixel.size = SPL_BASE_SIZE;
-        for (i=0;i<8;i++)
-            avlpix->pixel.tneighbors[i] = false;
-        neighbours_nest64(nsides, spl->pix_nest, avlpix->pixel.neighbors);
-
-        /* insert new pixel */
-        pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
-
-        /* update npixels and array of pixelids store */
-        if (store->pixelids_size == store->npixels) {
-            store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
-            store->pixelids_size *= 2;
-        }
-        store->pixelids[store->npixels] = spl->pix_nest;
-        store->npixels++;
-
-    }
+    if (!avlpix)
+        avlpix =  create_pixel_avl(store, spl->pix_nest);
 
     /* Insert sample in HealPixel */
     HealPixel *pix = &avlpix->pixel;
@@ -382,7 +387,7 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
         }
     }
 
-    fix_pixel_neighbors(store->pixels);
+    fix_pixel_neighbors(store->pixels, nsides);
     return store;
 }
 
@@ -425,6 +430,7 @@ PixelStore_setMaxRadius(PixelStore *store, double radius) {
     pixelAvlSetMaxRadius(root, euclidean_dist);
 
 }
+
 void
 PixelStore_free(PixelStore* store) {
     pixelAvlFree((pixel_avl*) store->pixels);
