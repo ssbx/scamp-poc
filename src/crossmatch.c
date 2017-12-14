@@ -23,23 +23,12 @@
 #include "chealpix.h"
 #include "pixelstore.h"
 
-static void crossmatch(Sample*,Sample*);
 static long cross_pixels(PixelStore*,double);
 
 static long ntestmatches;
 
 
 #define NNEIGHBORS 8
-
-/**
- * A match bundle contains every samples from any fields that match each others.
- * This include friend-of-friends objects.
- */
-typedef struct MatchTest {
-    Sample *a, *b;
-    double va[3], vb[3];
-    double distance;
-} MatchTest;
 
 extern long
 Crossmatch_crossFields(
@@ -98,52 +87,23 @@ cross_pixels(PixelStore *store, double radius) {
     int64_t *pixelindex = store->pixelids;
 
     /*
-     * Iterate over HealPixel structure which old pointers to sample
+     * Iterate over HealPixel structure which holds pointers to sample
      * belonging to him.
-     *
-     * Define functions inside loop, for future omp usage.
-     *
-     * XXX TODO: pixels are crossed twice (one as current_pix, and another
-     * as neighbor_pix) with each others,
-     * XXX TODO: how should I link matching samples from different fields? (
-     * answer, use the MatchBundle structure. Only one sample from the same
-     * field must exist in one MatchBundle. Maybe add all, and reduce after,
-     * or find a way to reduce. Do not modify Sample structure while iterating,
-     * but reduce at the end to avoid false sharing.
-     * XXX TODO: this code is thread safe but not parallelisable, because of the
-     * false sharing induced by the "crossmatch" function modifying some
-     * Sample values. TODO, create a temporary result for each threads, then
-     * reduce the results in a single thread.
      */
     for (i=0; i<npixels; i++) {
 
         HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
 
-        long j, k, l;
+        long j, k;
 
         Sample *current_spl;
-        Sample *test_spl;
+        Sample *closer_spl;
 
         for (j=1; j<current_pix->nsamples; j++) {
 
             current_spl = current_pix->samples[j];
 
-            /*
-             * First cross match with samples of the pixel between them
-             */
-            for(k=0; k<j; k++) {
-                test_spl = current_pix->samples[k];
-
-                if (current_spl->set->field == test_spl->set->field)
-                    continue;
-
-                if (abs(current_spl->col - test_spl->col) > radius)
-                    continue;
-
-                crossmatch(current_spl, test_spl);
-
-            }
-
+            closer_spl = PixelStore_getClosestSample(current_pix, current_spl);
 
             /*
              * Then iterate against neighbors pixels
@@ -158,69 +118,24 @@ cross_pixels(PixelStore *store, double radius) {
                 if (test_pixel == NULL)
                     continue;
 
+
+                /*
+                 * We may allready crossed these two pixels
+                 */
                 if (test_allready_crossed(current_pix, test_pixel, k) == true)
                     continue;
 
-                /*
-                 * Then iterate over samples.
-                 */
-                for (l=0; l<test_pixel->nsamples; l++) {
-                    test_spl = test_pixel->samples[l];
+                closer_spl = PixelStore_getClosestSample(test_pixel, current_spl);
 
-                    if (current_spl->set->field == test_spl->set->field)
-                        continue;
-
-                    if (abs(current_spl->col - test_spl->col) > radius)
-                        continue;
-
-                    crossmatch(current_spl, test_spl);
-
-                }
-            }
-
-            if (current_spl->bestMatch != NULL) {
-                nbmatches++;
             }
         }
     }
-
-    Logger_log(LOGGER_NORMAL,
-            "Crossmatch end: %li matches for all pixels!\n", nbmatches);
-    Logger_log(LOGGER_NORMAL,
-            "Crossmatch end: %li real cross match tests!\n", ntestmatches);
     return nbmatches;
-
 }
 
 int
 get_iterate_count() {
     return ntestmatches;
-}
-
-static void
-crossmatch(Sample *current_spl, Sample *test_spl) {
-
-    ntestmatches++;
-
-    /*
-     * Get distance between samples
-     */
-    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
-
-    /*
-     * If distance is less than previous (or initial) update
-     * best_distance and set test_spl to current_spl.bestMatch
-     */
-    if (distance < current_spl->bestMatchDistance) {
-        current_spl->bestMatch = test_spl;          /* XXX false shared ! */
-        current_spl->bestMatchDistance = distance;  /* XXX false shared ! */
-    }
-
-    if (distance < test_spl->bestMatchDistance) {
-        test_spl->bestMatch = current_spl;
-        test_spl->bestMatchDistance = distance;
-    }
-
 }
 
 

@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <assert.h>
 
 #include "../src/scamp.h"
 #include "../src/mem.h"
@@ -34,9 +33,13 @@ int main(int argc, char **argv) {
     long matches;
     matches = Crossmatch_crossFields(fields, 2, nsides, radius_arcsec);
 
-    assert(matches == 1);
+    int status = 0;
+    if (matches != 1) {
+        fprintf(stderr, "crossmatch limit error\n");
+        status = 1;
+    }
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);
-    return 0;
+    return status;
 }
