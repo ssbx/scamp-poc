@@ -25,6 +25,7 @@
 #include "assert.h"
 #include "string.h"
 #include "logger.h"
+#include "kdtree.h"
 
 /*****************************************************************************
  * 1 AVL Tree implementation
@@ -207,14 +208,15 @@ void pixelAvlFree(pixel_avl *pix) {
     pixelAvlFree(pix->pBefore);
 
     FREE(pix->pixel.samples);
+    FREE(pix->pixel.kdnode);
     FREE(pix);
 }
 
-void pixelAvlLink(pixel_avl *root, pixel_avl *leaf, int64_t nsides) {
+void pixel_avl_freeze(pixel_avl *root, pixel_avl *leaf, int64_t nsides) {
     if (leaf->pAfter)
-        pixelAvlLink(root, leaf->pAfter, nsides);
+        pixel_avl_freeze(root, leaf->pAfter, nsides);
     if (leaf->pBefore)
-        pixelAvlLink(root, leaf->pBefore, nsides);
+        pixel_avl_freeze(root, leaf->pBefore, nsides);
 
     int i;
     int64_t neighbors[8];
@@ -223,10 +225,24 @@ void pixelAvlLink(pixel_avl *root, pixel_avl *leaf, int64_t nsides) {
         pixel_avl *f = pixelAvlSearch(root, neighbors[i]);
         leaf->pixel.pneighbors[i] = &f->pixel;
     }
+
+    leaf->pixel.kdnode = ALLOC(sizeof(kd_node) * leaf->pixel.nsamples);
+    Sample *spl;
+    kd_node node;
+    for (i=0; i<leaf->pixel.nsamples; i++) {
+        spl = leaf->pixel.samples[i];
+        node.data = (void*) spl;
+        node.x[0] = spl->vector[0];
+        node.x[1] = spl->vector[1];
+        node.x[2] = spl->vector[2];
+        leaf->pixel.kdnode[i] = node;
+    }
+    leaf->pixel.root = make_tree(leaf->pixel.kdnode, leaf->pixel.nsamples, 0, 3);
+
 }
 
-void fix_pixel_neighbors(pixel_avl *root, int64_t nsides) {
-    pixelAvlLink(root, root, nsides);
+void freeze_avl(pixel_avl *root, int64_t nsides) {
+    pixel_avl_freeze(root, root, nsides);
 }
 
 #if 0 /* NOT USED */
@@ -387,7 +403,7 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
         }
     }
 
-    fix_pixel_neighbors(store->pixels, nsides);
+    freeze_avl(store->pixels, nsides);
     return store;
 }
 
@@ -413,8 +429,8 @@ pixelAvlSetMaxRadius(pixel_avl *leaf, double radius) {
     int i;
     for (i=0; i<p->nsamples; i++)
         p->samples[i]->bestMatchDistance = radius;
-
 }
+
 void
 PixelStore_setMaxRadius(PixelStore *store, double radius) {
     pixel_avl *root = store->pixels;
@@ -429,6 +445,20 @@ PixelStore_setMaxRadius(PixelStore *store, double radius) {
 
     pixelAvlSetMaxRadius(root, euclidean_dist);
 
+}
+
+Sample*
+PixelStore_getClosestSample(HealPixel *pixel, Sample* sample) {
+    kd_node test, *found;
+    double best_dist;
+    int visited;
+    test.x[0] = sample->vector[0];
+    test.x[1] = sample->vector[1];
+    test.x[2] = sample->vector[2];
+
+    nearest(pixel->root, &test, 0, 3, &found, &best_dist, &visited);
+
+    return (Sample*) found->data;
 }
 
 void

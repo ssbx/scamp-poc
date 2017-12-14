@@ -45,7 +45,7 @@ int main(int argc, const char *argv[]) {
 
     printf("sizeof HealPixel is %lui\n", sizeof(HealPixel) - 8 * sizeof(void*));
     printf("sizeof neighbors is %lui\n", sizeof(void*) * 8);
-    printf("sizeof sample is %i\n", sizeof(Sample));
+    printf("sizeof sample is %li\n", sizeof(Sample));
     return 0;
 }
 

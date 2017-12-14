@@ -16,6 +16,7 @@
 #define SRC_PIXELSTORE_H_
 
 #include <stdbool.h>
+#include "kdtree.h"
 #include "scamp.h"
 
 typedef struct HealPixel HealPixel;
@@ -32,6 +33,9 @@ struct HealPixel {
     int size;           /* for reallocation if required */
 
     bool tneighbors[8]; /* check if neighbors have allready been matched */
+    kd_node *kdnode;
+    kd_node *root;
+
 
 };
 
@@ -57,4 +61,7 @@ PixelStore_free(PixelStore *store);
 
 extern void
 PixelStore_setMaxRadius(PixelStore *store, double radius);
+
+extern Sample*
+PixelStore_getClosestSample(HealPixel *pixel, Sample* sample);
 #endif /* SRC_PIXELSTORE_H_ */

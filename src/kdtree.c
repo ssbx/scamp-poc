@@ -6,7 +6,6 @@
  */
 #include "kdtree.h"
 
-
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -19,18 +18,27 @@ inline double dist(kd_node *a, kd_node *b, int dim) {
     }
     return d;
 }
+
 inline void swap(kd_node *x, kd_node *y) {
     double tmp[MAX_DIM];
+    void *tmps;
     memcpy(tmp, x->x, sizeof(tmp));
+    tmps = x->data;
+
     memcpy(x->x, y->x, sizeof(tmp));
+    x->data = y->data;
+
     memcpy(y->x, tmp, sizeof(tmp));
+    y->data = tmps;
 }
 
 /* see quickselect method */
- kd_node*
+kd_node*
 find_median(kd_node *start, kd_node *end, int idx) {
+
     if (end <= start)
         return NULL;
+
     if (end == start + 1)
         return start;
 
@@ -60,9 +68,9 @@ find_median(kd_node *start, kd_node *end, int idx) {
     }
 }
 
- kd_node*
-make_tree( kd_node *t, int len, int i, int dim) {
-     kd_node *n;
+kd_node*
+make_tree(kd_node *t, int len, int i, int dim) {
+    kd_node *n;
 
     if (!len)
         return 0;
@@ -75,9 +83,8 @@ make_tree( kd_node *t, int len, int i, int dim) {
     return n;
 }
 
-
-void nearest(kd_node *root, kd_node *nd, int i, int dim,
-        kd_node **best, double *best_dist, int *visited) {
+void nearest(kd_node *root, kd_node *nd, int i, int dim, kd_node **best,
+        double *best_dist, int *visited) {
     double d, dx, dx2;
 
     if (!root)
@@ -100,8 +107,10 @@ void nearest(kd_node *root, kd_node *nd, int i, int dim,
     if (++i >= dim)
         i = 0;
 
-    nearest(dx > 0 ? root->left : root->right, nd, i, dim, best, best_dist, visited);
+    nearest(dx > 0 ? root->left : root->right, nd, i, dim, best, best_dist,
+            visited);
     if (dx2 >= *best_dist)
         return;
-    nearest(dx > 0 ? root->right : root->left, nd, i, dim, best, best_dist, visited);
+    nearest(dx > 0 ? root->right : root->left, nd, i, dim, best, best_dist,
+            visited);
 }

@@ -31,6 +31,8 @@ testSingleCatCrossmatch_SOURCES= \
 		test_single_cat_crossmatch.c \
  		../src/catalog.c \
 		../src/catalog.h \
+		../src/kdtree.h \
+		../src/kdtree.c \
 		../src/crossmatch.c \
 		../src/crossmatch.h \
 		../src/chealpix.c \
@@ -48,6 +50,8 @@ testChealpixsphereAvltree_SOURCES= \
 		../src/catalog.h \
 		../src/chealpix.c \
 		../src/chealpix.h \
+		../src/kdtree.h \
+		../src/kdtree.c \
 		../src/pixelstore.c \
 		../src/pixelstore.h \
 		../src/logger.c \
@@ -61,6 +65,8 @@ perfCrossmatchSingle_SOURCES= \
 		../src/catalog.h \
 		../src/chealpix.c \
 		../src/chealpix.h \
+		../src/kdtree.h \
+		../src/kdtree.c \
 		../src/pixelstore.c \
 		../src/pixelstore.h \
 		../src/crossmatch.c \
@@ -76,6 +82,8 @@ testCrossmatchLimit_SOURCES= \
 		../src/catalog.h \
 		../src/crossmatch.c \
 		../src/crossmatch.h \
+		../src/kdtree.h \
+		../src/kdtree.c \
 		../src/chealpix.c \
 		../src/chealpix.h \
 		../src/pixelstore.c \
@@ -91,6 +99,8 @@ testCrossmatchNumber_SOURCES= \
 		../src/catalog.h \
 		../src/crossmatch.c \
 		../src/crossmatch.h \
+		../src/kdtree.h \
+		../src/kdtree.c \
 		../src/chealpix.c \
 		../src/chealpix.h \
 		../src/pixelstore.c \
