@@ -124,8 +124,8 @@ cross_pixels(PixelStore *store, double radius) {
         Sample *current_spl;
         Sample *test_spl;
 
-
         for (j=1; j<current_pix->nsamples; j++) {
+
             current_spl = current_pix->samples[j];
 
             /*
@@ -144,6 +144,7 @@ cross_pixels(PixelStore *store, double radius) {
 
             }
 
+
             /*
              * Then iterate against neighbors pixels
              */
@@ -153,7 +154,6 @@ cross_pixels(PixelStore *store, double radius) {
 
                 /*
                  * Does the pixel contains any samples?
-                 * any samples.
                  */
                 if (test_pixel == NULL)
                     continue;
@@ -205,8 +205,7 @@ crossmatch(Sample *current_spl, Sample *test_spl) {
     /*
      * Get distance between samples
      */
-//    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
-    double distance = 0.2;
+    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
 
     /*
      * If distance is less than previous (or initial) update

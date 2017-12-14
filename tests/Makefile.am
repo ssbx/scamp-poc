@@ -6,8 +6,14 @@ bin_PROGRAMS = \
 	testCrossmatchLimit \
 	testCrossmatchNumber \
 	perfCrossmatchSingle \
-	perfOmpTest
-
+	perfOmpTest \
+	testKdtree
+	
+testKdtree_SOURCES= \
+		test_kdtree.c \
+		../src/kdtree.h \
+		../src/kdtree.c
+		
 perfOmpTest_SOURCES= \
 		perf_omp_test.c
 			

@@ -21,28 +21,29 @@ int
 main(int argc, char **argv) {
     int64_t nsides = pow(2,16);
     double radius_arcsec = 2.0;
+    int n = argc - 1;
+    char **files = &argv[1];
 
-    int ncat = atoi(argv[1]);
 
-    Field *fields = ALLOC(sizeof(Field) * ncat);
+    Field *fields = ALLOC(sizeof(Field) * n);
 
-    int i, j;
-    for (i=0; i<ncat; i++) {
-        printf("opening catalog %i: %i\n", i, 2+i%2);
+    int i;
+    for (i=0; i<n; i++) {
+        printf("opening catalog %i\n", i);
         fflush(stdout);
-        Catalog_open(argv[2 + i % 2], &fields[i]);
+        Catalog_open(files[i], &fields[i]);
     }
 
     clock_t start, end;
     double cpu_time_used;
     start = clock();
-    Crossmatch_crossFields(fields, ncat, nsides, radius_arcsec);
+    Crossmatch_crossFields(fields, n, nsides, radius_arcsec);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
     printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);
 
-    for (i=0; i<ncat; i++) {
+    for (i=0; i<n; i++) {
         Catalog_freeField(&fields[i]);
     }
 

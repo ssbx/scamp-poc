@@ -1016,10 +1016,10 @@ double inline
 euclidean_distance(double *va, double *vb) {
     double x = va[0] - vb[0];
     double y = va[1] - vb[1];
-//    double z = va[2] - vb[2];
+    double z = va[2] - vb[2];
 
 //    return sqrt(x*x + y*y + z*z);
-    return x*x + y*y;
+    return x*x + y*y + z*z;
 }
 
 #ifdef ENABLE_FITSIO
