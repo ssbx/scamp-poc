@@ -41,7 +41,7 @@ main(int argc, char **argv) {
     CmTree *tree;
     tree = CmTree_new(RADIUS_ARCSEC * 3600 * TO_RAD);
     insert_in_cmtree(0, &fields[0], tree);
-    insert_in_cmtree(1, &fields[0], tree);
+    insert_in_cmtree(1, &fields[1], tree);
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);

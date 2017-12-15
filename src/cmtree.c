@@ -22,31 +22,42 @@ CmTree_new(double max_radius) {
     return tree;
 }
 
+CmLeaf*
+new_leaf(CmLeaf *up, unsigned char axe, Sample *spl) {
+    CmLeaf *myLeaf = ALLOC(sizeof(CmLeaf));
+    myLeaf->axe = axe;
+    myLeaf->sample = spl;
+    myLeaf->up = up;
+    myLeaf->left = NULL;
+    myLeaf->right = NULL;
+    myLeaf->div = spl->vector[axe];
+    return myLeaf;
+}
+
 void
 cmtree_insert_internal(
-        CmLeaf **leaf,
-        Sample *spl,
-        unsigned char parent_axe,
-        double max_radius)
+        CmLeaf *leaf,
+        Sample *spl)
 {
-    CmLeaf *myLeaf = *leaf;
-    if (myLeaf == NULL) {
-        myLeaf = ALLOC(sizeof(CmLeaf));
-        myLeaf->axe = ROTATE_AXE(parent_axe);
-        myLeaf->sample = spl;
-        myLeaf->left = NULL;
-        myLeaf->right = NULL;
-        myLeaf->div = spl->vector[myLeaf->axe];
-        (*leaf) = myLeaf;
-        return;
-    }
-    unsigned char current_axe = myLeaf->axe;
-    double spl_div = spl->vector[current_axe];
-    if (spl_div < myLeaf->div) {
-        cmtree_insert_internal(&myLeaf->left, spl, current_axe);
-    } else if (spl_div > myLeaf->div) {
-        cmtree_insert_internal(&myLeaf->right, spl, current_axe);
-    } else {
+    double lim = spl->vector[leaf->axe];
+
+    if (lim < leaf->div) {
+
+        if (!leaf->left) {
+            leaf->left = new_leaf(leaf, ROTATE_AXE(leaf->axe), spl);
+            return;
+        }
+
+        cmtree_insert_internal(leaf->left, spl);
+
+    } else if (lim > leaf->div) {
+
+        if (!leaf->right) {
+            leaf->right = new_leaf(leaf, ROTATE_AXE(leaf->axe), spl);
+            return;
+        }
+
+        cmtree_insert_internal(leaf->right, spl);
 
     }
 
@@ -54,5 +65,10 @@ cmtree_insert_internal(
 
 void
 CmTree_insert(CmTree *tree, int layer, Sample *spl) {
-    cmtree_insert_internal(&tree->root, spl, 0, tree->max_radius);
+    if (!tree->root) {
+        tree->root = new_leaf(NULL, 0, spl);
+        return;
+    }
+
+    cmtree_insert_internal(tree->root, spl);
 }

@@ -15,13 +15,14 @@ typedef struct CmTree CmTree;
 struct CmLeaf {
     unsigned char axe;
     double   div;
+    CmLeaf  *up;
     CmLeaf  *right;
     CmLeaf  *left;
     Sample  *sample;
 };
 
 struct CmTree {
-    int max_radius; /* in radian */
+    double max_radius; /* in radian */
     CmLeaf *root;
 };
 
