@@ -1,5 +1,5 @@
 run: all
-	./tests/perfCrossmatchSingle 160 ./tests/data/fitscat/data1.fits.cat ./tests/data/fitscat/data2.fits.cat
+	./tests/testCmtree
 	
 tests: all
 	./tests/test_suite.sh

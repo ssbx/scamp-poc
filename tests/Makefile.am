@@ -6,7 +6,21 @@ bin_PROGRAMS = \
 	testCrossmatchLimit \
 	testCrossmatchNumber \
 	perfCrossmatchSingle \
-	perfOmpTest
+	perfOmpTest \
+	testCmtree
+
+testCmtree_SOURCES = \
+	test_cmtree.c \
+	../src/cmtree.h \
+	../src/cmtree.c \
+	../src/catalog.h \
+	../src/catalog.c \
+	../src/mem.h \
+	../src/mem.c \
+	../src/logger.h \
+	../src/logger.c \
+	../src/chealpix.h \
+	../src/chealpix.c
 
 perfOmpTest_SOURCES= \
 		perf_omp_test.c

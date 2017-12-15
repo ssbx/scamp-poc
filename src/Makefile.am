@@ -11,5 +11,7 @@ scamppoc_SOURCES= \
 		pixelstore.h \
 		logger.c \
 		logger.h \
+		cmtree.c \
+		cmtree.h \
 		mem.c \
 		mem.h
