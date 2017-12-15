@@ -37,7 +37,7 @@ main(int argc, char **argv) {
     clock_t start, end;
     double cpu_time_used;
     start = clock();
-    Crossmatch_crossFields(fields, n, nsides, radius_arcsec);
+    Crossmatch_crossFields2(fields, n, nsides, radius_arcsec);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
