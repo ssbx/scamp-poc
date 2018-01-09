@@ -278,6 +278,8 @@ Catalog_open(char *filename, Field *field) {
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
             sample.id      = col_number[j];
+            sample.ra   = world[k];
+            sample.dec  = world[k+1];
             sample.lon      = world[k] * TO_RAD;
             /* degree latitude to radian colatitude */
             sample.col     = SC_HALFPI - world[k+1] * TO_RAD;

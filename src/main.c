@@ -53,8 +53,6 @@ int main(int argc, char** argv) {
 
     Field *fields = ALLOC(sizeof(Field) * nfields);
     int i;
-
-#pragma omp parallel for
     for (i=0; i<nfields; i++)
         Catalog_open(cat_files[i], &fields[i]);
 

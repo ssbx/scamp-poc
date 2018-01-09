@@ -35,12 +35,18 @@ struct Sample {
     double lon; /* right ascension (rad) (x) world coordinates */
     double col; /* collatitude     (rad) (y) world coordinates */
 
+    /* Degrees used by WCS */
+    double ra;   /* ra in degree */
+    double dec;  /* declination in degree */
+
     /* Representation as vector used to determinate the euclidean distance
      * with another vector in the cross-match algorithm  */
     double vector[3];
 
     /* position on healpix ring scheme */
     int64_t pix_nest;
+    void *healpix_nest;
+    void *healpix_neighbors[8];
 
     /* Sample belonging to this set */
     Set *set;
@@ -54,6 +60,9 @@ struct Sample {
      * without a bestMatch sample
      */
     double bestMatchDistance;
+
+    /* Object belong to this match bundle. */
+    MatchBundle *matchBundle;
 
 };
 
@@ -73,6 +82,7 @@ struct Set {
     int nwcs;
 
     Field *field;
+
 };
 
 
@@ -84,6 +94,15 @@ struct Field {
     Set *sets;
     int  nsets;
 
+};
+
+/**
+ * A match bundle contains every samples from any fields that match each others.
+ * This include friend-of-friends objects.
+ */
+struct MatchBundle {
+    Sample **samples;
+    int     nsamples;
 };
 
 #endif /* SRC_SCAMP_H_ */
