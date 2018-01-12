@@ -13,7 +13,7 @@
 
 
 #include <string.h>
-#include <fitsio.h>
+#include <cfitsio/fitsio.h>
 #include <chealpix.h>
 
 #include "catalog.h"
