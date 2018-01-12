@@ -13,7 +13,7 @@ AC_PROG_RANLIB
 #nl AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
 
 dnl cfitsio
-AC_CHECK_HEADER(fitsio.h,,AC_MSG_ERROR(Could not find fitsio.h),)
+#AC_CHECK_HEADER(fitsio.h,,AC_MSG_ERROR(Could not find fitsio.h),)
 AC_CHECK_LIB(cfitsio, ffopen,,AC_MSG_ERROR(Could not find cfitsio))
 
 dnl wcs

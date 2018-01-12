@@ -32,7 +32,7 @@
 int main(int argc, char** argv) {
 
     /* default values */
-    int nsides_power = 17, c;
+    int nsides_power = 16, c;
     double radius_arcsec = 2.0; /* in arcsec */
 
     while ((c=getopt(argc,argv,"n:r:b")) != -1) {
