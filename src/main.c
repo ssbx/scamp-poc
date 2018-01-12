@@ -32,7 +32,7 @@
 int main(int argc, char** argv) {
 
     /* default values */
-    int nsides_power = 15, c;
+    int nsides_power = 17, c;
     double radius_arcsec = 2.0; /* in arcsec */
 
     while ((c=getopt(argc,argv,"n:r:b")) != -1) {
@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     clock_t start, end;
     double cpu_time_used;
     int64_t nsides = pow(2, nsides_power);
+	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
     start = clock();
     Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec);
     end = clock();

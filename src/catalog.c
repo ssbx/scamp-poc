@@ -47,7 +47,7 @@ Catalog_open(char *filename, Field *field) {
     if (fits_open_file(&fptr, filename, READONLY, &status)) {
         if (status) {
             Logger_log(LOGGER_CRITICAL,
-                    "Open FITS file failed with status %i\n", status);
+                    "Open FITS file %s failed with status %i\n", filename, status);
         }
     }
 
@@ -87,6 +87,7 @@ Catalog_open(char *filename, Field *field) {
         fits_movabs_hdu(fptr, i, &hdutype, &status);
         field_card = read_field_card(fptr, &nkeys, charnull);
 
+        Logger_log(LOGGER_TRACE, "Read fieldcard %s %i\n", field_card, strlen(field_card));
         /*
          * create wcsprm with the image FITS header
          */
@@ -97,7 +98,7 @@ Catalog_open(char *filename, Field *field) {
             Logger_log(LOGGER_CRITICAL,
                     "Can not read WCS in sextractor field card\n");
 
-
+        Logger_log(LOGGER_TRACE, "Reading fits hav successfuly applyed wcsbth %s\n", filename);
         Logger_log(LOGGER_TRACE,
                 "Number of WCS coordinate representations: %i with naxis %i\n",
                 nwcs, wcs[0].naxis);
@@ -105,6 +106,8 @@ Catalog_open(char *filename, Field *field) {
         /*
          * Now we should have required informations in "struct wcsprm *wcs".
          */
+        Logger_log(LOGGER_TRACE, "Reading fits ffffffffffffffff %s\n", filename);
+
         FREE(field_card);
 
         /*
@@ -116,9 +119,11 @@ Catalog_open(char *filename, Field *field) {
          * Dump table and apply WCS transformation on samples.
          */
         fits_get_num_cols(fptr, &ncolumns, &status);
+/*
         if (ncolumns != 21)
             Logger_log(LOGGER_CRITICAL,
                     "Error: this HDU is not sextractor table\n");
+*/
 
         fits_get_num_rows(fptr, &nrows, &status);
         Logger_log(LOGGER_TRACE, "Have %i rows in the table\n", nrows);
@@ -128,19 +133,24 @@ Catalog_open(char *filename, Field *field) {
          * Now begin to load column values.
          */
 
+        int num_col, x_image_col, y_image_col;
+        fits_get_colnum(fptr, CASESEN, "NUMBER", &num_col, &status);
+        fits_get_colnum(fptr, CASESEN, "X_IMAGE", &x_image_col, &status);
+        fits_get_colnum(fptr, CASESEN, "Y_IMAGE", &y_image_col, &status);
+
         /* Get "number" row */
         long *col_number = ALLOC(sizeof(long) * nrows);
-        fits_read_col(fptr, TLONG, 1, 1, 1, nrows, &longnull,  col_number,
+        fits_read_col(fptr, TLONG, num_col, 1, 1, nrows, &longnull,  col_number,
                 &anynull, &status);
 
         /* Get "x_image" row */
         float *x_image = ALLOC(sizeof(float) * nrows);
-        fits_read_col(fptr, TFLOAT, 2, 1, 1, nrows, &floatnull,  x_image,
+        fits_read_col(fptr, TFLOAT, x_image_col, 1, 1, nrows, &floatnull,  x_image,
                 &anynull, &status);
 
         /* Get "y_image" row */
         float *y_image = ALLOC(sizeof(float) * nrows);
-        fits_read_col(fptr, TFLOAT, 3, 1, 1, nrows, &floatnull,  y_image,
+        fits_read_col(fptr, TFLOAT, y_image_col, 1, 1, nrows, &floatnull,  y_image,
                 &anynull, &status);
 
         /* Use these if needed later */
@@ -241,21 +251,21 @@ Catalog_open(char *filename, Field *field) {
          */
         double *pixcrd, *imgcrd, *phi, *theta, *world;
         int *stat;
-        pixcrd  = ALLOC(sizeof(double) * nrows * 2);
+        pixcrd  = ALLOC(sizeof(double) * nrows * 3);
         imgcrd  = ALLOC(sizeof(double) * nrows * 2);
         phi     = ALLOC(sizeof(double) * nrows * 2);
         theta   = ALLOC(sizeof(double) * nrows * 2);
         world   = ALLOC(sizeof(double) * nrows * 2);
         stat    = CALLOC(sizeof(int), nrows * 2);
 
-        for (j=0, k=0; j < nrows; j++, k+=2) {
-            pixcrd[k]   = x_image[j];
-            pixcrd[k+1] = y_image[j];
+        for (j=0, k=0; j < nrows; j++, k+=3) {
+            pixcrd[k] = 0;
+            pixcrd[k+1]   = x_image[j];
+            pixcrd[k+2] = y_image[j];
         }
 
 
         wcsp2s(wcs, nrows, 2, pixcrd, imgcrd, phi, theta, world, stat);
-
 
         for (j=0; j < nrows * 2; j++) {
             if (stat[j] != 0) {
@@ -263,7 +273,7 @@ Catalog_open(char *filename, Field *field) {
             }
         }
 
-        Logger_log(LOGGER_TRACE, "File %s read. Create samples set\n", filename);
+        Logger_log(LOGGER_TRACE, "File %s read. Create samples \n", filename);
 
         /*
          * Create a set of samples (a CCD)
@@ -277,10 +287,10 @@ Catalog_open(char *filename, Field *field) {
         Sample sample;
         for (j=0, k=0; j < nrows; j++, k+=2) {
 
-            sample.id      = col_number[j];
+            sample.id   = col_number[j];
             sample.ra   = world[k];
             sample.dec  = world[k+1];
-            sample.lon      = world[k] * TO_RAD;
+            sample.lon  = world[k] * TO_RAD;
             /* degree latitude to radian colatitude */
             sample.col     = SC_HALFPI - world[k+1] * TO_RAD;
             sample.set     = &field->sets[l];
@@ -292,13 +302,13 @@ Catalog_open(char *filename, Field *field) {
         FREE(col_number);
         FREE(x_image);
         FREE(y_image);
-
         FREE(pixcrd);
         FREE(imgcrd);
         FREE(phi);
         FREE(theta);
         FREE(world);
         FREE(stat);
+
 
     }
 
@@ -337,6 +347,7 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     char *buff;
 
     fits_get_col_display_width(fptr, 1, &field_card_size, &status);
+
     if (status) {
         fits_report_error(stderr, status);
         exit(status);
@@ -351,13 +362,13 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
      * single row single element data, but accept to increment
      * the element count.
      */
-    memset(field_card, ' ', field_card_size);
     for (i=0, charpos=0; i<*nkeys; i++,charpos+=80) {
         buff = &field_card[charpos];
         fits_read_col(
               fptr, TSTRING, 1, 1, 1+i, 1, &charnull, &buff, &anynull, &status);
 
     }
+    field_card[field_card_size] = '\0';
 
     return field_card;
 }

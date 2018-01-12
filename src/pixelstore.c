@@ -374,7 +374,9 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
 
                 spl = &set.samples[k];
                 spl->bestMatch = NULL;
-                ang2pix_nest64(nsides,spl->col, spl->lon,&spl->pix_nest);
+
+//             printf("have field %i set %i spl %i %i %0.10lf %0.10lf\n", i, j, k, nfields, spl->lon, spl->col);
+                ang2pix_nest64(nsides,spl->col, spl->lon, &spl->pix_nest);
                 ang2vec(spl->col, spl->lon, spl->vector);
                 insert_sample_into_avltree_store(store, spl, nsides);
 
