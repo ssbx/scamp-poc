@@ -8,9 +8,9 @@ AM_INIT_AUTOMAKE([subdir-objects])
 AM_PROG_CC_C_O
 AC_PROG_RANLIB
 
-dnl openmp
-AC_OPENMP
-AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
+#dnl openmp
+#AC_OPENMP
+#nl AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
 
 dnl cfitsio
 AC_CHECK_HEADER(fitsio.h,,AC_MSG_ERROR(Could not find fitsio.h),)
