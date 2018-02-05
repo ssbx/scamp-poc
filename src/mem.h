@@ -13,17 +13,17 @@
 #ifndef _MEM_H_
 #define _MEM_H_
 
-void* Mem_alloc(long nbytes);
-void* Mem_calloc(long nbytes, long count);
-void  Mem_free(void *ptr);
-void* Mem_realloc(void *ptr, long nbytes);
+void* Mem_alloc(long nbytes, int line, char *file);
+void* Mem_calloc(long nbytes, long count, int line, char *file);
+void  Mem_free(void *ptr, int line, char *file);
+void* Mem_realloc(void *ptr, long nbytes, int line, char *file);
 
 /* TODO print file and lines */
 /* TODO crash on alloc error */
-#define ALLOC(nbytes)  Mem_alloc(nbytes)
-#define CALLOC(count, nbytes) Mem_calloc(count, nbytes)
-#define FREE(ptr) {Mem_free(ptr); ptr = (void*) 0;}
-#define REALLOC(ptr, nbytes) Mem_realloc(ptr, nbytes)
+#define ALLOC(nbytes)  Mem_alloc(nbytes, __LINE__, __FILE__)
+#define CALLOC(count, nbytes) Mem_calloc(count, nbytes, __LINE__, __FILE__)
+#define FREE(ptr) {Mem_free(ptr, __LINE__, __FILE__); ptr = (void*) 0;}
+#define REALLOC(ptr, nbytes) Mem_realloc(ptr, nbytes, __LINE__, __FILE__)
 #define NEW(element) Mem_alloc(sizeof(element))
 
 #endif /* _MEM_H_ */

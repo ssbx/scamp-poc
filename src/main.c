@@ -31,6 +31,8 @@
  */
 int main(int argc, char** argv) {
 
+    Logger_setLevel(LOGGER_TRACE);
+
     /* default values */
     int nsides_power = 16, c;
     double radius_arcsec = 2.0; /* in arcsec */
@@ -52,6 +54,7 @@ int main(int argc, char** argv) {
     char **cat_files = &argv[optind];
 
     Field *fields = ALLOC(sizeof(Field) * nfields);
+
     int i;
     for (i=0; i<nfields; i++)
         Catalog_open(cat_files[i], &fields[i]);

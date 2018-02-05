@@ -79,8 +79,9 @@ Catalog_open(char *filename, Field *field) {
 
     for (i=2, l=0; i <= nhdus; i+=2, l++) {
 
-        Logger_log(LOGGER_TRACE, "Reading fits file %s\n", filename);
+        Logger_log(LOGGER_TRACE, "Reading fits HDU %s %i\n", filename, i);
 
+        printf("wtf");
         /*
          * even hdu contain original image FITS header
          */
@@ -119,15 +120,14 @@ Catalog_open(char *filename, Field *field) {
          * Dump table and apply WCS transformation on samples.
          */
         fits_get_num_cols(fptr, &ncolumns, &status);
-/*
-        if (ncolumns != 21)
-            Logger_log(LOGGER_CRITICAL,
-                    "Error: this HDU is not sextractor table\n");
-*/
 
         fits_get_num_rows(fptr, &nrows, &status);
-        Logger_log(LOGGER_TRACE, "Have %i rows in the table\n", nrows);
+        Logger_log(LOGGER_TRACE, "Have %i rows and %i cols in the table\n", nrows, ncolumns);
 
+        if (nrows <= 0) {
+            Logger_log(LOGGER_ERROR, "file %i hdu %i contain an empty table\n", filename, i);
+            continue;
+        }
 
         /*
          * Now begin to load column values.
@@ -347,6 +347,13 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     char *buff;
 
     fits_get_col_display_width(fptr, 1, &field_card_size, &status);
+    int newsize;
+    long nn;
+    fits_read_tdim(fptr, 1, 1, &newsize, &nn, &status);
+    printf("hello %i %i\n",newsize, nn);fflush(stdout);
+
+
+    
 
     if (status) {
         fits_report_error(stderr, status);
@@ -354,8 +361,10 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     }
 
     field_card = ALLOC(sizeof(char) * field_card_size);
-
     *nkeys = field_card_size / 80;
+
+    printf("wtf\n"); fflush(stdout);
+    Logger_log(LOGGER_TRACE, "fieldcard size %i, nkeys %i\n", field_card_size, *nkeys);
 
     /*
      * XXX this is a hack. Fitsio do not know how to read this single column

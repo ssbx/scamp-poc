@@ -14,18 +14,27 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 void*
-Mem_alloc(long nbytes) {
+Mem_alloc(long nbytes, int line, char *file) {
     void *ptr;
-    assert(nbytes > 0);
+    if (nbytes < 1)  {
+        fprintf(stderr, "mem alloc fail %s %i\n", file, line);
+        abort();
+    }
+        
     ptr = malloc(nbytes);
-    assert(ptr);
+    if (!ptr) {
+        fprintf(stderr, "mem alloc fail %s %i\n", file, line);
+        abort();
+    }
+
     return ptr;
 }
 
 void*
-Mem_calloc(long nbytes, long count) {
+Mem_calloc(long nbytes, long count, int line, char *file) {
     void *ptr;
     assert(nbytes > 0);
     assert(count > 0);
@@ -41,7 +50,7 @@ Mem_free(void *ptr) {
 }
 
 void*
-Mem_realloc(void *ptr, long nbytes) {
+Mem_realloc(void *ptr, long nbytes, int line, char *file) {
     assert(ptr);
     assert(nbytes > 0);
     ptr = realloc(ptr, nbytes);
