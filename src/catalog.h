@@ -16,6 +16,7 @@
 #define __CATALOG_H__
 
 #include "scamp.h"
+#include "pixelstore.h"
 
 /**
  * Open a catalog. Presently only support sextractor catalogs. The Field
@@ -24,7 +25,7 @@
  * Tread safe.
  */
 extern void
-Catalog_open(char *file, Field *field);
+Catalog_open(char *file, Field *field, PixelStore *store);
 
 /**
  * Print the content of catalogs. Used for debugging purpose.

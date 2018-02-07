@@ -19,6 +19,7 @@
 #include "logger.h"
 #include "catalog.h"
 #include "crossmatch.h"
+#include "pixelstore.h"
 
 #include "chealpix.h"
 #include "scamp.h"
@@ -55,16 +56,17 @@ int main(int argc, char** argv) {
 
     Field *fields = ALLOC(sizeof(Field) * nfields);
 
+    int64_t nsides = pow(2, nsides_power);
+    PixelStore *store = PixelStore_new(nsides);
     int i;
     for (i=0; i<nfields; i++)
-        Catalog_open(cat_files[i], &fields[i]);
+        Catalog_open(cat_files[i], &fields[i], store);
 
     clock_t start, end;
     double cpu_time_used;
-    int64_t nsides = pow(2, nsides_power);
 	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
     start = clock();
-    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec);
+    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, store);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);

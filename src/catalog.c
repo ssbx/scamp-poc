@@ -25,7 +25,7 @@ static char charnull[2] = {' ', '\0'};
 
 
 void
-Catalog_open(char *filename, Field *field) {
+Catalog_open(char *filename, Field *field, PixelStore *store) {
     fitsfile *fptr;
     int i, j, k, l;
     int status, ncolumns, nhdus, hdutype, nkeys, nwcsreject, nwcs;
@@ -278,7 +278,7 @@ Catalog_open(char *filename, Field *field) {
         /*
          * Create a set of samples (a CCD)
          */
-        field->sets[l].samples = ALLOC(sizeof(Sample) * nrows);
+        field->sets[l].samples = ALLOC(sizeof(Sample*) * nrows);
         field->sets[l].nsamples = nrows;
         field->sets[l].wcs = wcs;
         field->sets[l].nwcs = nwcs;
@@ -294,9 +294,7 @@ Catalog_open(char *filename, Field *field) {
             /* degree latitude to radian colatitude */
             sample.col     = SC_HALFPI - world[k+1] * TO_RAD;
             sample.set     = &field->sets[l];
-
-            field->sets[l].samples[j] = sample;
-
+            PixelStore_add(store, sample, &field->sets[l].samples[j]);
         }
 
         FREE(col_number);

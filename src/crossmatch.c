@@ -31,37 +31,17 @@ static long ntestmatches;
 #define NNEIGHBORS 8
 
 extern long
-Crossmatch_crossFields(
-        Field           *fields,
-        int             nfields,
-        int64_t         nsides,
+Crossmatch_crossSamples(
+        PixelStore      *pixstore,
         double          radius_arcsec)
 {
     long nmatches;
-
-    PixelStore *pixstore;
-
-	printf("create pixel store\n");
-    pixstore = PixelStore_new(fields, nfields, nsides);
-	printf("create pixel store done!\n");
-	fflush(stdout);
 
     /* arcsec to radiant */
     double radius = radius_arcsec / 3600 * TO_RAD;
 
     PixelStore_setMaxRadius(pixstore, radius);
-    clock_t start, end;
-    start = clock();
-
-	printf("cross pixels\n");
     nmatches = cross_pixels(pixstore, radius);
-	fflush(stdout);
-    end = clock();
-
-    double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Crossmatch (only) done in %lf cpu_time seconds\n", cpu_time_used);
-    PixelStore_free(pixstore);
-
 
     return nmatches;
 

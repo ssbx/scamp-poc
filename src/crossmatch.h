@@ -16,7 +16,6 @@
 #include "pixelstore.h"
 
 extern long
-Crossmatch_crossFields(Field *fields, int nfields, int64_t nsides,
-        double radius_arcsec);
+Crossmatch_crossSamples(PixelStore *store, double radius_arcsec);
 
 #endif /* __CROSSMATCH_H__ */

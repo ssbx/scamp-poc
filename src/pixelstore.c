@@ -404,14 +404,13 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
 */
 
 PixelStore*
-PixelStore_new() 
+PixelStore_new(int64_t nsides) 
 {
-    return new_store();
-    
+    return new_store(nsides);
 }
 
 void
-PixelStore_add(PixelStore *store, int64_t key, Sample spl, Sample **ext)
+PixelStore_add(PixelStore *store, Sample spl, Sample **ext)
 {
     spl.bestMatch = NULL;
     ang2pix_nest64(store->nsides, spl.col, spl.lon, &spl.pix_nest);
