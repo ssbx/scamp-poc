@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
     double cpu_time_used;
 	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
     start = clock();
-    Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec, store);
+    Crossmatch_crossSamples(store, radius_arcsec);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);
@@ -74,6 +74,7 @@ int main(int argc, char** argv) {
     for (i=0; i<nfields; i++)
         Catalog_freeField(&fields[i]);
 
+    PixelStore_free(store);
     return (EXIT_SUCCESS);
 
 }

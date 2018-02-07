@@ -329,11 +329,11 @@ Catalog_freeField(Field *field) {
 void
 Catalog_dump(Field *field) {
     int i, j;
-    Sample sample;
+    Sample *sample;
     for (i=0; i<field->nsets; i++) {
         for (j=0; j<field->sets[i].nsamples; j++) {
             sample = field->sets[i].samples[j];
-            printf("ra: %f dec: %f num: %li\n", sample.lon, sample.col, sample.id);
+            printf("ra: %f dec: %f num: %li\n", sample->lon, sample->col, sample->id);
         }
     }
 }
@@ -348,10 +348,6 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     int newsize;
     long nn;
     fits_read_tdim(fptr, 1, 1, &newsize, &nn, &status);
-    printf("hello %i %i\n",newsize, nn);fflush(stdout);
-
-
-    
 
     if (status) {
         fits_report_error(stderr, status);
@@ -380,9 +376,8 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     return field_card;
 }
 
-
 void
-test_Catalog_open_ascii(char *filename, Field *field) {
+test_Catalog_open_ascii(char *filename, Field *field, PixelStore *store) {
     FILE *fp = fopen(filename, "r");
     int set_size = 10;
 
@@ -402,7 +397,7 @@ test_Catalog_open_ascii(char *filename, Field *field) {
             set.samples = REALLOC(set.samples, sizeof(Sample) * set_size * 2);
             set_size *= 2;
         }
-        set.samples[set.nsamples] = spl;
+        PixelStore_add(store, spl, &set.samples[set.nsamples]);
         set.nsamples++;
     }
 

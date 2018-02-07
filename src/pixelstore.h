@@ -57,7 +57,7 @@ PixelStore_new(int64_t nsides);
  * updated automatically.
  */
 extern void
-PixelStore_add(PixelStore *store, int64_t key, Sample spl, Sample **ext);
+PixelStore_add(PixelStore *store, Sample spl, Sample **ext);
 
 extern HealPixel*
 PixelStore_get(PixelStore *store, int64_t key);

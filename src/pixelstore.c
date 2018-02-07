@@ -299,13 +299,13 @@ insert_sample_into_avltree_store(
 
         /* allocate and initialize */
         avlpix = CALLOC(1, sizeof(pixel_avl));
-        avlpix->pixel.id = spl->pix_nest;
+        avlpix->pixel.id = spl.pix_nest;
         avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
         avlpix->pixel.nsamples = 0;
         avlpix->pixel.size = SPL_BASE_SIZE;
         for (i=0;i<8;i++)
             avlpix->pixel.tneighbors[i] = false;
-        neighbours_nest64(store->nsides, spl->pix_nest, avlpix->pixel.neighbors);
+        neighbours_nest64(store->nsides, spl.pix_nest, avlpix->pixel.neighbors);
 
         /* insert new pixel */
         pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
@@ -316,7 +316,7 @@ insert_sample_into_avltree_store(
                                     sizeof(long) * store->pixelids_size * 2);
             store->pixelids_size *= 2;
         }
-        store->pixelids[store->npixels] = spl->pix_nest;
+        store->pixelids[store->npixels] = spl.pix_nest;
         store->npixels++;
 
     }
@@ -330,7 +330,7 @@ insert_sample_into_avltree_store(
         int i;
         for (i=0; i<pix->size; i++) {
             Sample **ext = pix->ext[i];
-            *ext = &pix->sample[i];
+            *ext = &pix->samples[i];
         }
         pix->size *= 2;
     }
@@ -414,7 +414,7 @@ PixelStore_add(PixelStore *store, Sample spl, Sample **ext)
 {
     spl.bestMatch = NULL;
     ang2pix_nest64(store->nsides, spl.col, spl.lon, &spl.pix_nest);
-    ang2vec(spl.col, spl.lon. spl.vector);
+    ang2vec(spl.col, spl.lon, spl.vector);
     insert_sample_into_avltree_store(store, spl, ext);
 }
 
@@ -440,7 +440,7 @@ pixelAvlSetMaxRadius(pixel_avl *leaf, double radius) {
     HealPixel *p = &leaf->pixel;
     int i;
     for (i=0; i<p->nsamples; i++)
-        p->samples[i]->bestMatchDistance = radius;
+        (&p->samples[i])->bestMatchDistance = radius;
 
 }
 void

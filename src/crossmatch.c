@@ -102,13 +102,13 @@ cross_pixels(PixelStore *store, double radius) {
 
 
         for (j=1; j<current_pix->nsamples; j++) {
-            current_spl = current_pix->samples[j];
+            current_spl = &current_pix->samples[j];
 
             /*
              * First cross match with samples of the pixel between them
              */
             for(k=0; k<j; k++) {
-                test_spl = current_pix->samples[k];
+                test_spl = &current_pix->samples[k];
 
                 if (current_spl->set->field == test_spl->set->field)
                     continue;
@@ -142,7 +142,7 @@ cross_pixels(PixelStore *store, double radius) {
                  * Then iterate over samples.
                  */
                 for (l=0; l<test_pixel->nsamples; l++) {
-                    test_spl = test_pixel->samples[l];
+                    test_spl = &test_pixel->samples[l];
 
                     if (current_spl->set->field == test_spl->set->field)
                         continue;

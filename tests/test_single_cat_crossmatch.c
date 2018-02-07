@@ -14,6 +14,7 @@
 
 #include "../src/catalog.h"
 #include "../src/crossmatch.h"
+#include "../src/pixelstore.h"
 
 int main(int argc, char **argv) {
 
@@ -21,23 +22,24 @@ int main(int argc, char **argv) {
     long nsides = pow(2, 13);
     double radius_arcsec = 2.0;
 
+    PixelStore *store = PixelStore_new(nsides);
     Field fields[2];
 
-    Catalog_open(argv[1], &fields[0]);
-    Catalog_open(argv[1], &fields[1]);
+    Catalog_open(argv[1], &fields[0], store);
+    Catalog_open(argv[1], &fields[1], store);
 
-    Crossmatch_crossFields(fields, 2, nsides, radius_arcsec);
+    Crossmatch_crossSamples(store, radius_arcsec);
 
     int status = 0;
     Field f1 = fields[0];
     Set s;
-    Sample obj, *obj_bm;
+    Sample *obj, *obj_bm;
 
     for (i = 0; i < f1.nsets; i++) {
         s = f1.sets[i];
         for (j = 0; j < s.nsamples; j++) {
             obj = s.samples[j];
-            obj_bm = obj.bestMatch;
+            obj_bm = obj->bestMatch;
 
             // Every objects should match something
             if (obj_bm == NULL) {
@@ -48,7 +50,7 @@ int main(int argc, char **argv) {
             }
 
             // Every objects should not match something from their field
-            if (obj.set->field == obj_bm->set->field) {
+            if (obj->set->field == obj_bm->set->field) {
                 fprintf(stderr, "\nObject should not match with himself!"
                         " %i %i\n", i, j);
                 status = 1;
@@ -56,26 +58,26 @@ int main(int argc, char **argv) {
             }
 
             // objects matches must share the same nest id
-            if (obj.pix_nest != obj_bm->pix_nest) {
+            if (obj->pix_nest != obj_bm->pix_nest) {
                 fprintf(stderr, "\n Object should share the pix id %i %i pix:"
-                        " %li match pix: %li", i, j, obj.pix_nest,
+                        " %li match pix: %li", i, j, obj->pix_nest,
                         obj_bm->pix_nest);
                 status = 1;
                 continue;
             }
 
             // object id must have the same id
-            if (obj.id != obj_bm->id) {
+            if (obj->id != obj_bm->id) {
                 fprintf(stderr, "\n Object should share the same id %i %i id:"
-                        " %li match: %li", i, j, obj.id, obj_bm->id);
+                        " %li match: %li", i, j, obj->id, obj_bm->id);
                 status = 1;
                 continue;
             }
 
             // match distance must be zero
-            if (obj.bestMatchDistance > 0.0f) {
+            if (obj->bestMatchDistance > 0.0f) {
                 fprintf(stderr, "\nBest distance should be 0.0f %0.50f ",
-                        obj.bestMatchDistance);
+                        obj->bestMatchDistance);
                 status = 1;
                 continue;
             }

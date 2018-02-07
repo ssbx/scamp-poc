@@ -15,6 +15,7 @@
 #include "../src/catalog.h"
 #include "../src/crossmatch.h"
 #include "../src/mem.h"
+#include "../src/pixelstore.h"
 
 
 int
@@ -24,19 +25,20 @@ main(int argc, char **argv) {
     int n = argc - 1;
     char **files = &argv[1];
 
+    PixelStore *store = PixelStore_new(nsides);
 
     Field *fields = ALLOC(sizeof(Field) * n);
 
     int i;
     for (i=0; i<n; i++) {
         printf("opening catalog %i\n", i);
-        Catalog_open(files[i], &fields[i]);
+        Catalog_open(files[i], &fields[i], store);
     }
 
     clock_t start, end;
     double cpu_time_used;
     start = clock();
-    Crossmatch_crossFields(fields, n, nsides, radius_arcsec);
+    Crossmatch_crossSamples(store, radius_arcsec);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
 
@@ -45,6 +47,7 @@ main(int argc, char **argv) {
     for (i=0; i<n; i++) {
         Catalog_freeField(&fields[i]);
     }
+    PixelStore_free(store);
 
     FREE(fields);
     return 0;
