@@ -45,8 +45,6 @@ struct Sample {
 
     /* position on healpix ring scheme */
     int64_t pix_nest;
-    void *healpix_nest;
-    void *healpix_neighbors[8];
 
     /* Sample belonging to this set */
     Set *set;
@@ -71,7 +69,7 @@ struct Sample {
  */
 struct Set {
 
-    Sample *samples;
+    Sample **samples; /* samples are stored in the pixel store */
     int     nsamples;
 
     /*

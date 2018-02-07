@@ -26,7 +26,8 @@ typedef struct HealPixel HealPixel;
 struct HealPixel {
 
     long id;            /* healpix id */
-    Sample **samples;   /* our samples pointers */
+    Sample *samples;    /* our samples */
+    Sample ***ext;       /* update ext if realloc is called */
     int nsamples;       /* number of samples belonging to this pixel */
     int size;           /* for reallocation if required */
     int64_t neighbors[8];  /* Neighbors indexes */
@@ -36,6 +37,7 @@ struct HealPixel {
 };
 
 typedef struct PixelStore {
+    int64_t     nsides;
     void        *pixels; /* our opaque data */
 
     /* These are used to iterate over pixels */
@@ -47,7 +49,15 @@ typedef struct PixelStore {
 
 
 extern PixelStore*
-PixelStore_new(Field *fields, int nfields, int64_t nsides);
+PixelStore_new(int64_t nsides);
+
+/* 
+ * Store "spl" in "store" in pixel id "key". Set "ext to contains a pointer to
+ * our newly created sample. In case of internal reallocation, ext is 
+ * updated automatically.
+ */
+extern void
+PixelStore_add(PixelStore *store, int64_t key, Sample spl, Sample **ext);
 
 extern HealPixel*
 PixelStore_get(PixelStore *store, int64_t key);

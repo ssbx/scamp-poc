@@ -282,12 +282,16 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
  */
 #define SPL_BASE_SIZE 50
 static void
-insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides) {
+insert_sample_into_avltree_store(
+    PixelStore *store, 
+    Sample spl, 
+    Sample **ext) 
+{
 
 
     /* search for the pixel */
     pixel_avl *avlpix =
-            pixelAvlSearch((pixel_avl*) store->pixels, spl->pix_nest);
+            pixelAvlSearch((pixel_avl*) store->pixels, spl.pix_nest);
 
     if (!avlpix) { // no such pixel
 
@@ -301,14 +305,15 @@ insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides)
         avlpix->pixel.size = SPL_BASE_SIZE;
         for (i=0;i<8;i++)
             avlpix->pixel.tneighbors[i] = false;
-        neighbours_nest64(nsides, spl->pix_nest, avlpix->pixel.neighbors);
+        neighbours_nest64(store->nsides, spl->pix_nest, avlpix->pixel.neighbors);
 
         /* insert new pixel */
         pixelAvlInsert((pixel_avl**) &store->pixels, avlpix);
 
         /* update npixels and array of pixelids store */
         if (store->pixelids_size == store->npixels) {
-            store->pixelids = REALLOC(store->pixelids, sizeof(long) * store->pixelids_size * 2);
+            store->pixelids = REALLOC(store->pixelids, 
+                                    sizeof(long) * store->pixelids_size * 2);
             store->pixelids_size *= 2;
         }
         store->pixelids[store->npixels] = spl->pix_nest;
@@ -320,22 +325,30 @@ insert_sample_into_avltree_store(PixelStore *store, Sample *spl, int64_t nsides)
     HealPixel *pix = &avlpix->pixel;
     if (pix->nsamples == pix->size) {
         /* need realloc */
-        pix->samples = REALLOC(pix->samples, sizeof(Sample**) * pix->size * 2);
+        pix->samples = REALLOC(pix->samples, sizeof(Sample) * pix->size * 2);
+        pix->ext     = REALLOC(pix->ext, sizeof(Sample**) * pix->size * 2);
+        int i;
+        for (i=0; i<pix->size; i++) {
+            Sample **ext = pix->ext[i];
+            *ext = &pix->sample[i];
+        }
         pix->size *= 2;
     }
 
     pix->samples[pix->nsamples] = spl;
+    pix->ext[pix->nsamples] = ext;
     pix->nsamples++;
 
 }
 
 #define PIXELIDS_BASE_SIZE 1000
 static PixelStore*
-new_store() {
+new_store(int64_t nsides) {
 
     PixelStore *store = ALLOC(sizeof(PixelStore));
 
     store->pixels = NULL;
+    store->nsides = nsides;
     store->npixels = 0;
     store->pixelids = ALLOC(sizeof(int64_t) * PIXELIDS_BASE_SIZE);
     store->pixelids_size = PIXELIDS_BASE_SIZE;
@@ -354,6 +367,8 @@ new_store() {
  * PUBLIC FUNCTIONS
  */
 
+
+/*
 PixelStore*
 PixelStore_new(Field *fields, int nfields, int64_t nsides) {
 
@@ -375,7 +390,6 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
                 spl = &set.samples[k];
                 spl->bestMatch = NULL;
 
-//             printf("have field %i set %i spl %i %i %0.10lf %0.10lf\n", i, j, k, nfields, spl->lon, spl->col);
                 ang2pix_nest64(nsides,spl->col, spl->lon, &spl->pix_nest);
                 ang2vec(spl->col, spl->lon, spl->vector);
                 insert_sample_into_avltree_store(store, spl, nsides);
@@ -387,6 +401,24 @@ PixelStore_new(Field *fields, int nfields, int64_t nsides) {
     fix_pixel_neighbors(store->pixels);
     return store;
 }
+*/
+
+PixelStore*
+PixelStore_new() 
+{
+    return new_store();
+    
+}
+
+void
+PixelStore_add(PixelStore *store, int64_t key, Sample spl, Sample **ext)
+{
+    spl.bestMatch = NULL;
+    ang2pix_nest64(store->nsides, spl.col, spl.lon, &spl.pix_nest);
+    ang2vec(spl.col, spl.lon. spl.vector);
+    insert_sample_into_avltree_store(store, spl, ext);
+}
+
 
 HealPixel*
 PixelStore_get(PixelStore* store, int64_t key) {
