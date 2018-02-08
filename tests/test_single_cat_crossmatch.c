@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
             // object id must have the same id
             if (obj->id != obj_bm->id) {
                 fprintf(stderr, "\n Object should share the same id %i %i id:"
-                        " %li match: %li", i, j, obj->id, obj_bm->id);
+                        " %li match: %li %lf %lf %li", i, j, obj->id, obj_bm->id, obj->vector[2], obj_bm->vector[2], obj_bm->bestMatch->id);
                 status = 1;
                 continue;
             }

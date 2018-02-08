@@ -30,7 +30,7 @@ static long ntestmatches;
 
 #define NNEIGHBORS 8
 
-extern long
+long
 Crossmatch_crossSamples(
         PixelStore      *pixstore,
         double          radius_arcsec)
@@ -51,17 +51,18 @@ Crossmatch_crossSamples(
  * Test if two pixels have already tested cross matching samples. If not,
  * set it to true.
  */
-bool
-test_allready_crossed(HealPixel *a, HealPixel *b, int an) {
-    if (a->tneighbors[an] == true) // already matched
+static bool
+test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
+    if (a->tneighbors[n] == true) // already matched
         return true;
 
-    a->tneighbors[an] = true;
+    a->tneighbors[n] = true;
     int i;
-    for (i=0; i<8; i++) {
-        if (b->pneighbors[i] == a)
+    for (i=0; i<NNEIGHBORS; i++) {
+        if (b->pneighbors[i] == a) {
             b->tneighbors[i] = true;
-        break;
+        	break;
+		}
     }
     return false;
 }
