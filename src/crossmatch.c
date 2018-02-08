@@ -50,16 +50,23 @@ Crossmatch_crossFields(
     double radius = radius_arcsec / 3600 * TO_RAD;
 
     PixelStore_setMaxRadius(pixstore, radius);
+
+    /* start timers */
+    time_t  real_start, real_end;
     clock_t start, end;
-    start = clock();
+    real_start  = time(NULL);
+    start       = clock();
+
 
 	printf("cross pixels\n");
     nmatches = cross_pixels(pixstore, radius);
 	fflush(stdout);
     end = clock();
+    real_end = time(NULL);
 
+    double real_time_used = difftime(real_end, real_start);
     double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Crossmatch (only) done in %lf cpu_time seconds\n", cpu_time_used);
+    printf("Crossmatch (only) done in %lf cpu_time seconds %lf real time\n", cpu_time_used, real_time_used);
     PixelStore_free(pixstore);
 
 

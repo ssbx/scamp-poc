@@ -31,7 +31,7 @@
  */
 int main(int argc, char** argv) {
 
-    Logger_setLevel(LOGGER_TRACE);
+    Logger_setLevel(LOGGER_NORMAL);
 
     /* default values */
     int nsides_power = 16, c;
@@ -59,15 +59,20 @@ int main(int argc, char** argv) {
     for (i=0; i<nfields; i++)
         Catalog_open(cat_files[i], &fields[i]);
 
+    time_t real_start, real_end;
     clock_t start, end;
     double cpu_time_used;
+    double real_time_used;
     int64_t nsides = pow(2, nsides_power);
 	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
     start = clock();
+    real_start = time(NULL);
     Crossmatch_crossFields(fields, nfields, nsides, radius_arcsec);
     end = clock();
+    real_end = time(NULL);
+
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);
+    printf("Crossmatch done in %lf cpu_time seconds and %lf real seconds\n", cpu_time_used, real_time_used);
 
     for (i=0; i<nfields; i++)
         Catalog_freeField(&fields[i]);

@@ -81,7 +81,6 @@ Catalog_open(char *filename, Field *field) {
 
         Logger_log(LOGGER_TRACE, "Reading fits HDU %s %i\n", filename, i);
 
-        printf("wtf");
         /*
          * even hdu contain original image FITS header
          */
@@ -350,10 +349,6 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     int newsize;
     long nn;
     fits_read_tdim(fptr, 1, 1, &newsize, &nn, &status);
-    printf("hello %i %i\n",newsize, nn);fflush(stdout);
-
-
-    
 
     if (status) {
         fits_report_error(stderr, status);
@@ -363,7 +358,6 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     field_card = ALLOC(sizeof(char) * field_card_size);
     *nkeys = field_card_size / 80;
 
-    printf("wtf\n"); fflush(stdout);
     Logger_log(LOGGER_TRACE, "fieldcard size %i, nkeys %i\n", field_card_size, *nkeys);
 
     /*
