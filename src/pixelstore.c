@@ -301,7 +301,7 @@ insert_sample_into_avltree_store(
         avlpix = CALLOC(1, sizeof(pixel_avl));
         avlpix->pixel.id = spl.pix_nest;
         avlpix->pixel.samples = ALLOC(sizeof(Sample) * SPL_BASE_SIZE);
-        avlpix->pixel.ext = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
+        avlpix->pixel.ext = ALLOC(sizeof(Sample***) * SPL_BASE_SIZE);
         avlpix->pixel.nsamples = 0;
         avlpix->pixel.size = SPL_BASE_SIZE;
         for (i=0;i<8;i++)
@@ -325,19 +325,22 @@ insert_sample_into_avltree_store(
     /* Insert sample in HealPixel */
     HealPixel *pix = &avlpix->pixel;
     if (pix->nsamples == pix->size) {
+		printf("halllll\n");fflush(stdout);
         /* need realloc */
         pix->samples = REALLOC(pix->samples, sizeof(Sample) * pix->size * 2);
-        pix->ext     = REALLOC(pix->ext, sizeof(Sample**) * pix->size * 2);
+        pix->ext     = REALLOC(pix->ext, sizeof(Sample***)  * pix->size * 2);
         int i;
         for (i=0; i<pix->size; i++) {
-            Sample **ext = pix->ext[i];
-            *ext = &pix->samples[i];
+            Sample **ext2 	=  pix->ext[i];
+            *ext2 			= &pix->samples[i];
         }
         pix->size *= 2;
     }
 
     pix->samples[pix->nsamples] = spl;
+	*ext = &pix->samples[pix->nsamples];
     pix->ext[pix->nsamples] = ext;
+	printf("%i %i\n", pix->samples[pix->nsamples].id, (*pix->ext[pix->nsamples])->id);
     pix->nsamples++;
 
 }

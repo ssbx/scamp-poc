@@ -42,7 +42,9 @@ int main(int argc, char **argv) {
     for (i = 0; i < f1.nsets; i++) {
         s = f1.sets[i];
         for (j = 0; j < s.nsamples; j++) {
+
             obj = s.samples[j];
+
             obj_bm = obj->bestMatch;
 
             // Every objects should match something
@@ -90,6 +92,8 @@ int main(int argc, char **argv) {
 
     Catalog_freeField(&fields[0]);
     Catalog_freeField(&fields[1]);
+	PixelStore_free(store);
+	printf("end");
 
     return status;
 }
