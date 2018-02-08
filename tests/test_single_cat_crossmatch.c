@@ -22,13 +22,17 @@ int main(int argc, char **argv) {
     long nsides = pow(2, 13);
     double radius_arcsec = 2.0;
 
+    printf("hello\n"); fflush(stdout);
     PixelStore *store = PixelStore_new(nsides);
     Field fields[2];
 
+    printf("hello\n"); fflush(stdout);
     Catalog_open(argv[1], &fields[0], store);
     Catalog_open(argv[1], &fields[1], store);
+    printf("hello\n"); fflush(stdout);
 
     Crossmatch_crossSamples(store, radius_arcsec);
+    printf("hello\n"); fflush(stdout);
 
     int status = 0;
     Field f1 = fields[0];

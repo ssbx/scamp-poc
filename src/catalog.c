@@ -81,7 +81,6 @@ Catalog_open(char *filename, Field *field, PixelStore *store) {
 
         Logger_log(LOGGER_TRACE, "Reading fits HDU %s %i\n", filename, i);
 
-        printf("wtf");
         /*
          * even hdu contain original image FITS header
          */

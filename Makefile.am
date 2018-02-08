@@ -1,5 +1,5 @@
 run: all
-	./tests/testCrossmatchNumber
+	./tests/testSingleCatCrossmatch ./tests/data/fitscat/data2.fits.cat
 
 tests: all
 	./tests/test_suite.sh
