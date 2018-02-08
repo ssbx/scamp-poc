@@ -80,13 +80,6 @@ cross_pixels(PixelStore *store, double radius) {
      *
      * Define functions inside loop, for future omp usage.
      *
-     * XXX TODO: pixels are crossed twice (one as current_pix, and another
-     * as neighbor_pix) with each others,
-     * XXX TODO: how should I link matching samples from different fields? (
-     * answer, use the MatchBundle structure. Only one sample from the same
-     * field must exist in one MatchBundle. Maybe add all, and reduce after,
-     * or find a way to reduce. Do not modify Sample structure while iterating,
-     * but reduce at the end to avoid false sharing.
      * XXX TODO: this code is thread safe but not parallelisable, because of the
      * false sharing induced by the "crossmatch" function modifying some
      * Sample values. TODO, create a temporary result for each threads, then
@@ -173,13 +166,22 @@ get_iterate_count() {
     return ntestmatches;
 }
 
+static inline double
+dist(double *va, double *vb) {
+    double x = va[0] - vb[0];
+    double y = va[1] - vb[1];
+    double z = va[2] - vb[2];
+
+    return sqrt(x*x + y*y + z*z);
+}
+
 static void
 crossmatch(Sample *current_spl, Sample *test_spl) {
     ntestmatches++;
     /*
      * Get distance between samples
      */
-    double distance = euclidean_distance(current_spl->vector, test_spl->vector);
+    double distance = dist(current_spl->vector, test_spl->vector);
 
     /*
      * If distance is less than previous (or initial) update
@@ -196,4 +198,3 @@ crossmatch(Sample *current_spl, Sample *test_spl) {
     }
 
 }
-

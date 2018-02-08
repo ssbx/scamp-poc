@@ -32,7 +32,7 @@
  */
 int main(int argc, char** argv) {
 
-    Logger_setLevel(LOGGER_TRACE);
+    Logger_setLevel(LOGGER_NORMAL);
 
     /* default values */
     int nsides_power = 16, c;
