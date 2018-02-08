@@ -40,7 +40,7 @@ fi
 
 
 echo "==> Running testSingleCatCrossmatch"
-${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat avl > /dev/null
+${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat > /dev/null
 if [ $? -gt 0 ]
 then 
 	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch" "FAILED"

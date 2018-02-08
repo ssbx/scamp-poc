@@ -300,7 +300,8 @@ insert_sample_into_avltree_store(
         /* allocate and initialize */
         avlpix = CALLOC(1, sizeof(pixel_avl));
         avlpix->pixel.id = spl.pix_nest;
-        avlpix->pixel.samples = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
+        avlpix->pixel.samples = ALLOC(sizeof(Sample) * SPL_BASE_SIZE);
+        avlpix->pixel.ext = ALLOC(sizeof(Sample**) * SPL_BASE_SIZE);
         avlpix->pixel.nsamples = 0;
         avlpix->pixel.size = SPL_BASE_SIZE;
         for (i=0;i<8;i++)

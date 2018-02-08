@@ -357,7 +357,6 @@ read_field_card(fitsfile *fptr, int *nkeys, char *charnull) {
     field_card = ALLOC(sizeof(char) * field_card_size);
     *nkeys = field_card_size / 80;
 
-    printf("wtf\n"); fflush(stdout);
     Logger_log(LOGGER_TRACE, "fieldcard size %i, nkeys %i\n", field_card_size, *nkeys);
 
     /*
@@ -387,14 +386,14 @@ test_Catalog_open_ascii(char *filename, Field *field, PixelStore *store) {
 
     Set set;
     set.nsamples = 0;
-    set.samples = ALLOC(sizeof(Sample) * set_size);
+    set.samples = ALLOC(sizeof(Sample*) * set_size);
     set.field = field;
 
     Sample spl;
     spl.set = &field->sets[0];
     while (fscanf(fp, "%li %lf %lf\n", &spl.id, &spl.lon, &spl.col) > 0) {
         if (set.nsamples == set_size) {
-            set.samples = REALLOC(set.samples, sizeof(Sample) * set_size * 2);
+            set.samples = REALLOC(set.samples, sizeof(Sample*) * set_size * 2);
             set_size *= 2;
         }
         PixelStore_add(store, spl, &set.samples[set.nsamples]);
