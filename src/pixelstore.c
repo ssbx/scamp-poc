@@ -284,10 +284,9 @@ static void amatchAvlRemove(amatch_avl **ppHead, amatch_avl *pOld){
 static void
 insert_sample_into_avltree_store(
     PixelStore *store, 
-    Sample spl, 
-    Sample **ext) 
+    Sample 		spl, 
+    Sample 		**ext) 
 {
-
 
     /* search for the pixel */
     pixel_avl *avlpix =
@@ -340,7 +339,7 @@ insert_sample_into_avltree_store(
     pix->samples[pix->nsamples] = spl;
 	*ext = &pix->samples[pix->nsamples];
     pix->ext[pix->nsamples] = ext;
-	printf("%i %i\n", pix->samples[pix->nsamples].id, (*pix->ext[pix->nsamples])->id);
+	//printf("%li %li\n", pix->samples[pix->nsamples].id, (*pix->ext[pix->nsamples])->id);
     pix->nsamples++;
 
 }

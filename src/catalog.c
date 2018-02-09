@@ -192,7 +192,6 @@ Catalog_open(char *filename, Field *field, PixelStore *store) {
 
         Sample sample;
         for (j=0, k=0; j < nrows; j++, k+=2) {
-
             sample.id   = col_number[j];
             sample.ra   = world[k];
             sample.dec  = world[k+1];

@@ -69,6 +69,16 @@ else
     printf "%-70s %10s\n" "===> Test for testCrossmatchLimit" "SUCCESS"
 fi
 
+echo "==> Running testSingleCatCrossmatchAscii"
+${DIR}/testSingleCatCrossmatchAscii > /dev/null
+if [ $? -gt 0 ]
+then 
+	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatchAscii" "FAILED"
+	STATUS=1
+else
+	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatchAscii" "SUCCESS"
+fi
+
 
 echo "=> Test suite end"
 

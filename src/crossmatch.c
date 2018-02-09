@@ -173,6 +173,7 @@ dist(double *va, double *vb) {
     double y = va[1] - vb[1];
     double z = va[2] - vb[2];
 
+	/* return x*x + y*y + z*z; */
     return sqrt(x*x + y*y + z*z);
 }
 

@@ -16,6 +16,8 @@
 #include "../src/crossmatch.h"
 #include "../src/pixelstore.h"
 
+static char cat[] = "tests/data/asciicat/t4_cat.txt";
+
 void
 print_sample(Sample *s) {
 	fprintf(stderr, "\n----------------\n");
@@ -44,8 +46,8 @@ int main(int argc, char **argv) {
     Field fields[2];
 
     printf("hello\n"); fflush(stdout);
-    Catalog_open(argv[1], &fields[0], store);
-    Catalog_open(argv[1], &fields[1], store);
+    test_Catalog_open_ascii(cat, &fields[0], store);
+    test_Catalog_open_ascii(cat, &fields[1], store);
     printf("hello\n"); fflush(stdout);
 
     Crossmatch_crossSamples(store, radius_arcsec);
