@@ -59,48 +59,67 @@ Crossmatch_crossSamples(
         PixelStore      *pixstore,
         double          radius_arcsec)
 {
+	int i;
+
 
     /* arcsec to radiant */
     double radius = radius_arcsec / 3600 * TO_RAD;
     PixelStore_setMaxRadius(pixstore, radius);
 
-	int i;
-    long nmatches = 0;
-	int64_t *pixelindex = pixstore->pixelids;
 
+	/* allocate mem */
 	int nthreads = 4;
 	pthread_t *threads 		 = ALLOC(sizeof(pthread_t) * nthreads);
 	struct thread_args *args = ALLOC(sizeof(struct thread_args) * nthreads);
 	int	*results			 = ALLOC(sizeof(int) * nthreads);
+	int *npixs 				 = ALLOC(sizeof(int) * nthreads);
 
-	int *npixs = ALLOC(sizeof(int) * nthreads);
-	int pix_per_thread = pixstore->npixels / nthreads;
+
+	/* distribute work between threads */
+	int np = pixstore->npixels / nthreads;
 	for (i=0; i<nthreads; i++)
-		npixs[i] = pix_per_thread;
+		npixs[i] = np;
 	npixs[0] += pixstore->npixels % nthreads;
 
+
+	/* start threads */
+	int64_t *pixelindex = pixstore->pixelids;
 	for (i=0; i<nthreads; i++) {
+		
+		/* construct thread argument structure */
 		struct thread_args *arg = &args[i];
 		arg->store 		= pixstore;
 		arg->radius 	= radius;
 		arg->pixelindex = pixelindex;
 		arg->npixs 		= npixs[i];
 		arg->result 	= &results[i];
+
+		/* launch! */
 		pthread_create(&threads[i], NULL, pthread_cross_pixel, arg);
+
+		/* increment pixelindex for next thread */
 		pixelindex += npixs[i];
+
 	}
 
 
+	/* wait for joins */
 	for (i=0; i<nthreads; i++)
 		pthread_join(threads[i], NULL);
+	
 
+	/* reduce */
+    long nmatches = 0;
+	for (i=0; i<nthreads; i++)
+		nmatches += results[i];
+
+
+	/* cleanup */
 	FREE(threads);
 	FREE(args);
 	FREE(npixs);
-	
-	for (i=0; i<nthreads; i++)
-		nmatches += results[i];
 	FREE(results);
+
 
     return nmatches;
 
@@ -109,6 +128,8 @@ Crossmatch_crossSamples(
 /**
  * Test if two pixels have already tested cross matching samples. If not,
  * set it to true.
+ *
+ * There must be a lock somewere.
  */
 static bool
 test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
@@ -126,8 +147,34 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
     return false;
 }
 
+/**
+ * Called by cross_pixel, to notify neighbors that I handle myself for the
+ * rest of the run. So do not cross with me.
+ *
+ * Should be a (global) lock somewere?
+ * XXX: is it usefull to lock here?
+ */
+static void
+set_reserve_cross(HealPixel *a) {
+	int i, j;
+	for (i=0; i<NNEIGHBORS; i++) {
+		HealPixel *b = a->pneighbors[i];
+		if (b) {
+			for (j=0; j<NNEIGHBORS; j++) {
+				if (a == b->pneighbors[j]) {
+					b->tneighbors[j] = true;
+					break;
+				}
+			}
+		}
+	}
+}
+
 static long
 cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
+
+	set_reserve_cross(pix);
+
 	long nbmatches = 0;
 
 	/*
