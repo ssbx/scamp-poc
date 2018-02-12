@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include <time.h>
+#include <pthread.h>
 
 #include "crossmatch.h"
 #include "logger.h"
@@ -24,11 +25,34 @@
 #include "pixelstore.h"
 
 static void crossmatch(Sample*,Sample*);
-static long cross_pixels(HealPixel*,PixelStore*,double);
+static long cross_pixel(HealPixel*,PixelStore*,double);
 
 static long ntestmatches;
 
 #define NNEIGHBORS 8
+
+struct thread_args {
+	PixelStore 	*store;
+	int64_t		*pixelindex;
+	int			npixs;
+	double 		radius;
+	int			*result;
+};
+
+void*
+pthread_cross_pixel(void *args) {
+	struct thread_args *ta = (struct thread_args*) args;
+
+	int i;
+	int nmatches = 0;
+	for (i=0; i<ta->npixs; i++) {
+		HealPixel *pix = PixelStore_get(ta->store, ta->pixelindex[i]);
+		nmatches += cross_pixel(pix, ta->store, ta->radius);
+	}
+
+	*(ta->result) = nmatches;
+	return NULL;
+}
 
 long
 Crossmatch_crossSamples(
@@ -44,11 +68,39 @@ Crossmatch_crossSamples(
     long nmatches = 0;
 	int64_t *pixelindex = pixstore->pixelids;
 
-	HealPixel *pix;
-	for (i=0; i<pixstore->npixels; i++) {
-		pix = PixelStore_get(pixstore, pixelindex[i]);
-    	nmatches += cross_pixels(pix, pixstore, radius);
+	int nthreads = 4;
+	pthread_t *threads 		 = ALLOC(sizeof(pthread_t) * nthreads);
+	struct thread_args *args = ALLOC(sizeof(struct thread_args) * nthreads);
+	int	*results			 = ALLOC(sizeof(int) * nthreads);
+
+	int *npixs = ALLOC(sizeof(int) * nthreads);
+	int pix_per_thread = pixstore->npixels / nthreads;
+	for (i=0; i<nthreads; i++)
+		npixs[i] = pix_per_thread;
+	npixs[0] += pixstore->npixels % nthreads;
+
+	for (i=0; i<nthreads; i++) {
+		struct thread_args *arg = &args[i];
+		arg->store 		= pixstore;
+		arg->radius 	= radius;
+		arg->pixelindex = pixelindex;
+		arg->npixs 		= npixs[i];
+		arg->result 	= &results[i];
+		pthread_create(&threads[i], NULL, pthread_cross_pixel, arg);
+		pixelindex += npixs[i];
 	}
+
+
+	for (i=0; i<nthreads; i++)
+		pthread_join(threads[i], NULL);
+
+	FREE(threads);
+	FREE(args);
+	FREE(npixs);
+	
+	for (i=0; i<nthreads; i++)
+		nmatches += results[i];
+	FREE(results);
 
     return nmatches;
 
@@ -75,7 +127,7 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
 }
 
 static long
-cross_pixels(HealPixel *pix, PixelStore *store, double radius) {
+cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
 	long nbmatches = 0;
 
 	/*
