@@ -1,5 +1,5 @@
 run: all
-	./tests/testSingleCatCrossmatch ./tests/data/fitscat/data2.fits.cat
+	./tests/testSingleCatCrossmatchAscii ./tests/data/asciicat/cat_4.txt
 
 tests: all
 	./tests/test_suite.sh

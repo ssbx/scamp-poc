@@ -16,6 +16,7 @@
 #include "../src/crossmatch.h"
 #include "../src/pixelstore.h"
 
+extern void test_Catalog_open_ascii(char*, Field*, PixelStore*);
 static char cat[] = "tests/data/asciicat/t4_cat.txt";
 
 void
@@ -35,6 +36,7 @@ print_sample(Sample *s) {
 	fprintf(stderr, "pix: %lf\n", s->bestMatchDistance);
 	
 }
+
 int main(int argc, char **argv) {
 
     int i, j;
