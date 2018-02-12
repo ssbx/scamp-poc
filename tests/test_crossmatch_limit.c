@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     test_Catalog_open_ascii(t3, &fields[1], store);
 
     long matches;
-    matches = Crossmatch_crossSamples(store, radius_arcsec);
+    matches = Crossmatch_crossSamples(store, radius_arcsec, 4);
 
     assert(matches == 1);
 

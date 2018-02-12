@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     Catalog_open(argv[1], &fields[1], store);
     printf("hello\n"); fflush(stdout);
 
-    Crossmatch_crossSamples(store, radius_arcsec);
+    Crossmatch_crossSamples(store, radius_arcsec, 4);
     printf("hello\n"); fflush(stdout);
 
     int status = 0;

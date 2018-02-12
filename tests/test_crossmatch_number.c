@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
     test_Catalog_open_ascii(t1, &fields[0], store);
     test_Catalog_open_ascii(t1, &fields[1], store);
 
-    nmatches = Crossmatch_crossSamples(store, radius_arcsec);
+    nmatches = Crossmatch_crossSamples(store, radius_arcsec, 4);
     if (nmatches != 5) {
         fprintf(stderr, "have %li matches when 5 is expected\n", nmatches);
         return 1;

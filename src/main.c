@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
     /* default values */
     int nsides_power = 16, c;
     double radius_arcsec = 2.0; /* in arcsec */
+	int nthreads= 4;
 
     while ((c=getopt(argc,argv,"n:r:b")) != -1) {
         switch(c) {
@@ -45,6 +46,9 @@ int main(int argc, char** argv) {
             break;
         case 'r':
             radius_arcsec = atof(optarg);
+            break;
+        case 't':
+            nthreads = atoi(optarg);
             break;
         default:
             abort();
@@ -66,7 +70,7 @@ int main(int argc, char** argv) {
     double cpu_time_used;
 	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
     start = clock();
-    Crossmatch_crossSamples(store, radius_arcsec);
+    Crossmatch_crossSamples(store, radius_arcsec, nthreads);
     end = clock();
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
     printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);

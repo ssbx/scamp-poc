@@ -29,6 +29,8 @@ static long cross_pixel(HealPixel*,PixelStore*,double);
 
 static long ntestmatches;
 
+static pthread_mutex_t CMUTEX = PTHREAD_MUTEX_INITIALIZER;
+
 #define NNEIGHBORS 8
 
 struct thread_args {
@@ -57,7 +59,8 @@ pthread_cross_pixel(void *args) {
 long
 Crossmatch_crossSamples(
         PixelStore      *pixstore,
-        double          radius_arcsec)
+        double          radius_arcsec,
+		int				nthreads)
 {
 	int i;
 
@@ -68,7 +71,6 @@ Crossmatch_crossSamples(
 
 
 	/* allocate mem */
-	int nthreads = 4;
 	pthread_t *threads 		 = ALLOC(sizeof(pthread_t) * nthreads);
 	struct thread_args *args = ALLOC(sizeof(struct thread_args) * nthreads);
 	int	*results			 = ALLOC(sizeof(int) * nthreads);
@@ -126,39 +128,16 @@ Crossmatch_crossSamples(
 }
 
 /**
- * Test if two pixels have already tested cross matching samples. If not,
- * set it to true.
- *
- * There must be a lock somewere.
- */
-static bool
-test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
-    if (a->tneighbors[n] == true) // already matched
-        return true;
-
-    a->tneighbors[n] = true;
-    int i;
-    for (i=0; i<NNEIGHBORS; i++) {
-        if (b->pneighbors[i] == a) {
-            b->tneighbors[i] = true;
-        	break;
-		}
-    }
-    return false;
-}
-
-/**
  * Called by cross_pixel, to notify neighbors that I handle myself for the
  * rest of the run. So do not cross with me.
- *
- * Should be a (global) lock somewere?
- * XXX: is it usefull to lock here?
  */
 static void
 set_reserve_cross(HealPixel *a) {
 	int i, j;
+	HealPixel *b;
+	pthread_mutex_lock(&CMUTEX);
 	for (i=0; i<NNEIGHBORS; i++) {
-		HealPixel *b = a->pneighbors[i];
+		b = a->pneighbors[i];
 		if (b) {
 			for (j=0; j<NNEIGHBORS; j++) {
 				if (a == b->pneighbors[j]) {
@@ -168,6 +147,7 @@ set_reserve_cross(HealPixel *a) {
 			}
 		}
 	}
+	pthread_mutex_unlock(&CMUTEX);
 }
 
 static long
@@ -211,21 +191,23 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
 		 */
 		HealPixel *test_pixel;
 		for (k=0; k<NNEIGHBORS; k++) {
-			test_pixel = pix->pneighbors[k];
+
+			/* maybe allready crossed by an neighbor */
+			if (pix->tneighbors[k] == true)
+				continue;
+
 
 			/*
 			 * Does the pixel exists? It may be a neighbor of current pixel,
 			 * but not be initialized because it does not contains
 			 * any samples.
 			 */
+			test_pixel = pix->pneighbors[k];
 			if (test_pixel == NULL)
 				continue;
 
-			if (test_allready_crossed(pix, test_pixel, k) == true)
-				continue;
-
 			/*
-			 * Then iterate over samples.
+			 * Ok, then iterate over samples.
 			 */
 			for (l=0; l<test_pixel->nsamples; l++) {
 				test_spl = &test_pixel->samples[l];
