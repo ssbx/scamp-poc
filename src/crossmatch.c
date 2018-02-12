@@ -34,11 +34,11 @@ static pthread_mutex_t CMUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NNEIGHBORS 8
 
 struct thread_args {
-	PixelStore	*store;
-	int64_t		*pixelindex;
-	int			npixs;
-	double		radius;
-	int			*result;
+	PixelStore 	*store;
+	int64_t 	*pixelindex;
+	int 		npixs;
+	double 		radius;
+	int 		*result;
 };
 
 
@@ -73,10 +73,10 @@ Crossmatch_crossSamples(
 
 
 	/* allocate mem */
-	pthread_t *threads 		 = ALLOC(sizeof(pthread_t) * nthreads);
-	struct thread_args *args = ALLOC(sizeof(struct thread_args) * nthreads);
-	int	*results			 = ALLOC(sizeof(int) * nthreads);
-	int *npixs 				 = ALLOC(sizeof(int) * nthreads);
+	pthread_t *threads			= ALLOC(sizeof(pthread_t) * nthreads);
+	struct thread_args *args	= ALLOC(sizeof(struct thread_args) * nthreads);
+	int	*results				= ALLOC(sizeof(int) * nthreads);
+	int *npixs					= ALLOC(sizeof(int) * nthreads);
 
 
 	/* distribute work between threads */
@@ -271,8 +271,8 @@ crossmatch(Sample *current_spl, Sample *test_spl)
 	 * best_distance and set test_spl to current_spl.bestMatch
 	 */
 	if (distance < current_spl->bestMatchDistance) {
-		current_spl->bestMatch = test_spl;		  /* XXX false shared ! */
-		current_spl->bestMatchDistance = distance;  /* XXX false shared ! */
+		current_spl->bestMatch = test_spl;			/* XXX false shared ! */
+		current_spl->bestMatchDistance = distance;	/* XXX false shared ! */
 	}
 
 	if (distance < test_spl->bestMatchDistance) {
