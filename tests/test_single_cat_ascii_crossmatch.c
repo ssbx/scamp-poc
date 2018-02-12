@@ -17,7 +17,6 @@
 #include "../src/pixelstore.h"
 
 extern void test_Catalog_open_ascii(char*, Field*, PixelStore*);
-static char cat[] = "tests/data/asciicat/t4_cat.txt";
 
 void
 print_sample(Sample *s) {

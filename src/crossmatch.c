@@ -34,15 +34,17 @@ static pthread_mutex_t CMUTEX = PTHREAD_MUTEX_INITIALIZER;
 #define NNEIGHBORS 8
 
 struct thread_args {
-	PixelStore 	*store;
+	PixelStore	*store;
 	int64_t		*pixelindex;
 	int			npixs;
-	double 		radius;
+	double		radius;
 	int			*result;
 };
 
+
 void*
-pthread_cross_pixel(void *args) {
+pthread_cross_pixel(void *args) 
+{
 	struct thread_args *ta = (struct thread_args*) args;
 
 	int i;
@@ -56,18 +58,18 @@ pthread_cross_pixel(void *args) {
 	return NULL;
 }
 
+
 long
 Crossmatch_crossSamples(
-        PixelStore      *pixstore,
-        double          radius_arcsec,
-		int				nthreads)
+		PixelStore	*pixstore,
+		double		radius_arcsec,
+		int			nthreads)
 {
 	int i;
 
-
-    /* arcsec to radiant */
-    double radius = radius_arcsec / 3600 * TO_RAD;
-    PixelStore_setMaxRadius(pixstore, radius);
+	/* arcsec to radiant */
+	double radius = radius_arcsec / 3600 * TO_RAD;
+	PixelStore_setMaxRadius(pixstore, radius);
 
 
 	/* allocate mem */
@@ -111,7 +113,7 @@ Crossmatch_crossSamples(
 	
 
 	/* reduce */
-    long nmatches = 0;
+	long nmatches = 0;
 	for (i=0; i<nthreads; i++)
 		nmatches += results[i];
 
@@ -126,7 +128,7 @@ Crossmatch_crossSamples(
 	Logger_log(LOGGER_NORMAL,
 			"Crossmatch end: %li matches for all pixels!\n", nmatches);
 
-    return nmatches;
+	return nmatches;
 
 }
 
@@ -135,7 +137,8 @@ Crossmatch_crossSamples(
  * rest of the run. So do not cross with me.
  */
 static void
-set_reserve_cross(HealPixel *a) {
+set_reserve_cross(HealPixel *a) 
+{
 	int i, j;
 	HealPixel *b;
 	pthread_mutex_lock(&CMUTEX);
@@ -154,7 +157,8 @@ set_reserve_cross(HealPixel *a) {
 }
 
 static long
-cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
+cross_pixel(HealPixel *pix, PixelStore *store, double radius) 
+{
 
 	set_reserve_cross(pix);
 
@@ -234,41 +238,46 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
 
 }
 
+
 int
-get_iterate_count() {
-    return ntestmatches;
+get_iterate_count() 
+{
+	return ntestmatches;
 }
 
+
 static inline double
-dist(double *va, double *vb) {
-    double x = va[0] - vb[0];
-    double y = va[1] - vb[1];
-    double z = va[2] - vb[2];
+dist(double *va, double *vb) 
+{
+	double x = va[0] - vb[0];
+	double y = va[1] - vb[1];
+	double z = va[2] - vb[2];
 
 	/* return x*x + y*y + z*z; */
-    return sqrt(x*x + y*y + z*z);
+	return sqrt(x*x + y*y + z*z);
 }
 
 static void
-crossmatch(Sample *current_spl, Sample *test_spl) {
-    ntestmatches++;
-    /*
-     * Get distance between samples
-     */
-    double distance = dist(current_spl->vector, test_spl->vector);
+crossmatch(Sample *current_spl, Sample *test_spl) 
+{
+	ntestmatches++;
+	/*
+	 * Get distance between samples
+	 */
+	double distance = dist(current_spl->vector, test_spl->vector);
 
-    /*
-     * If distance is less than previous (or initial) update
-     * best_distance and set test_spl to current_spl.bestMatch
-     */
-    if (distance < current_spl->bestMatchDistance) {
-        current_spl->bestMatch = test_spl;          /* XXX false shared ! */
-        current_spl->bestMatchDistance = distance;  /* XXX false shared ! */
-    }
+	/*
+	 * If distance is less than previous (or initial) update
+	 * best_distance and set test_spl to current_spl.bestMatch
+	 */
+	if (distance < current_spl->bestMatchDistance) {
+		current_spl->bestMatch = test_spl;		  /* XXX false shared ! */
+		current_spl->bestMatchDistance = distance;  /* XXX false shared ! */
+	}
 
-    if (distance < test_spl->bestMatchDistance) {
-        test_spl->bestMatch = current_spl;
-        test_spl->bestMatchDistance = distance;
-    }
+	if (distance < test_spl->bestMatchDistance) {
+		test_spl->bestMatch = current_spl;
+		test_spl->bestMatchDistance = distance;
+	}
 
 }
