@@ -133,6 +133,18 @@ Crossmatch_crossSamples(
 }
 
 /**
+ * THIS is the trickiest part of this file. pneighbors is are pointers,
+ * tneighbors are boolean values indicating that the cross identification
+ * between two pixels is done.
+ *
+ * When a pixel want to cross his neigbhors, he first execute this, setting
+ * all neighbors "tneigbhors" value for himself to true. Neigbhors will then
+ * state that they do not need to cross. This is done only if my 
+ * "tneighbor" value for the foreign pixel is not true. If my "tneighbor" is
+ * true, this would indicate that the neighbor has allready reserved the 
+ * cross identification. I must not touch his "tnieghbor" then, or he will 
+ * not cross it two, and the pixels would never been cross identified.
+ *
  * Called by cross_pixel, to notify neighbors that I handle myself for the
  * rest of the run. So do not cross with me.
  */
