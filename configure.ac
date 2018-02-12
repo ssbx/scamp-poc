@@ -10,7 +10,7 @@ AC_PROG_RANLIB
 
 #dnl openmp
 #AC_OPENMP
-#nl AC_SUBST(AM_CFLAGS, "-Wall $OPENMP_CFLAGS")
+AC_SUBST(AM_CFLAGS, "-Wall -pthread")
 
 dnl cfitsio
 #AC_CHECK_HEADER(fitsio.h,,AC_MSG_ERROR(Could not find fitsio.h),)

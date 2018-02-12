@@ -24,7 +24,7 @@
 #include "pixelstore.h"
 
 static void crossmatch(Sample*,Sample*);
-static long cross_pixels(PixelStore*,double);
+static long cross_pixels(HealPixel*,PixelStore*,double);
 
 static long ntestmatches;
 
@@ -35,13 +35,20 @@ Crossmatch_crossSamples(
         PixelStore      *pixstore,
         double          radius_arcsec)
 {
-    long nmatches;
 
     /* arcsec to radiant */
     double radius = radius_arcsec / 3600 * TO_RAD;
-
     PixelStore_setMaxRadius(pixstore, radius);
-    nmatches = cross_pixels(pixstore, radius);
+
+	int i;
+    long nmatches = 0;
+	int64_t *pixelindex = pixstore->pixelids;
+
+	HealPixel *pix;
+	for (i=0; i<pixstore->npixels; i++) {
+		pix = PixelStore_get(pixstore, pixelindex[i]);
+    	nmatches += cross_pixels(pix, pixstore, radius);
+	}
 
     return nmatches;
 
@@ -68,90 +75,80 @@ test_allready_crossed(HealPixel *a, HealPixel *b, int n) {
 }
 
 static long
-cross_pixels(PixelStore *store, double radius) {
-    long i;
-    long nbmatches = 0;
+cross_pixels(HealPixel *pix, PixelStore *store, double radius) {
+	long nbmatches = 0;
 
-    long npixels = store->npixels;
-    int64_t *pixelindex = store->pixelids;
+	/*
+	 * Iterate over HealPixel structure which old sample structures
+	 * belonging to him.
+	 */
+	long j, k, l;
 
-    /*
-     * Iterate over HealPixel structure which old sample structures
-     * belonging to him.
-     */
-    for (i=0; i<npixels; i++) {
-
-        HealPixel *current_pix = PixelStore_get(store,pixelindex[i]);
-        long j, k, l;
-
-        Sample *current_spl;
-        Sample *test_spl;
+	Sample *current_spl;
+	Sample *test_spl;
 
 
-        for (j=0; j<current_pix->nsamples; j++) {
-            current_spl = &current_pix->samples[j];
+	for (j=0; j<pix->nsamples; j++) {
+		current_spl = &pix->samples[j];
 
-            /*
-             * First cross match with samples of the pixel between them
-             */
-            for(k=0; k<j; k++) {
-                test_spl = &current_pix->samples[k];
+		/*
+		 * First cross match with samples of the pixel between them
+		 */
+		for(k=0; k<j; k++) {
+			test_spl = &pix->samples[k];
 
-                if (current_spl->set->field == test_spl->set->field)
-                    continue;
+			if (current_spl->set->field == test_spl->set->field)
+				continue;
 
-                if (abs(current_spl->col - test_spl->col) > radius)
-                    continue;
+			if (abs(current_spl->col - test_spl->col) > radius)
+				continue;
 
-                crossmatch(current_spl, test_spl);
+			crossmatch(current_spl, test_spl);
 
-            }
+		}
 
-            /*
-             * Then iterate against neighbors pixels
-             */
-            HealPixel *test_pixel;
-            for (k=0; k<NNEIGHBORS; k++) {
-                test_pixel = current_pix->pneighbors[k];
+		/*
+		 * Then iterate against neighbors pixels
+		 */
+		HealPixel *test_pixel;
+		for (k=0; k<NNEIGHBORS; k++) {
+			test_pixel = pix->pneighbors[k];
 
-                /*
-                 * Does the pixel exists? It may be a neighbor of current pixel,
-                 * but not be initialized because it does not contains
-                 * any samples.
-                 */
-                if (test_pixel == NULL)
-                    continue;
+			/*
+			 * Does the pixel exists? It may be a neighbor of current pixel,
+			 * but not be initialized because it does not contains
+			 * any samples.
+			 */
+			if (test_pixel == NULL)
+				continue;
 
-                if (test_allready_crossed(current_pix, test_pixel, k) == true)
-                    continue;
+			if (test_allready_crossed(pix, test_pixel, k) == true)
+				continue;
 
-                /*
-                 * Then iterate over samples.
-                 */
-                for (l=0; l<test_pixel->nsamples; l++) {
-                    test_spl = &test_pixel->samples[l];
+			/*
+			 * Then iterate over samples.
+			 */
+			for (l=0; l<test_pixel->nsamples; l++) {
+				test_spl = &test_pixel->samples[l];
 
-                    if (current_spl->set->field == test_spl->set->field)
-                        continue;
+				if (current_spl->set->field == test_spl->set->field)
+					continue;
 
-                    if (abs(current_spl->col - test_spl->col) > radius)
-                        continue;
+				if (abs(current_spl->col - test_spl->col) > radius)
+					continue;
 
-                    crossmatch(current_spl, test_spl);
+				crossmatch(current_spl, test_spl);
 
-                }
-            }
+			}
+		}
 
-            if (current_spl->bestMatch != NULL) {
-                nbmatches++;
-            }
-        }
-    }
-    Logger_log(LOGGER_NORMAL,
-            "Crossmatch end: %li matches for all pixels!\n", nbmatches);
-    Logger_log(LOGGER_NORMAL,
-            "Crossmatch end: %li real cross match tests!\n", ntestmatches);
-    return nbmatches;
+		if (current_spl->bestMatch != NULL) {
+			nbmatches++;
+		}
+	}
+	Logger_log(LOGGER_NORMAL,
+			"Crossmatch end: %li matches for all pixels!\n", nbmatches);
+	return nbmatches;
 
 }
 
