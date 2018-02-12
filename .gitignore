@@ -32,6 +32,7 @@
 /src/scamppoc
 /tests/testChealpixNeighboursNest
 /tests/testSingleCatCrossmatch
+/tests/testSingleCatCrossmatchAscii
 /tests/testChealpixsphereAvltree
 /tests/perfCrossmatchSingle
 /tests/testAngdist
