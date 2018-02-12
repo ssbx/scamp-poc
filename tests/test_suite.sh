@@ -40,7 +40,7 @@ fi
 
 
 echo "==> Running testSingleCatCrossmatch"
-${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data2.fits.cat > /dev/null
+${DIR}/testSingleCatCrossmatch ${DIR}/data/fitscat/data8.fits.cat > /dev/null 2>&1
 if [ $? -gt 0 ]
 then 
 	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatch" "FAILED"
@@ -70,7 +70,7 @@ else
 fi
 
 echo "==> Running testSingleCatCrossmatchAscii"
-${DIR}/testSingleCatCrossmatchAscii > /dev/null
+${DIR}/testSingleCatCrossmatchAscii ${DIR}/data/asciicat/t4_cat.txt > /dev/null
 if [ $? -gt 0 ]
 then 
 	printf "%-70s %10s\n" "===> Test for testSingleCatCrossmatchAscii" "FAILED"

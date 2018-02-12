@@ -48,8 +48,8 @@ int main(int argc, char **argv) {
     Field fields[2];
 
     printf("hello\n"); fflush(stdout);
-    test_Catalog_open_ascii(cat, &fields[0], store);
-    test_Catalog_open_ascii(cat, &fields[1], store);
+    test_Catalog_open_ascii(argv[1], &fields[0], store);
+    test_Catalog_open_ascii(argv[1], &fields[1], store);
     printf("hello\n"); fflush(stdout);
 
     Crossmatch_crossSamples(store, radius_arcsec);

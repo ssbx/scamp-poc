@@ -91,8 +91,8 @@ int main(int argc, char **argv) {
 
             // object id must have the same id
             if (obj->id != obj_bm->id) {
-                fprintf(stderr, "\n Object should share the same id %i %i \tmyid:"
-                        " %li matchid: %li matchmatchid: %li", i, j, obj->id, obj_bm->id, obj_bm->bestMatch->id);
+                fprintf(stderr, "\n Object should share the same id set: %i, \tmyid:"
+                        " %li matchid: %li matchmatchid: %li", i, obj->id, obj_bm->id, obj_bm->bestMatch->id);
 				print_sample(obj);
 				print_sample(obj_bm);
                 status = 1;

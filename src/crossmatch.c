@@ -76,15 +76,8 @@ cross_pixels(PixelStore *store, double radius) {
     int64_t *pixelindex = store->pixelids;
 
     /*
-     * Iterate over HealPixel structure which old pointers to sample
+     * Iterate over HealPixel structure which old sample structures
      * belonging to him.
-     *
-     * Define functions inside loop, for future omp usage.
-     *
-     * XXX TODO: this code is thread safe but not parallelisable, because of the
-     * false sharing induced by the "crossmatch" function modifying some
-     * Sample values. TODO, create a temporary result for each threads, then
-     * reduce the results in a single thread.
      */
     for (i=0; i<npixels; i++) {
 
@@ -95,7 +88,7 @@ cross_pixels(PixelStore *store, double radius) {
         Sample *test_spl;
 
 
-        for (j=1; j<current_pix->nsamples; j++) {
+        for (j=0; j<current_pix->nsamples; j++) {
             current_spl = &current_pix->samples[j];
 
             /*
