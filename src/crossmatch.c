@@ -141,10 +141,17 @@ set_reserve_cross(HealPixel *a)
 {
 	int i, j;
 	HealPixel *b;
+
 	pthread_mutex_lock(&CMUTEX);
+
 	for (i=0; i<NNEIGHBORS; i++) {
 		b = a->pneighbors[i];
-		if (b) {
+		/* 
+		 * test if b is not null and if my self test for this neighbor
+		 * is positive wich signifies that this "b" has reserved the
+		 * crossmatch from him to me ("a") 
+		 */
+		if (b && a->tneighbors[i] != true) {
 			for (j=0; j<NNEIGHBORS; j++) {
 				if (a == b->pneighbors[j]) {
 					b->tneighbors[j] = true;
@@ -153,6 +160,7 @@ set_reserve_cross(HealPixel *a)
 			}
 		}
 	}
+
 	pthread_mutex_unlock(&CMUTEX);
 }
 
