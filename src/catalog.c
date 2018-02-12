@@ -228,8 +228,8 @@ void
 Catalog_freeField(Field *field) {
 	int i;
 	for (i=0; i<field->nsets; i++) {
-		//FREE(field->sets[i].samples);
-		//wcsvfree(&field->sets[i].nwcs, &field->sets[i].wcs);
+		FREE(field->sets[i].samples);
+		wcsvfree(&field->sets[i].nwcs, &field->sets[i].wcs);
 	}
 	FREE(field->sets);
 }
