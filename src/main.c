@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
     double radius_arcsec = 2.0; /* in arcsec */
 	int nthreads= 4;
 
-    while ((c=getopt(argc,argv,"n:r:b")) != -1) {
+    while ((c=getopt(argc,argv,"n:r:t:b")) != -1) {
         switch(c) {
         case 'n':
             nsides_power = atoi(optarg);
@@ -66,14 +66,16 @@ int main(int argc, char** argv) {
     for (i=0; i<nfields; i++)
         Catalog_open(cat_files[i], &fields[i], store);
 
-    clock_t start, end;
-    double cpu_time_used;
+    struct timespec start, end;
 	printf("match radius max is %0.30lf\n", (180.0f / (4 * nsides - 1)) * 3600  );
-    start = clock();
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
     Crossmatch_crossSamples(store, radius_arcsec, nthreads);
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Crossmatch done in %lf cpu_time seconds\n", cpu_time_used);
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    int sec = end.tv_sec - start.tv_sec;
+    double nano = (end.tv_nsec - start.tv_nsec);
+    double nano2 = nano / 1000000000;
+    double elapsed = (double) sec + nano2;
+    printf("Crossmatch done in %lf time seconds\n", elapsed);
 
     for (i=0; i<nfields; i++)
         Catalog_freeField(&fields[i]);

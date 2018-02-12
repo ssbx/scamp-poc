@@ -123,6 +123,9 @@ Crossmatch_crossSamples(
 	FREE(results);
 
 
+	Logger_log(LOGGER_NORMAL,
+			"Crossmatch end: %li matches for all pixels!\n", nmatches);
+
     return nmatches;
 
 }
@@ -227,8 +230,6 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius) {
 			nbmatches++;
 		}
 	}
-	Logger_log(LOGGER_NORMAL,
-			"Crossmatch end: %li matches for all pixels!\n", nbmatches);
 	return nbmatches;
 
 }

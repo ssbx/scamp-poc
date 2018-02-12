@@ -324,7 +324,6 @@ insert_sample_into_avltree_store(
     /* Insert sample in HealPixel */
     HealPixel *pix = &avlpix->pixel;
     if (pix->nsamples == pix->size) {
-		printf("halllll\n");fflush(stdout);
         /* need realloc */
         pix->samples = REALLOC(pix->samples, sizeof(Sample) * pix->size * 2);
         pix->ext     = REALLOC(pix->ext, sizeof(Sample***)  * pix->size * 2);
