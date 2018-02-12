@@ -147,6 +147,11 @@ Crossmatch_crossSamples(
  *
  * Called by cross_pixel, to notify neighbors that I handle myself for the
  * rest of the run. So do not cross with me.
+ *
+ * TODO BUG XXX in case a pixel a is crossing with neighbors, and a neighbor
+ * try to crossmatch with myself (wich can fairly append). Another lock
+ * is required somewere.
+ *
  */
 static void
 set_reserve_cross(HealPixel *a) 
@@ -174,7 +179,9 @@ set_reserve_cross(HealPixel *a)
 	}
 
 	pthread_mutex_unlock(&CMUTEX);
+
 }
+
 
 static long
 cross_pixel(HealPixel *pix, PixelStore *store, double radius) 
@@ -289,6 +296,7 @@ crossmatch(Sample *current_spl, Sample *test_spl)
 	/*
 	 * If distance is less than previous (or initial) update
 	 * best_distance and set test_spl to current_spl.bestMatch
+     * TODO XXX another lock here?
 	 */
 	if (distance < current_spl->bestMatchDistance) {
 		current_spl->bestMatch = test_spl;			/* XXX false shared ! */
