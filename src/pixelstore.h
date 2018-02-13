@@ -16,6 +16,8 @@
 #define SRC_PIXELSTORE_H_
 
 #include <stdbool.h>
+#include <pthread.h>
+
 #include "scamp.h"
 
 typedef struct HealPixel HealPixel;
@@ -33,6 +35,7 @@ struct HealPixel {
     int64_t neighbors[8];  /* Neighbors indexes */
     HealPixel *pneighbors[8];
     bool tneighbors[8]; /* check if neighbors have allready been matched */
+	pthread_mutex_t mutex;
 
 };
 

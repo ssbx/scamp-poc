@@ -188,6 +188,7 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius)
 {
 
 	set_reserve_cross(pix);
+	pthread_mutex_lock(&pix->mutex);
 
 	long nbmatches = 0;
 
@@ -241,8 +242,10 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius)
 				continue;
 
 			/*
-			 * Ok, then iterate over samples.
+			 * Ok, then lock and iterate over samples.
 			 */
+			pthread_mutex_lock(&test_pixel->mutex);
+
 			for (l=0; l<test_pixel->nsamples; l++) {
 				test_spl = &test_pixel->samples[l];
 
@@ -255,12 +258,17 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius)
 				crossmatch(current_spl, test_spl);
 
 			}
+
+			pthread_mutex_unlock(&test_pixel->mutex);
 		}
 
 		if (current_spl->bestMatch != NULL) {
 			nbmatches++;
 		}
 	}
+
+	pthread_mutex_unlock(&pix->mutex);
+
 	return nbmatches;
 
 }
