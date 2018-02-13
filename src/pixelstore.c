@@ -303,7 +303,7 @@ insert_sample_into_avltree_store(
 		avlpix->pixel.ext = CALLOC(SPL_BASE_SIZE, sizeof(Sample***));
 		avlpix->pixel.nsamples = 0;
 		avlpix->pixel.size = SPL_BASE_SIZE;
-		avlpix->pixel.mutex = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
+		pthread_mutex_init(&avlpix->pixel.mutex, NULL);
 
 		for (i=0;i<8;i++)
 			avlpix->pixel.tneighbors[i] = false;

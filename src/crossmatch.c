@@ -133,6 +133,8 @@ Crossmatch_crossSamples(
 }
 
 /**
+ * This function prevent dead locks.
+ *
  * THIS is the trickiest part of this file. pneighbors is are pointers,
  * tneighbors are boolean values indicating that the cross identification
  * between two pixels is done.
@@ -147,10 +149,6 @@ Crossmatch_crossSamples(
  *
  * Called by cross_pixel, to notify neighbors that I handle myself for the
  * rest of the run. So do not cross with me.
- *
- * TODO BUG XXX in case a pixel a is crossing with neighbors, and a neighbor
- * try to crossmatch with myself (wich can fairly append). Another lock
- * is required somewere.
  *
  */
 static void
@@ -227,7 +225,7 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius)
 		HealPixel *test_pixel;
 		for (k=0; k<NNEIGHBORS; k++) {
 
-			/* maybe allready crossed by an neighbor */
+			/* Allready crossed by an neighbor ? */
 			if (pix->tneighbors[k] == true)
 				continue;
 
@@ -242,7 +240,7 @@ cross_pixel(HealPixel *pix, PixelStore *store, double radius)
 				continue;
 
 			/*
-			 * Ok, then lock and iterate over samples.
+			 * Ok, then lock test pixel and iterate over samples.
 			 */
 			pthread_mutex_lock(&test_pixel->mutex);
 
